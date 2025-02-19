@@ -1,11 +1,17 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild, ElementRef } from '@angular/core';
 
 @Component({
   selector: 'app-login',
-  imports: [],
   templateUrl: './login.component.html',
-  styleUrl: './login.component.css'
+  styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
 
+  username: string = '';
+  password: string = '';
+
+  login() {
+    console.log('Logging in with:', this.username, this.password);
+  }
+ 
 }
