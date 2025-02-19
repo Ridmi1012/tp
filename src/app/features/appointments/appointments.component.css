@@ -1,0 +1,64 @@
+.appointments-container {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+  }
+  
+  .container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .appointment-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+  
+  .header-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    text-align: center;
+    z-index: 1;
+  }
+  
+  .header-text h1 {
+    font-size: 3rem;
+    margin-bottom: 10px;
+  }
+  
+  .header-text p {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+  }
+  
+  .reserve {
+    width: 100px;
+    padding: 16px;
+    background-color: #d15d58;
+    border: none;
+    border-radius: 25px;
+    color: white;
+    font-size: 18px; 
+    font-weight: bold;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: 0.3s;
+  }
+  
+  .reserve a {
+    color: white;
+    text-decoration: none;
+  }
+  
+  .reserve:hover {
+    background-color: #b24b45;
+  }
+  
+

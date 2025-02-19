@@ -1,0 +1,120 @@
+.register-container {
+    display: flex;
+    height: 100vh;
+    justify-content: flex-start;  /* Align to the left */
+    align-items: flex-start;      /* Align to the top */
+    background-color: black;
+    position: relative;
+    overflow: hidden;  /* Prevent overflow of elements */
+}
+
+/* Form Box */
+.register-box {
+    width: 400px;
+    padding: 30px;
+    background: black;
+    color: white;
+    border-radius: 10px;
+    z-index: 2; /* Ensure the form appears above the background image */
+    margin-left: 200px; /* Optional, for adding some space from the left edge */
+}
+
+/* Form Title */
+.register-title {
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+/* Form Styles */
+form {
+    display: flex;
+    flex-direction: column;
+}
+
+.name-fields {
+    display: flex;
+    gap: 10px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+    color: white;
+}
+
+label {
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+/* Input Fields */
+input {
+    padding: 12px;
+    border: 1px solid white; 
+    border-radius: 25px;
+    background: transparent;
+    color: white;
+    outline: none;
+}
+
+input::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Button */
+.register-btn {
+    background-color: #e74c3c;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.register-btn:hover {
+    background-color: #c0392b;
+}
+
+/* Login Text */
+.login-text {
+    text-align: center;
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+.login-text a {
+    color: #e74c3c;
+    text-decoration: none;
+}
+
+.login-text a:hover {
+    text-decoration: underline;
+}
+
+
+.background-image {
+    position: absolute;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    z-index: 1;
+}
+
+
+@media (max-width: 768px) {
+    .background-image {
+        display: none;
+    }
+
+    .register-box {
+        width: 90%;
+    }
+}
