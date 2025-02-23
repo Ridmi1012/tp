@@ -1,0 +1,64 @@
+.portfolio {
+    margin-top: 120px; /* Remove space at the top */
+    padding-bottom: 20px; /* Add space at the bottom before footer */
+}
+
+.category {
+    text-align: center;
+    margin: 20px auto;
+    width: 100%;
+    margin-bottom: 20px;
+}
+
+.image-slider {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.image-container {
+    display: flex;
+    gap: 10px;
+    overflow: hidden;
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 20px; /* Add space below each section */
+}
+
+.slider-image {
+    flex: 1; /* Each image takes equal space */
+    width: 100%;
+    height: auto; /* Maintain aspect ratio */
+    max-height: 500px; /* Prevent images from becoming too large */
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+button {
+    background-color: #5b1c0c;
+    color: white;
+    border: none;
+    padding: 15px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 20px;
+}
+
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .slider-image {
+        max-height: 300px; /* Adjust for smaller screens */
+    }
+
+    button {
+        padding: 10px;
+        font-size: 16px;
+    }
+}
