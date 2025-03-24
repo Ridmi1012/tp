@@ -68,6 +68,11 @@
     transition: 0.3s;
 }
 
+.login-btn a {
+    color: white;
+    text-decoration: none;
+  }
+
 .login-btn:hover {
     background-color: #b54440;
 }

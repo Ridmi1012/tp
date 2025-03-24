@@ -4,6 +4,10 @@ import { PortfolioComponent } from './portfolio/portfolio.component';
 import { HomeComponent } from './home/home.component';
 import { AppointmentsComponent } from './appointments/appointments.component';
 import { ReviewsComponent } from './reviews/reviews.component';
+import { BookingFormComponent } from './bookingform/bookingform.component';
+import { OngoingComponent } from './ongoing/ongoing.component';
+import { ReviewformComponent } from './reviewform/reviewform.component';
+
 
 
 
@@ -14,7 +18,10 @@ import { ReviewsComponent } from './reviews/reviews.component';
     HomeComponent, 
     PortfolioComponent,
     AppointmentsComponent,
-    ReviewsComponent
+    ReviewsComponent,
+    BookingFormComponent,
+    OngoingComponent,
+    ReviewformComponent
   ]
 })
 export class FeaturesModule { }

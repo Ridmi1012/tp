@@ -1,0 +1,52 @@
+<div class="booking-container" style="background: url('assets/images/image 20.png') no-repeat center center; background-size: cover;">
+  <div class="header">
+    <h2>Book Appointment</h2>
+  </div>
+  <div class="form-container">
+
+    <form #bookingForm="ngForm">
+      <label for="name">Name</label>
+      <input type="text" id="name" name="name" [(ngModel)]="bookingData.name" placeholder="Enter your name" required />
+
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" [(ngModel)]="bookingData.email" placeholder="Enter your email" required />
+
+      <label for="eventImage">Upload inspo Photos</label>
+      <input type="file" id="eventImage" (change)="onFileSelected($event)">
+      <img *ngIf="selectedImage" [src]="selectedImage" alt="Uploaded Image Preview" class="preview-image">
+
+      <label for="contact">Contact Number</label>
+      <input type="tel" id="contact" name="contact" [(ngModel)]="bookingData.contact" placeholder="Enter your contact number" required />
+
+      <div>
+        <label for="venue">Venue (Location Picker)</label>
+        <input id="searchBox" #searchBox type="text" name="venue" [(ngModel)]="bookingData.venue" placeholder="Search for venue location">
+      </div>
+
+      <div id="map" style="width: 100%; height: 300px; margin-top: 10px;"></div>
+
+      <div>
+        <label for="distance">Distance</label>
+        <input id="distance" type="text" name="distance" [(ngModel)]="bookingData.distance" readonly>
+      </div>
+
+      <label for="eventType">Event Type</label>
+      <select id="eventType" name="eventType" [(ngModel)]="bookingData.eventType">
+        <option value="bride-to-be">Bride to Be</option>
+        <option value="birthday">Birthday</option>
+        <option value="wedding">Wedding</option>
+      </select>
+
+      <label for="theme">Event Theme</label>
+      <input type="text" id="theme" name="theme" [(ngModel)]="bookingData.theme" placeholder="Enter event theme" />
+
+      <label for="eventDate">Event Date</label>
+      <input type="date" id="eventDate" name="eventDate" [(ngModel)]="bookingData.eventDate" />
+
+      <label for="backdrops">Number of Backdrops Needed</label>
+      <input type="number" id="backdrops" name="backdrops" [(ngModel)]="bookingData.backdrops" min="1" />
+
+      <button type="submit">Submit Your Request</button>
+    </form>
+  </div>
+</div>

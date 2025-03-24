@@ -16,7 +16,9 @@
     top: 0;
     left: 0;
     width: 100%;
+    height: 100%;
     object-fit: cover;
+    filter: brightness(50%);
 }
 
 .reviews-content {
@@ -24,16 +26,10 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    color:white;
+    color: white;
     text-align: center;
     z-index: 1;
     width: 80%;
-}
-
-.reviews-content h1 {
-    font-size: 2.5rem;
-    margin-bottom: 20px;
-    color: black;
 }
 
 .reviews-slider {
@@ -43,19 +39,27 @@
 }
 
 .review {
-    background:black;
+    background: rgba(255, 255, 255, 0.1);
     padding: 20px;
     border-radius: 15px;
     width: 30%;
     text-align: center;
+    backdrop-filter: blur(15px);
 }
 
-.icon {
+.user-icon i {
     font-size: 40px;
+    color: white;
+}
+
+.stars {
+    color: gold;
+    font-size: 1.5rem;
+    margin-top: 5px;
 }
 
 .review-text {
-    font-size: 1.2rem;
+    font-size: 1rem;
     margin: 10px 0;
 }
 
@@ -64,25 +68,23 @@
     font-weight: bold;
 }
 
-.stars {
-    color: gold;
-    font-size: 1.5rem;
-}
-
 .leave-review {
     margin-top: 20px;
     padding: 12px 24px;
     background-color: #d15d58;
     border: none;
     border-radius: 25px;
-    color: black;
+    color: white;
     font-size: 18px;
     font-weight: bold;
     cursor: pointer;
     transition: 0.3s;
 }
 
+.leave-review a {
+    color: white;
+    text-decoration: none;
+  }
 .leave-review:hover {
     background-color: #b24b45;
 }
-
