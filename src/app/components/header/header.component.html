@@ -1,13 +1,41 @@
 <header class="header">
   <div class="logo">RS SHANISHA DECORATIONS</div>
-  <div class="hamburger" (click)="toggleMenu()">{{ menuOpen ? '✖' : '☰' }}</div>
+
+  <div class="hamburger" (click)="toggleMenu()">
+    {{ menuOpen ? '✖' : '☰' }}
+  </div>
+
   <nav class="nav-links" [ngClass]="{ 'open': menuOpen }">
     <a routerLink="/home" (click)="closeMenu()">Home</a>
     <a routerLink="/portfolio" (click)="closeMenu()">Portfolio</a>
-    <a routerLink="/appointments" (click)="closeMenu()">Appointments</a>
-    <a routerLink="/reviews" (click)="closeMenu()">Reviews</a>
-    <a routerLink="/login" (click)="closeMenu()">Login</a>
-    <a routerLink="/profile" (click)="closeMenu()">Profile</a>
-    <a routerLink="/ongoing" (click)="closeMenu()">Ongoing</a>
+
+    <!-- Our Services logic -->
+    <ng-container *ngIf="!isLoggedIn; else loggedInServices">
+      <div class="dropdown" (click)="toggleServicesDropdown()">
+        <span>Our Services</span>
+        <div class="dropdown-menu" *ngIf="showServicesDropdown">
+          <a routerLink="/appointments" (click)="closeMenu()">Appointments</a>
+          <a routerLink="/reviews" (click)="closeMenu()">Reviews</a>
+        </div>
+      </div>
+    </ng-container>
+    <ng-template #loggedInServices>
+      <a routerLink="/log2book" (click)="closeMenu()">Our Services</a>
+    </ng-template>
+
+    <a routerLink="/login" *ngIf="!isLoggedIn" (click)="closeMenu()">Login</a>
+    <a routerLink="/ongoing" *ngIf="isLoggedIn" (click)="closeMenu()">Ongoing</a>
+
+    <!-- Profile Dropdown -->
+    <div class="profile-dropdown" *ngIf="isLoggedIn">
+      <div class="profile-icon" (click)="toggleProfileDropdown()">
+        <img src="assets/images/profile-icon.png" alt="Profile Icon" class="profile-image" />
+      </div>
+      <div class="dropdown-menu" *ngIf="showProfileDropdown">
+        <a routerLink="/profile" (click)="closeMenu()">Edit Profile</a>
+        <a (click)="logout()">Logout</a>
+      </div>
+    </div>
   </nav>
 </header>
+

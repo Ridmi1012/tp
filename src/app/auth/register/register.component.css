@@ -1,5 +1,6 @@
 .register-container {
     display: flex;
+    margin-top: 50px;
     height: 100vh;
     justify-content: flex-start;  /* Align to the left */
     align-items: flex-start;      /* Align to the top */
@@ -66,7 +67,7 @@ input::placeholder {
 
 /* Button */
 .register-btn {
-    background-color: #e74c3c;
+    background-color: #d15d58;
     color: white;
     padding: 12px;
     border: none;
@@ -86,10 +87,11 @@ input::placeholder {
     text-align: center;
     margin-top: 15px;
     font-size: 14px;
+    cursor: pointer;
 }
 
 .login-text a {
-    color: #e74c3c;
+    color: #d15d58;
     text-decoration: none;
 }
 
