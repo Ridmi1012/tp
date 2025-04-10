@@ -11,7 +11,7 @@
   
   .dashboard-header h1 {
     font-size: 2.5em;
-    color: #ffcc00;
+    color: #d15d58;
   }
   
   .dashboard-header p {
@@ -40,7 +40,7 @@
   
   .dashboard-card h3 {
     font-size: 1.8em;
-    color: #ffcc00;
+    color: #d15d58;
   }
   
   .dashboard-card p {
@@ -67,6 +67,6 @@
   }
   
   .btn-primary:hover {
-    background-color: #e6b800;
+    background-color: #b54440;
   }
   

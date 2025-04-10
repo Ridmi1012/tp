@@ -35,17 +35,32 @@
         <small *ngIf="registerForm.get('username')?.invalid && registerForm.get('username')?.touched">Username is required</small>
       </div>
 
-      <div class="input-group">
+      <div class="input-group password-group">
         <label for="password">Password</label>
-        <input type="password" id="password" formControlName="password" placeholder="Enter your password">
-        <small *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched">Password must be at least 6 characters</small>
+        <div class="password-wrapper">
+          <input [type]="showPassword ? 'text' : 'password'" id="password" formControlName="password" placeholder="Enter your password">
+          <span class="toggle-eye" (click)="togglePasswordVisibility()">
+            {{ showPassword ? '🙈' : '👁️' }}
+          </span>
+        </div>
+        <small *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched">
+          Password must be at least 6 characters
+        </small>
       </div>
 
-      <div class="input-group">
+      <div class="input-group password-group">
         <label for="confirmPassword">Confirm Password</label>
-        <input type="password" id="confirmPassword" formControlName="confirmPassword" placeholder="Confirm your password">
-        <small *ngIf="registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched">Passwords must match</small>
+        <div class="password-wrapper">
+          <input [type]="showConfirmPassword ? 'text' : 'password'" id="confirmPassword" formControlName="confirmPassword" placeholder="Confirm your password">
+          <span class="toggle-eye" (click)="toggleConfirmPasswordVisibility()">
+            {{ showConfirmPassword ? '🙈' : '👁️' }}
+          </span>
+        </div>
+        <small *ngIf="registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched">
+          Passwords must match
+        </small>
       </div>
+      
 
       <p *ngIf="errorMessage" class="error-message">{{ errorMessage }}</p>
 
@@ -56,6 +71,4 @@
       Already have an account? <a routerLink="/login">Login</a>
     </p>
   </div>
-
-  <div class="background-image"  style="background-image: url('assets/images/image 18.png');"></div>
 </div>

@@ -35,7 +35,7 @@ html, body {
   .footer-section h3 {
     font-size: 1.4em;
     margin-bottom: 10px;
-    color: #ffcc00;
+    color:  #d15d58;
     text-transform: uppercase;
     font-weight: 600;
   }
@@ -79,7 +79,7 @@ html, body {
   }
   
   .footer-section:hover h3 {
-    color: #ffcc00;
+    color:#b54440;
   }
   
   .footer-section:hover p {

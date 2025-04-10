@@ -1,31 +1,47 @@
 .register-container {
     display: flex;
-    margin-top: 50px;
-    height: 100vh;
-    justify-content: flex-start;  /* Align to the left */
-    align-items: flex-start;      /* Align to the top */
-    background-color: black;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 100px); 
+    background: linear-gradient(to right, #ffe5ec, #ffc1c1);
     position: relative;
-    overflow: hidden;  /* Prevent overflow of elements */
+    overflow: hidden;
+    padding: 15px ;
 }
 
 /* Form Box */
 .register-box {
-    width: 400px;
-    padding: 30px;
-    background: black;
-    color: white;
-    border-radius: 10px;
-    z-index: 2; /* Ensure the form appears above the background image */
-    margin-left: 200px; /* Optional, for adding some space from the left edge */
+    width: 500px;
+    margin-top: 70px;
+    padding: 20px 30px;
+    background: #fff;
+    color: #333;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    z-index: 2;
+    position: relative;
+    animation: fadeInUp 0.6s ease-out;
+}
+
+/* Fade In Animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Form Title */
 .register-title {
     text-align: center;
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 20px;
+    font-size: 28px;
+    font-weight: 700;
+    color: #d15d58;
+    margin-bottom: 25px;
 }
 
 /* Form Styles */
@@ -36,14 +52,30 @@ form {
 
 .name-fields {
     display: flex;
-    gap: 10px;
+    gap: 10px;;
+    flex-wrap: wrap; 
+}
+
+.name-fields .input-group {
+    width:49%; 
+}
+
+@media (max-width: 768px) {
+    .name-fields {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .name-fields .input-group {
+        width: 100%;
+    }
 }
 
 .input-group {
     display: flex;
     flex-direction: column;
-    margin-bottom: 15px;
-    color: white;
+    margin-bottom: 20px;
+    color: #333;
 }
 
 label {
@@ -53,16 +85,23 @@ label {
 
 /* Input Fields */
 input {
-    padding: 12px;
-    border: 1px solid white; 
+    padding: 12px 15px;
+    border: 1px solid #ccc;
     border-radius: 25px;
-    background: transparent;
-    color: white;
-    outline: none;
+    background: #f9f9f9;
+    transition: 0.3s ease;
+    color: #7b6b76;
+    font-size: 14px;
+}
+
+input:focus {
+    border-color: #d15d58;
+    background-color: #fff;
+    box-shadow: 0 0 5px rgba(209, 93, 88, 0.4);
 }
 
 input::placeholder {
-    color: rgba(255, 255, 255, 0.5);
+    color: #aaa;
 }
 
 /* Button */
@@ -75,48 +114,75 @@ input::placeholder {
     cursor: pointer;
     font-size: 16px;
     font-weight: bold;
-    margin-top: 10px;
+    transition: background-color 0.3s ease;
 }
 
 .register-btn:hover {
-    background-color: #c0392b;
+    background-color: #b94d4b;
 }
 
 /* Login Text */
 .login-text {
     text-align: center;
-    margin-top: 15px;
+    margin-top: 20px;
     font-size: 14px;
-    cursor: pointer;
 }
 
 .login-text a {
     color: #d15d58;
     text-decoration: none;
+    font-weight: bold;
+    cursor: pointer;
 }
 
 .login-text a:hover {
     text-decoration: underline;
 }
 
-
+/* Background Image */
 .background-image {
     position: absolute;
     right: 0;
-    width: 100%;
+    width: 50%;
     height: 100%;
     background-size: cover;
     background-position: center;
     z-index: 1;
+    opacity: 0.15;
+    pointer-events: none;
 }
 
+.password-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  .password-wrapper input {
+    flex: 1;
+    padding-right: 40px; /* space for eye icon */
+  }
+  
+  .toggle-eye {
+    position: absolute;
+    right: 12px;
+    cursor: pointer;
+    font-size: 18px;
+    user-select: none;
+  }
 
+/* Responsive */
 @media (max-width: 768px) {
     .background-image {
         display: none;
     }
 
     .register-box {
-        width: 90%;
+        width: 100%;
+        padding: 30px 20px;
+    }
+
+    .name-fields {
+        flex-direction: column;
     }
 }
