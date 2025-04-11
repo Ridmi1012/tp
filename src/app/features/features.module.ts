@@ -6,7 +6,7 @@ import { AppointmentsComponent } from './appointments/appointments.component';
 import { ReviewsComponent } from './reviews/reviews.component';
 import { BookingFormComponent } from './bookingform/bookingform.component';
 import { OngoingComponent } from './ongoing/ongoing.component';
-import { ReviewformComponent } from './reviewform/reviewform.component';
+import { ReviewFormComponent } from './reviewform/reviewform.component';
 
 
 
@@ -21,7 +21,7 @@ import { ReviewformComponent } from './reviewform/reviewform.component';
     ReviewsComponent,
     BookingFormComponent,
     OngoingComponent,
-    ReviewformComponent
+    ReviewFormComponent
   ]
 })
 export class FeaturesModule { }
