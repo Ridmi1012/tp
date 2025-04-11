@@ -21,6 +21,7 @@ body {
   justify-content: center;
   align-items: center;
   padding: 2rem;
+  margin-top: 60px;
 }
 
 .form-container {
