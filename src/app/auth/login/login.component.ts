@@ -16,7 +16,13 @@ export class LoginComponent {
   username: string = '';
   password: string = '';
   errorMessage: string = '';
+  showPassword: boolean = false;
 
+
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
+  }
+  
   constructor(private authService: AuthService, private router: Router) { }
 
   login() {

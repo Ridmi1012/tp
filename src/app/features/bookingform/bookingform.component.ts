@@ -2,7 +2,7 @@ import { FormsModule } from '@angular/forms';
 import { Component, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
-declare var atlas: any; 
+declare var atlas: any;
 
 @Component({
   selector: 'app-bookingform',
@@ -10,119 +10,128 @@ declare var atlas: any;
   templateUrl: './bookingform.component.html',
   styleUrls: ['./bookingform.component.css']
 })
-export class BookingFormComponent implements AfterViewInit {
-  @ViewChild('searchBox', { static: false }) searchBox!: ElementRef;
-  map: any;
-  userLocation = [79.9201, 7.2845]; // Katana, Sri Lanka
-  marker: any;
-  searchResults: { address: string, position: { lat: number; lon: number } }[] = [];
-  selectedImage: any = null; 
-  bookingData = {
-    name: '',
+export class BookingFormComponent {
+  form = {
+    fullName: '',
     email: '',
-    contact: '',
-    venue: '',
-    distance: '',
+    phone: '',
+    backdropTheme: '',
+    primaryColor: '#f47a7a',  // Updated to match theme
+    secondaryColor: '#f9b4b4', // Updated to match theme
+    tertiaryColor: '#fde2e2',  // Updated to match theme
+    character: '',
+    table: false,
+    cakeStand: false,
+    backdropCount: 1,
+    customText: '',
     eventType: '',
-    theme: '',
-    eventDate: '',
-    backdrops: 1,
-    uploadedImage: '' 
+    otherEventType: '',
+    celebrationYear: null,
+    eventDateTime: null,
+    venue: '',
+    location: '',
+    indoorOutdoor: '',
+    lighting: false,
+    letters: '',
+    addons: [] as string[], // Fixed by explicitly typing as string array
+    budget: '',
+    payment: '',
+    terms: false,
+    notes: ''
   };
 
-  ngAfterViewInit() {
-    this.initMap();
-  }
+  showYearField = false;
+  currentStep = 0;
+  file: File | null = null;
+  
+  // Available add-ons for selection
+  availableAddons = [
+    'Green Carpet',
+    'Artificial Grass',
+    'Flowers',
+    'Gift Table',
+    'Photo Props',
+    'Balloon Arch'
+  ];
 
-  initMap() {
-    this.map = new atlas.Map("map", {
-      center: this.userLocation,
-      zoom: 10,
-      authOptions: {
-        authType: 'subscriptionKey',
-        subscriptionKey: '2Hl8ZHiFElR0mIlhu9RKbirEGVb7tySOvPf7MNc5I6WSRqtVjTP0JQQJ99BBACYeBjFtZwVqAAAgAZMPx6C9' // Replace with actual Azure Maps key
+  steps = [
+    { title: 'Customer Details', sub: 'Tell us about yourself' },
+    { title: 'Event Details', sub: 'Let us know the event specifics' },
+    { title: 'Backdrop Selection', sub: 'Design your perfect backdrop' },
+    { title: 'Add-ons', sub: 'Want anything extra?' },
+    { title: 'Upload', sub: 'Add references (optional)' },
+    { title: 'Budget & Payment', sub: 'Final steps!' },
+    { title: 'Confirmation', sub: 'Almost done!' }
+  ];
+
+  nextStep() {
+    if (this.currentStep < this.steps.length - 1) {
+      // Simple validation for each step before proceeding
+      if (this.validateCurrentStep()) {
+        this.currentStep++;
+        window.scrollTo(0, 0); // Scroll to top for new step
       }
-    });
-
-    this.marker = new atlas.HtmlMarker({ position: this.userLocation });
-    this.map.markers.add(this.marker);
-    this.initSearchBox();
-  }
-
-  initSearchBox() {
-    const searchInput = this.searchBox.nativeElement;
-    searchInput.addEventListener('input', () => {
-      this.getAutoSuggestions(searchInput.value);
-    });
-  }
-
-  getAutoSuggestions(query: string) {
-    if (!query.trim()) {
-      this.searchResults = [];
-      return;
-    }
-
-    fetch(`https://atlas.microsoft.com/search/fuzzy/json?api-version=1.0&subscription-key=2Hl8ZHiFElR0mIlhu9RKbirEGVb7tySOvPf7MNc5I6WSRqtVjTP0JQQJ99BBACYeBjFtZwVqAAAgAZMPx6C9&query=${query}&countrySet=LK`)
-      .then(response => response.json())
-      .then(data => {
-        this.searchResults = data.results.map((result: any) => ({
-          address: result.address.freeformAddress,
-          position: result.position
-        }));
-
-       
-        if (this.searchResults.length > 0) {
-          this.autoSelectFirstResult();
-        }
-      })
-      .catch(error => console.error("Error fetching suggestions:", error));
-  }
-
-  autoSelectFirstResult() {
-    const firstResult = this.searchResults[0];
-    if (firstResult) {
-      this.bookingData.venue = firstResult.address;
-      this.updateMap(firstResult.position);
-      this.calculateDistance(firstResult.position);
     }
   }
 
-  updateMap(destination: { lat: number; lon: number }) {
-    this.map.setCamera({ center: [destination.lon, destination.lat] });
-    this.marker.setOptions({ position: [destination.lon, destination.lat] });
+  validateCurrentStep(): boolean {
+    // Add basic validation logic for each step
+    switch (this.currentStep) {
+      case 0: // Customer Details
+        return !!this.form.fullName && !!this.form.email && !!this.form.phone;
+      case 1: // Event Details
+        return !!this.form.eventType && !!this.form.eventDateTime;
+      default:
+        return true; // No validation for other steps in this example
+    }
   }
 
-  calculateDistance(destination: { lat: number; lon: number }) {
-    const origins = `${this.userLocation[1]},${this.userLocation[0]}`;  // Ensure format: lat,lon
-    const destinations = `${destination.lat},${destination.lon}`;
-  
-    const url = `https://atlas.microsoft.com/route/distance/matrix/json?api-version=1.0&subscription-key=2Hl8ZHiFElR0mIlhu9RKbirEGVb7tySOvPf7MNc5I6WSRqtVjTP0JQQJ99BBACYeBjFtZwVqAAAgAZMPx6C9&origins=${origins}&destinations=${destinations}&travelMode=car`;
-  
-    console.log("Fetching distance from:", origins, "to", destinations); // Debugging
-  
-    fetch(url)
-      .then(response => response.json())
-      .then(data => {
-        console.log("Distance API Response:", data); // Debugging
-  
-        if (data.matrix && data.matrix.length > 0 && data.matrix[0].length > 0) {
-          this.bookingData.distance = data.matrix[0][0].response.distance + " km";
-          console.log("Calculated Distance:", this.bookingData.distance);
-        } else {
-          console.error("Invalid distance data received:", data);
-        }
-      })
-      .catch(error => console.error("Error fetching distance:", error));
+  prevStep() {
+    if (this.currentStep > 0) {
+      this.currentStep--;
+      window.scrollTo(0, 0); // Scroll to top for new step
+    }
   }
+
   onFileSelected(event: any) {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e: any) => {
-        this.selectedImage = e.target.result; 
-        this.bookingData.uploadedImage = e.target.result;
-      };
-      reader.readAsDataURL(file);
+    this.file = event.target.files[0];
+  }
+
+  removeFile(event: Event) {
+    event.stopPropagation(); // Prevent triggering the file input
+    this.file = null;
+  }
+
+  checkYearField() {
+    const yearBased = ['Birthday Party', 'Anniversary'];
+    this.showYearField = yearBased.includes(this.form.eventType);
+  }
+
+  onOtherEventTypeChange() {
+    if (this.form.eventType === 'Other' && !this.form.otherEventType) {
+      // Custom logic for empty "Other" input
+      console.log('Custom event type is empty');
+    } else {
+      console.log('Custom event type:', this.form.otherEventType);
+    }
+  }
+
+  toggleAddon(addon: string) {
+    const index = this.form.addons.indexOf(addon);
+    if (index === -1) {
+      this.form.addons.push(addon);
+    } else {
+      this.form.addons.splice(index, 1);
+    }
+  }
+
+  onSubmit() {
+    if (this.validateCurrentStep()) {
+      console.log('Form submitted:', this.form);
+      // Here you would typically send the data to your backend
+      alert('Booking submitted successfully! We will contact you shortly.');
+    } else {
+      alert('Please fill in all required fields');
     }
   }
 }
