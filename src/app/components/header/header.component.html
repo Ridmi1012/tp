@@ -1,41 +1,40 @@
 <header class="header">
-  <div class="logo">RS SHANISHA DECORATIONS</div>
+  <div class="logo" routerLink="/home">RS SHANISHA DECORATIONS</div>
 
   <div class="hamburger" (click)="toggleMenu()">
-    {{ menuOpen ? '✖' : '☰' }}
+    <span>{{ menuOpen ? '✖' : '☰' }}</span>
   </div>
 
   <nav class="nav-links" [ngClass]="{ 'open': menuOpen }">
-    <a routerLink="/home" (click)="closeMenu()">Home</a>
-    <a routerLink="/portfolio" (click)="closeMenu()">Portfolio</a>
+    <a routerLink="/home" routerLinkActive="active-link" (click)="closeMenu()">Home</a>
+    <a routerLink="/portfolio" routerLinkActive="active-link" (click)="closeMenu()">Portfolio</a>
 
     <!-- Our Services logic -->
     <ng-container *ngIf="!isLoggedIn; else loggedInServices">
-      <div class="dropdown" (click)="toggleServicesDropdown()">
-        <span>Our Services</span>
-        <div class="dropdown-menu" *ngIf="showServicesDropdown">
+      <div class="dropdown">
+        <span (click)="toggleServicesDropdown()">Our Services</span>
+        <div class="dropdown-menu" [ngClass]="{ 'show': showServicesDropdown }">
           <a routerLink="/appointments" (click)="closeMenu()">Appointments</a>
           <a routerLink="/reviews" (click)="closeMenu()">Reviews</a>
         </div>
       </div>
     </ng-container>
     <ng-template #loggedInServices>
-      <a routerLink="/log2book" (click)="closeMenu()">Our Services</a>
+      <a routerLink="/log2book" routerLinkActive="active-link" (click)="closeMenu()">Our Services</a>
     </ng-template>
 
-    <a routerLink="/login" *ngIf="!isLoggedIn" (click)="closeMenu()">Login</a>
-    <a routerLink="/ongoing" *ngIf="isLoggedIn" (click)="closeMenu()">Ongoing</a>
+    <a routerLink="/login" routerLinkActive="active-link" *ngIf="!isLoggedIn" (click)="closeMenu()">Login</a>
+    <a routerLink="/ongoing" routerLinkActive="active-link" *ngIf="isLoggedIn" (click)="closeMenu()">Ongoing</a>
 
     <!-- Profile Dropdown -->
     <div class="profile-dropdown" *ngIf="isLoggedIn">
       <div class="profile-icon" (click)="toggleProfileDropdown()">
-        <img src="assets/images/profile-icon.png" alt="Profile Icon" class="profile-image" />
+        <img src="assets/images/profile-icon.png" alt="Profile" class="profile-image" />
       </div>
-      <div class="dropdown-menu" *ngIf="showProfileDropdown">
+      <div class="dropdown-menu" [ngClass]="{ 'show': showProfileDropdown }">
         <a routerLink="/profile" (click)="closeMenu()">Edit Profile</a>
         <a (click)="logout()">Logout</a>
       </div>
     </div>
   </nav>
 </header>
-
