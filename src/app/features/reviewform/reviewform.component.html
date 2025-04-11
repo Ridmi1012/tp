@@ -1,1 +1,78 @@
-<p>reviewform works!</p>
+<div class="review-form-container">
+  <div class="form-wrapper">
+    <h1>Share Your Experience</h1>
+    <p class="form-intro">We value your feedback. Please tell us about your backdrop decoration experience.</p>
+    
+    <form [formGroup]="reviewForm" (ngSubmit)="submitReview()">
+      <!-- Star Rating -->
+      <div class="form-section">
+        <div class="rating-group">
+          <label>Rate Your Experience</label>
+          <div class="star-rating">
+            <ng-container *ngFor="let star of [1, 2, 3, 4, 5]">
+              <i class="fas fa-star" 
+                 [class.filled]="star <= rating"
+                 [class.highlighted]="star <= hoverRating"
+                 (click)="setRating(star)"
+                 (mouseenter)="hoverRating = star"
+                 (mouseleave)="hoverRating = 0"></i>
+            </ng-container>
+          </div>
+          <div class="rating-text">{{ getRatingText() }}</div>
+          <div class="error-message" *ngIf="isFieldInvalid('rating')">
+            Please rate your experience
+          </div>
+        </div>
+      </div>
+      
+      <!-- Feedback -->
+      <div class="form-section">
+        <div class="form-group">
+          <label for="review">Your Review</label>
+          <textarea 
+            id="review" 
+            formControlName="review" 
+            rows="5" 
+            placeholder="Please share your experience with our backdrop decoration services..."></textarea>
+          <div class="error-message" *ngIf="isFieldInvalid('review')">
+            Please share your feedback (minimum 10 characters)
+          </div>
+        </div>
+      </div>
+      
+      <!-- Photos Upload -->
+      <div class="form-section">
+        <div class="form-group upload-group">
+          <label>
+            <span>Share Photos <span class="optional">(optional)</span></span>
+          </label>
+          <div class="upload-area" (click)="fileInput.click()">
+            <input #fileInput type="file" accept="image/*" multiple (change)="onFileSelected($event)" style="display: none">
+            <i class="fas fa-image"></i>
+            <p>Click to upload photos</p>
+          </div>
+          <div class="selected-files" *ngIf="selectedFiles.length > 0">
+            <p>{{ selectedFiles.length }} file(s) selected</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Submit -->
+      <div class="form-actions">
+        <button type="submit" class="submit-btn" [disabled]="reviewForm.invalid || isSubmitting">
+          <span *ngIf="!isSubmitting">Submit Review</span>
+          <span *ngIf="isSubmitting">
+            <i class="fas fa-spinner fa-spin"></i> Submitting...
+          </span>
+        </button>
+      </div>
+    </form>
+    
+    <!-- Success Message -->
+    <div class="success-message" *ngIf="isSubmitted">
+      <i class="fas fa-check-circle"></i>
+      <h2>Thank You!</h2>
+      <p>Your review has been submitted successfully. We appreciate your feedback!</p>
+    </div>
+  </div>
+</div>

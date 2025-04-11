@@ -22,6 +22,7 @@
     "@angular/platform-browser": "^19.1.7",
     "@angular/platform-browser-dynamic": "^19.1.7",
     "@angular/router": "^19.1.7",
+    "@fortawesome/fontawesome-free": "^6.7.2",
     "azure-maps-control": "^3.6.0",
     "firebase": "^11.3.1",
     "ngx-scrollreveal": "^3.0.0",

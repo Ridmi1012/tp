@@ -8,6 +8,7 @@ import { AppointmentsComponent } from './features/appointments/appointments.comp
 import { BookingFormComponent } from './features/bookingform/bookingform.component';
 import { OngoingComponent } from './features/ongoing/ongoing.component';
 import { CustomerdashboardComponent } from './features/customerdashboard/customerdashboard.component';
+import { ReviewFormComponent } from './features/reviewform/reviewform.component';
 
 
 
@@ -22,5 +23,6 @@ export const routes: Routes = [
     {path: 'log2book', component: CustomerdashboardComponent},
     {path: 'ongoing', component: OngoingComponent},
     {path: 'booking-form', component: BookingFormComponent},
+    {path: "review-form", component: ReviewFormComponent},
     {path: '**', redirectTo: ''}
 ];
