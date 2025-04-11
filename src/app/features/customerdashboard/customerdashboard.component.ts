@@ -13,14 +13,10 @@ export class CustomerdashboardComponent {
   constructor(private authService: AuthService, private router: Router) { }
 
   goToBookingForm(): void {
-    // Optionally show alert if needed
-    alert('Navigating to booking form...');
     this.router.navigate(['/booking-form']);
   }
 
   goToReviewForm(): void {
-    // Optionally show alert if needed
-    alert('Navigating to review form...');
     this.router.navigate(['/review-form']);
   }
 
