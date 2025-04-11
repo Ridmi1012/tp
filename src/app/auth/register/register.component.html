@@ -1,6 +1,15 @@
 <div class="register-container">
+  <!-- Decorative shapes -->
+  <div class="shape shape-1"></div>
+  <div class="shape shape-2"></div>
+  <div class="shape shape-3"></div>
+  
   <div class="register-box">
-    <h2 class="register-title">Create your account</h2>
+    <div class="register-icon">
+      <div class="register-icon-circle">👤</div>
+    </div>
+    <h2 class="register-title">Create Your Account</h2>
+    <p class="register-subtitle">Join our community today</p>
 
     <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
       <div class="name-fields">
@@ -68,7 +77,7 @@
     </form>
 
     <p class="login-text">
-      Already have an account? <a routerLink="/login">Login</a>
+      Already have an account? <a href="/login">Login</a>
     </p>
   </div>
 </div>

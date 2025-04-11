@@ -10,14 +10,18 @@ import { Router } from '@angular/router';
 })
 export class CustomerdashboardComponent {
 
- constructor(private authService: AuthService, private router: Router) { }
+  constructor(private authService: AuthService, private router: Router) { }
 
   goToBookingForm(): void {
-    this.router.navigate(['/booking-form']); // Adjust to your routing path for booking form
+    // Optionally show alert if needed
+    alert('Navigating to booking form...');
+    this.router.navigate(['/booking-form']);
   }
 
   goToReviewForm(): void {
-    this.router.navigate(['/review-form']); // Adjust to your routing path for review form
+    // Optionally show alert if needed
+    alert('Navigating to review form...');
+    this.router.navigate(['/review-form']);
   }
 
 }
