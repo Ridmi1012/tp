@@ -18,7 +18,6 @@ export class LoginComponent {
   errorMessage: string = '';
   showPassword: boolean = false;
 
-
   togglePasswordVisibility() {
     this.showPassword = !this.showPassword;
   }
@@ -33,7 +32,9 @@ export class LoginComponent {
 
     this.authService.login(this.username, this.password).subscribe({
       next: (response: any) => {
+        console.log('Login response:', response); // Add logging
         if (response.token) { 
+          console.log('Saving token:', response.token); // Add logging
           this.authService.saveToken(response.token); 
 
           if (response.userType === 'CUSTOMER') { 
@@ -46,7 +47,8 @@ export class LoginComponent {
         }
       },
       error: (err) => {
-        this.errorMessage = err.error.message || 'Invalid username or password';
+        console.error('Login error:', err); // Add logging
+        this.errorMessage = err.error?.message || 'Invalid username or password';
       }
     });
   }

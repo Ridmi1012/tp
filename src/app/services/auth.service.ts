@@ -26,8 +26,9 @@ export class AuthService {
     localStorage.setItem('authToken', token);
   }
 
-  getToken(): string | null {
-    return localStorage.getItem('authToken');
+  getToken(): string {
+    // Fix: Use 'authToken' consistently instead of 'token'
+    return localStorage.getItem('authToken') || '';
   }
 
   logout(): void {
@@ -35,6 +36,6 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-  return !!this.getToken(); // Returns true if token exists
-}
+    return !!this.getToken(); // Returns true if token exists
+  }
 }
