@@ -3,36 +3,61 @@
         <div class="overlay"></div>
         <div class="reviews-content">
             <h2 class="section-title">What Our <span>Clients</span> Say</h2>
-            <div class="reviews-slider">
-                <div class="review">
-                    <div class="user-icon"> 
-                        <i class="fas fa-user"></i> 
+            
+            <!-- Loading state -->
+            <div *ngIf="isLoading" class="loading">
+                Loading reviews...
+            </div>
+            
+            <!-- Error state -->
+            <div *ngIf="error" class="error-message">
+                {{ error }}
+            </div>
+
+            <!-- Reviews display -->
+            <div *ngIf="!isLoading && !error" class="reviews-wrapper">
+                <div class="reviews-slider">
+                    <div class="slider-track" [style.transform]="'translateX(' + sliderPosition + '%)'">
+                        <div *ngFor="let review of visibleReviews; let i = index" 
+                             class="review" 
+                             [class.entering]="review.entering" 
+                             [class.exiting]="review.exiting">
+                            <div class="user-icon"> 
+                                <i class="fas fa-user"></i> 
+                            </div>
+                            <div class="stars">{{ getStars(review.rating) }}</div>
+                            <p class="review-text">{{ review.reviewText }}</p>
+                            <h3 class="review-author">{{ review.customer.firstName }} {{ review.customer.lastName }}</h3>
+                        </div>
                     </div>
-                    <div class="stars">★★★★★</div>
-                    <p class="review-text">The backdrop decoration was stunning and perfectly matched our birthday theme. Highly recommend their services!</p>
-                    <h3 class="review-author">Samantha Lee</h3>
                 </div>
-                <div class="review">
-                    <div class="user-icon"> 
-                        <i class="fas fa-user"></i> 
-                    </div>
-                    <div class="stars">★★★★★</div>
-                    <p class="review-text">Amazing service! The wedding decorations were beautiful and created a magical atmosphere for our special day.</p>
-                    <h3 class="review-author">John Smith</h3>
+                
+                <!-- Show a message if no reviews are available -->
+                <div *ngIf="reviews.length === 0" class="no-reviews">
+                    No reviews available yet. Be the first to leave a review!
                 </div>
-                <div class="review">
-                    <div class="user-icon"> 
-                        <i class="fas fa-user"></i> 
-                    </div>
-                    <div class="stars">★★★★★</div>
-                    <p class="review-text">Service was amazing. The team was professional and delivered beyond our expectations. Highly recommend!</p>
-                    <h3 class="review-author">Nimali Fernando</h3>
+
+                <!-- Slider controls -->
+                <div *ngIf="reviews.length > 1" class="slider-controls">
+                    <button class="slider-btn prev" (click)="prevSlide()">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="slider-btn next" (click)="nextSlide()">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                
+                <!-- Pagination dots -->
+                <div *ngIf="reviews.length > 3" class="slider-pagination">
+                    <div *ngFor="let _ of getPageCount(); let i = index" 
+                         class="dot" 
+                         [class.active]="currentPage === i"
+                         (click)="goToPage(i)"></div>
                 </div>
             </div>
-            <button class="leave-review">
-                <a href="/login">
-                    <i class="fas fa-star"></i>Leave Your Review
-                </a>
+            
+            <button class="leave-review" (click)="navigateToLogin()">
+                <i class="fas fa-star"></i>Leave Your Review
             </button>
         </div>
     </div>
