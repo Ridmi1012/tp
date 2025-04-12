@@ -1,6 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+import { ReviewService } from '../../services/review.service';
+
 
 @Component({
   selector: 'app-reviewform',
@@ -9,15 +13,14 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
   styleUrl: './reviewform.component.css'
 })
 
-  export class ReviewFormComponent implements OnInit {
-    reviewForm!: FormGroup;
-  
+export class ReviewFormComponent implements OnInit {
+  reviewForm!: FormGroup;
   rating: number = 0;
   hoverRating: number = 0;
-  selectedFiles: File[] = [];
   isSubmitting: boolean = false;
   isSubmitted: boolean = false;
-  
+  showSuccessOverlay: boolean = false;
+
   ratingDescriptions = [
     '',
     'Poor - Did not meet expectations',
@@ -27,7 +30,12 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
     'Excellent - Exceeded all expectations'
   ];
 
-  constructor(private fb: FormBuilder) { }
+  constructor(
+    private fb: FormBuilder,
+    private reviewService: ReviewService,
+    private router: Router,
+    private authService: AuthService
+  ) { }
 
   ngOnInit(): void {
     this.initForm();
@@ -46,18 +54,11 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
   }
 
   getRatingText(): string {
-    return this.hoverRating > 0 
-      ? this.ratingDescriptions[this.hoverRating] 
-      : this.rating > 0 
-        ? this.ratingDescriptions[this.rating] 
+    return this.hoverRating > 0
+      ? this.ratingDescriptions[this.hoverRating]
+      : this.rating > 0
+        ? this.ratingDescriptions[this.rating]
         : 'Click to rate';
-  }
-
-  onFileSelected(event: any): void {
-    const files = event.target.files;
-    if (files) {
-      this.selectedFiles = Array.from(files);
-    }
   }
 
   isFieldInvalid(fieldName: string): boolean {
@@ -67,28 +68,52 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 
   submitReview(): void {
     if (this.reviewForm.invalid) {
-      // Mark all fields as touched to trigger validation messages
       Object.keys(this.reviewForm.controls).forEach(field => {
         const control = this.reviewForm.get(field);
         control?.markAsTouched({ onlySelf: true });
       });
       return;
     }
-
+  
+    // Check if user is logged in first
+    if (!this.authService.isLoggedIn()) {
+      alert('You must be logged in to submit a review');
+      this.router.navigate(['/login']);
+      return;
+    }
+  
     this.isSubmitting = true;
-
-    // Simulate API call
-    setTimeout(() => {
-      console.log('Form submitted:', this.reviewForm.value);
-      console.log('Files:', this.selectedFiles);
-      
-      this.isSubmitting = false;
-      this.isSubmitted = true;
-      
-      // Reset form after submission
-      this.reviewForm.reset();
-      this.rating = 0;
-      this.selectedFiles = [];
-    }, 1500);
+    const { rating, review } = this.reviewForm.value;
+    
+    console.log('Submitting review:', { rating, review });
+    console.log('Auth token:', this.authService.getToken());
+  
+    this.reviewService.submitReview(rating, review).subscribe({
+      next: (response) => {
+        console.log('Review submitted successfully:', response);
+        this.isSubmitting = false;
+        this.isSubmitted = true;
+        this.showSuccessOverlay = true;
+  
+        // Show the success message for 2.5 seconds, then navigate
+        setTimeout(() => {
+          this.router.navigate(['/reviews']);
+        }, 2500);
+  
+        this.reviewForm.reset();
+        this.rating = 0;
+      },
+      error: (error) => {
+        console.error('Error submitting review:', error);
+        this.isSubmitting = false;
+        
+        if (error.status === 401) {
+          alert('Your session has expired. Please login again.');
+          this.router.navigate(['/login']);
+        } else {
+          alert(`Failed to submit review: ${error.error || 'Please try again later.'}`);
+        }
+      }
+    });
   }
 }

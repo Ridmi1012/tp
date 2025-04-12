@@ -1,3 +1,14 @@
+<!-- Place the success overlay outside the review-form-container as a sibling -->
+<div class="success-overlay" *ngIf="showSuccessOverlay">
+  <div class="success-modal">
+    <div class="success-icon">
+      <i class="check-icon">✓</i>
+    </div>
+    <h2>Thank You!</h2>
+    <p>Your review has been submitted successfully. We appreciate your feedback!</p>
+  </div>
+</div>
+
 <div class="review-form-container">
   <div class="form-wrapper">
     <h1>Share Your Experience</h1>
@@ -39,24 +50,7 @@
           </div>
         </div>
       </div>
-      
-      <!-- Photos Upload -->
-      <div class="form-section">
-        <div class="form-group upload-group">
-          <label>
-            <span>Share Photos <span class="optional">(optional)</span></span>
-          </label>
-          <div class="upload-area" (click)="fileInput.click()">
-            <input #fileInput type="file" accept="image/*" multiple (change)="onFileSelected($event)" style="display: none">
-            <i class="fas fa-image"></i>
-            <p>Click to upload photos</p>
-          </div>
-          <div class="selected-files" *ngIf="selectedFiles.length > 0">
-            <p>{{ selectedFiles.length }} file(s) selected</p>
-          </div>
-        </div>
-      </div>
-      
+  
       <!-- Submit -->
       <div class="form-actions">
         <button type="submit" class="submit-btn" [disabled]="reviewForm.invalid || isSubmitting">
@@ -67,12 +61,5 @@
         </button>
       </div>
     </form>
-    
-    <!-- Success Message -->
-    <div class="success-message" *ngIf="isSubmitted">
-      <i class="fas fa-check-circle"></i>
-      <h2>Thank You!</h2>
-      <p>Your review has been submitted successfully. We appreciate your feedback!</p>
-    </div>
   </div>
 </div>
