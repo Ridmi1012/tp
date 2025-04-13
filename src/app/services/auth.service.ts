@@ -38,4 +38,20 @@ export class AuthService {
   isLoggedIn(): boolean {
     return !!this.getToken(); // Returns true if token exists
   }
+
+  saveUserType(userType: string): void {
+  localStorage.setItem('userType', userType);
+  }
+
+    getUserType(): string {
+  return localStorage.getItem('userType') || '';
+  }
+
+  isAdmin(): boolean {
+  return this.getUserType() === 'ADMIN';
+  }
+
+  isCustomer(): boolean {
+  return this.getUserType() === 'CUSTOMER';
+  }
 }

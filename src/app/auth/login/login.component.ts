@@ -12,7 +12,6 @@ import { FormsModule } from '@angular/forms';
 })
 
 export class LoginComponent {
-
   username: string = '';
   password: string = '';
   errorMessage: string = '';
@@ -29,25 +28,29 @@ export class LoginComponent {
       this.errorMessage = 'Please enter both username and password';
       return;
     }
-
+  
     this.authService.login(this.username, this.password).subscribe({
       next: (response: any) => {
-        console.log('Login response:', response); // Add logging
+        console.log('Login response:', response);
         if (response.token) { 
-          console.log('Saving token:', response.token); // Add logging
-          this.authService.saveToken(response.token); 
-
+          console.log('Saving token:', response.token);
+          this.authService.saveToken(response.token);
+          
+          // Store the user type in localStorage for future reference
+          localStorage.setItem('userType', response.userType);
+  
+          // Route based on user type
           if (response.userType === 'CUSTOMER') { 
             this.router.navigate(['/log2book']);
           } else if (response.userType === 'ADMIN') {  
-            this.router.navigate(['/log2book']);
+            this.router.navigate(['/admin-dashboard']); 
           }
         } else {
           this.errorMessage = 'Invalid credentials';
         }
       },
-      error: (err) => {
-        console.error('Login error:', err); // Add logging
+      error: (err: any) => {
+        console.error('Login error:', err);
         this.errorMessage = err.error?.message || 'Invalid username or password';
       }
     });
