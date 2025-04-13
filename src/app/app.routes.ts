@@ -10,6 +10,7 @@ import { OngoingComponent } from './features/ongoing/ongoing.component';
 import { CustomerdashboardComponent } from './features/customerdashboard/customerdashboard.component';
 import { ReviewFormComponent } from './features/reviewform/reviewform.component';
 import { AdmindashboardComponent } from './features/admindashboard/admindashboard.component';
+import { CustomereditprofileComponent } from './auth/customereditprofile/customereditprofile.component';
 
 
 
@@ -26,5 +27,6 @@ export const routes: Routes = [
     {path: 'booking-form', component: BookingFormComponent},
     {path: "review-form", component: ReviewFormComponent},
     {path: "admin-dashboard", component: AdmindashboardComponent},
+    {path: "customer-profile", component:CustomereditprofileComponent},
     {path: '**', redirectTo: ''}
 ];

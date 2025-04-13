@@ -22,6 +22,15 @@ export class AuthService {
     return this.http.post<any>(this.loginUrl, loginPayload, { headers });
   }
 
+  saveUserDetails(user: any): void {
+    localStorage.setItem('userDetails', JSON.stringify(user));
+  }
+  
+  getUserDetails(): any {
+    const userDetails = localStorage.getItem('userDetails');
+    return userDetails ? JSON.parse(userDetails) : null;
+  }
+
   saveToken(token: string): void {
     localStorage.setItem('authToken', token);
   }

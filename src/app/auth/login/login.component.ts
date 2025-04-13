@@ -33,12 +33,16 @@ export class LoginComponent {
       next: (response: any) => {
         console.log('Login response:', response);
         if (response.token) { 
-          console.log('Saving token:', response.token);
           this.authService.saveToken(response.token);
-          
-          // Store the user type in localStorage for future reference
           localStorage.setItem('userType', response.userType);
-  
+          
+          // Save user details
+          this.authService.saveUserDetails({
+            firstName: response.firstName,
+            userId: response.userId,
+            username: this.username
+          });
+          
           // Route based on user type
           if (response.userType === 'CUSTOMER') { 
             this.router.navigate(['/log2book']);
