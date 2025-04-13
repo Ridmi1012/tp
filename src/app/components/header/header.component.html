@@ -33,6 +33,7 @@
       </div>
       <div class="dropdown-menu" [ngClass]="{ 'show': showProfileDropdown }">
         <a routerLink="/customer-profile" (click)="closeMenu()">Edit Profile</a>
+        <a routerLink="/reset-password" (click)="closeMenu()">Change Password</a>
         <a (click)="logout()">Logout</a>
       </div>
     </div>
