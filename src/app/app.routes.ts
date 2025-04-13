@@ -11,6 +11,7 @@ import { CustomerdashboardComponent } from './features/customerdashboard/custome
 import { ReviewFormComponent } from './features/reviewform/reviewform.component';
 import { AdmindashboardComponent } from './features/admindashboard/admindashboard.component';
 import { CustomereditprofileComponent } from './auth/customereditprofile/customereditprofile.component';
+import { ResetpasswordComponent } from './auth/resetpassword/resetpassword.component';
 
 
 
@@ -28,5 +29,6 @@ export const routes: Routes = [
     {path: "review-form", component: ReviewFormComponent},
     {path: "admin-dashboard", component: AdmindashboardComponent},
     {path: "customer-profile", component:CustomereditprofileComponent},
+    {path: "reset-password", component: ResetpasswordComponent},
     {path: '**', redirectTo: ''}
 ];

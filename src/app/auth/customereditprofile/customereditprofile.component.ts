@@ -67,6 +67,9 @@ export class CustomereditprofileComponent implements OnInit {
       next: (response) => {
         this.successMessage = 'Profile updated successfully!';
         this.isLoading = false;
+        setTimeout(() => {
+          this.router.navigate(['/log2book']);
+        }, 2000);
         
         // Update stored user details
         const userDetails = this.authService.getUserDetails();
