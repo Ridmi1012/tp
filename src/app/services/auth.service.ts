@@ -8,6 +8,8 @@ import { Observable } from 'rxjs';
 export class AuthService {
   private registerUrl = 'http://localhost:8083/api/customers';
   private loginUrl = 'http://localhost:8083/api/auth/login';
+  private forgotPasswordUrl = 'http://localhost:8083/api/auth/forgot-password';
+  private googleLoginUrl = 'http://localhost:8083/api/auth/google';
 
   constructor(private http: HttpClient) { }
 
@@ -20,6 +22,25 @@ export class AuthService {
     const loginPayload = { username, password };
     const headers = new HttpHeaders().set('Content-Type', 'application/json');
     return this.http.post<any>(this.loginUrl, loginPayload, { headers });
+  }
+
+  // New method for forgot password
+  forgotPassword(email: string): Observable<any> {
+    const payload = { email };
+    const headers = new HttpHeaders().set('Content-Type', 'application/json');
+    return this.http.post<any>(this.forgotPasswordUrl, payload, { headers });
+  }
+
+  // New method for Google login
+  googleLogin(): Observable<any> {
+    // For actual implementation, you'll need to integrate with Google OAuth
+    // This is just a placeholder for the backend API call
+    return this.http.get<any>(this.googleLoginUrl);
+  }
+
+  // You might need this method to handle Google OAuth redirect
+  handleGoogleRedirect(token: string): Observable<any> {
+    return this.http.post<any>(`${this.googleLoginUrl}/callback`, { token });
   }
 
   saveUserDetails(user: any): void {
@@ -36,31 +57,32 @@ export class AuthService {
   }
 
   getToken(): string {
-    // Fix: Use 'authToken' consistently instead of 'token'
     return localStorage.getItem('authToken') || '';
   }
 
   logout(): void {
     localStorage.removeItem('authToken');
+    localStorage.removeItem('userDetails');
+    localStorage.removeItem('userType');
   }
 
   isLoggedIn(): boolean {
-    return !!this.getToken(); // Returns true if token exists
+    return !!this.getToken(); 
   }
 
   saveUserType(userType: string): void {
-  localStorage.setItem('userType', userType);
+    localStorage.setItem('userType', userType);
   }
 
-    getUserType(): string {
-  return localStorage.getItem('userType') || '';
+  getUserType(): string {
+    return localStorage.getItem('userType') || '';
   }
 
   isAdmin(): boolean {
-  return this.getUserType() === 'ADMIN';
+    return this.getUserType() === 'ADMIN';
   }
 
   isCustomer(): boolean {
-  return this.getUserType() === 'CUSTOMER';
+    return this.getUserType() === 'CUSTOMER';
   }
 }
