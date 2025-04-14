@@ -12,6 +12,8 @@ import { ReviewFormComponent } from './features/reviewform/reviewform.component'
 import { AdmindashboardComponent } from './features/admindashboard/admindashboard.component';
 import { CustomereditprofileComponent } from './auth/customereditprofile/customereditprofile.component';
 import { ResetpasswordComponent } from './auth/resetpassword/resetpassword.component';
+import { ChangepasswordComponent } from './auth/changepassword/changepassword.component';
+
 
 
 
@@ -20,15 +22,16 @@ export const routes: Routes = [
     {path: '', component: HomeComponent},
     {path: 'login', component: LoginComponent},
     {path: 'register', component: RegisterComponent},
-    {path:'portfolio', component: PortfolioComponent},
+    {path: 'portfolio', component: PortfolioComponent},
     {path: 'appointments', component: AppointmentsComponent},
-    {path: 'reviews', component:ReviewsComponent},
+    {path: 'reviews', component: ReviewsComponent},
     {path: 'log2book', component: CustomerdashboardComponent},
     {path: 'ongoing', component: OngoingComponent},
     {path: 'booking-form', component: BookingFormComponent},
-    {path: "review-form", component: ReviewFormComponent},
-    {path: "admin-dashboard", component: AdmindashboardComponent},
-    {path: "customer-profile", component:CustomereditprofileComponent},
-    {path: "reset-password", component: ResetpasswordComponent},
+    {path: 'review-form', component: ReviewFormComponent},
+    {path: 'admin-dashboard', component: AdmindashboardComponent},
+    {path: 'customer-profile', component: CustomereditprofileComponent},
+    {path: 'change-password', component: ChangepasswordComponent},
+    {path: 'reset-password', component: ResetpasswordComponent},
     {path: '**', redirectTo: ''}
 ];
