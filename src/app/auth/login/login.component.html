@@ -43,7 +43,11 @@
       </div>
 
       <button type="submit" class="login-btn">Login</button>
-      
+    </form>
+    
+    <div class="signup-text">
+      Don't have an account? <a href="/register">Register</a>
+    </div>
 
   <!-- Forgot Password Modal -->
   <div class="modal" *ngIf="forgotPasswordModalVisible">
@@ -57,3 +61,4 @@
       <button class="reset-btn" (click)="sendResetLink()">Send Reset Link</button>
     </div>
   </div>
+</div>

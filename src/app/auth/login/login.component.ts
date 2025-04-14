@@ -97,36 +97,4 @@ export class LoginComponent {
     });
   }
 
-  // Google login function
-  loginWithGoogle() {
-    this.authService.googleLogin().subscribe({
-      next: (response: any) => {
-        console.log('Google login response:', response);
-        if (response.token) {
-          this.authService.saveToken(response.token);
-          localStorage.setItem('userType', response.userType);
-          
-          // Save user details
-          this.authService.saveUserDetails({
-            firstName: response.firstName,
-            userId: response.userId,
-            username: response.email // Using email as username for Google login
-          });
-          
-          // Route based on user type
-          if (response.userType === 'CUSTOMER') { 
-            this.router.navigate(['/log2book']);
-          } else if (response.userType === 'ADMIN') {  
-            this.router.navigate(['/admin-dashboard']); 
-          }
-        } else {
-          this.errorMessage = 'Google login failed';
-        }
-      },
-      error: (err: any) => {
-        console.error('Google login error:', err);
-        this.errorMessage = err.error?.message || 'Failed to login with Google. Please try again.';
-      }
-    });
-  }
 }
