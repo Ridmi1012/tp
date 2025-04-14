@@ -44,22 +44,6 @@
 
       <button type="submit" class="login-btn">Login</button>
       
-      <!-- OR Divider -->
-      <div class="divider">
-        <span>OR</span>
-      </div>
-      
-      <!-- Google Login Button -->
-      <button type="button" class="google-btn" (click)="loginWithGoogle()">
-        <img src="assets/google-icon.svg" alt="Google" class="google-icon">
-        Login with Google
-      </button>
-    </form>
-
-    <p class="signup-text">
-      Don't have an account? <a href="/register">Sign Up</a>
-    </p>
-  </div>
 
   <!-- Forgot Password Modal -->
   <div class="modal" *ngIf="forgotPasswordModalVisible">
@@ -73,4 +57,3 @@
       <button class="reset-btn" (click)="sendResetLink()">Send Reset Link</button>
     </div>
   </div>
-</div>
