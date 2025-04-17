@@ -1,11 +1,20 @@
 <header class="header">
-  <div class="logo" routerLink="/home">RS SHANISHA DECORATIONS</div>
+  <!-- For normal users -->
+  <ng-container *ngIf="!isAdmin">
+    <div class="logo" routerLink="/home">RS SHANISHA DECORATIONS</div>
+  </ng-container>
+  
+  <!-- For admin users -->
+  <ng-container *ngIf="isAdmin">
+    <div class="logo admin-logo" routerLink="/admin/dashboard">RS SHANISHA DECORATION ADMIN</div>
+  </ng-container>
 
   <div class="hamburger" (click)="toggleMenu()">
     <span>{{ menuOpen ? '✖' : '☰' }}</span>
   </div>
 
-  <nav class="nav-links" [ngClass]="{ 'open': menuOpen }">
+  <!-- Regular User Navigation -->
+  <nav class="nav-links" [ngClass]="{ 'open': menuOpen }" *ngIf="!isAdmin">
     <a routerLink="/home" routerLinkActive="active-link" (click)="closeMenu()">Home</a>
     <a routerLink="/portfolio" routerLinkActive="active-link" (click)="closeMenu()">Portfolio</a>
 
@@ -26,7 +35,7 @@
     <a routerLink="/login" routerLinkActive="active-link" *ngIf="!isLoggedIn" (click)="closeMenu()">Login</a>
     <a routerLink="/ongoing" routerLinkActive="active-link" *ngIf="isLoggedIn" (click)="closeMenu()">Ongoing</a>
 
-    <!-- Profile Dropdown -->
+    <!-- Profile Dropdown for regular users -->
     <div class="profile-dropdown" *ngIf="isLoggedIn">
       <div class="profile-icon" (click)="toggleProfileDropdown()">
         <img src="assets/images/profile-icon.png" alt="Profile" class="profile-image" />
@@ -34,6 +43,43 @@
       <div class="dropdown-menu" [ngClass]="{ 'show': showProfileDropdown }">
         <a routerLink="/customer-profile" (click)="closeMenu()">Edit Profile</a>
         <a routerLink="/reset-password" (click)="closeMenu()">Change Password</a>
+        <a (click)="logout()">Logout</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Admin Navigation -->
+  <nav class="nav-links admin-nav" [ngClass]="{ 'open': menuOpen }" *ngIf="isAdmin">
+    <a routerLink="/admin-dashboard" routerLinkActive="active-link" (click)="closeMenu()">Dashboard</a>
+    <a routerLink="/admin/events" routerLinkActive="active-link" (click)="closeMenu()">
+      Events <span class="badge" *ngIf="todayEvents > 0">{{todayEvents}}</span>
+    </a>
+    <a routerLink="/admin/designs" routerLinkActive="active-link" (click)="closeMenu()">Designs</a>
+    <a routerLink="/admin/inventory" routerLinkActive="active-link" (click)="closeMenu()">Inventory</a>
+    <a routerLink="/admin/bookings" routerLinkActive="active-link" (click)="closeMenu()">Bookings</a>
+    <a routerLink="/admin/reports" routerLinkActive="active-link" (click)="closeMenu()">Reports</a>
+    
+    <!-- Notifications for admin -->
+    <div class="dropdown">
+      <span (click)="toggleAdminDropdown()" class="notification-indicator">
+        Notifications <span class="badge" *ngIf="unreadNotifications > 0">{{unreadNotifications}}</span>
+      </span>
+      <div class="dropdown-menu" [ngClass]="{ 'show': showAdminDropdown }">
+        <a routerLink="/admin/notifications" (click)="closeMenu()">View All Notifications</a>
+        <a routerLink="/admin/notifications/settings" (click)="closeMenu()">Notification Settings</a>
+      </div>
+    </div>
+    
+    <!-- Admin Profile Dropdown -->
+    <div class="profile-dropdown">
+      <div class="admin-name" *ngIf="adminName">{{adminName}}</div>
+      <div class="profile-icon" (click)="toggleProfileDropdown()">
+        <img src="assets/images/admin-icon.png" alt="Admin Profile" class="profile-image" />
+      </div>
+      <div class="dropdown-menu" [ngClass]="{ 'show': showProfileDropdown }">
+        <a routerLink="/admin/profile" (click)="closeMenu()">Edit Profile</a>
+        <a routerLink="/admin/settings" (click)="closeMenu()">Admin Settings</a>
+        <a routerLink="/admin/reset-password" (click)="closeMenu()">Change Password</a>
         <a (click)="logout()">Logout</a>
       </div>
     </div>

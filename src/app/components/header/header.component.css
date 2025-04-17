@@ -283,3 +283,100 @@ html, body {
     margin-left: auto;
   }
 }
+
+/* Admin header styling */
+.admin-logo {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: white;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease;
+}
+
+.admin-logo:hover {
+  color: #d15d58;
+  transform: scale(1.02);
+}
+
+.admin-nav {
+  gap: 20px;
+}
+
+.admin-nav a {
+  font-weight: 500;
+}
+
+/* Badge for notifications and events count */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #d15d58;
+  color: white;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-size: 12px;
+  margin-left: 5px;
+  font-weight: bold;
+}
+
+.notification-indicator {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Admin name display */
+.admin-name {
+  margin-right: 10px;
+  color: #ffffff;
+  font-weight: 500;
+}
+
+/* Enhanced dropdown style for admin */
+.admin-nav .dropdown-menu {
+  border-top: 3px solid #d15d58;
+}
+
+/* Media queries for admin header */
+@media (max-width: 992px) {
+  .admin-nav {
+    gap: 15px;
+  }
+  
+  .admin-name {
+    display: none; /* Hide admin name on smaller screens */
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-nav {
+    padding-top: 10px;
+  }
+  
+  .admin-nav a, .admin-nav .dropdown {
+    border-bottom: 1px solid #333;
+    padding: 15px 25px;
+    width: 100%;
+  }
+  
+  .badge {
+    margin-left: auto;
+  }
+  
+  .notification-indicator {
+    justify-content: space-between;
+    width: 100%;
+  }
+  
+  .admin-name {
+    display: block;
+    padding: 10px 25px;
+    border-bottom: 1px solid #333;
+    width: 100%;
+    text-align: center;
+    font-weight: bold;
+  }
+}
