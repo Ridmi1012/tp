@@ -14,11 +14,52 @@ export class HeaderComponent {
   menuOpen = false;
   showProfileDropdown = false;
   showServicesDropdown = false;
+  showAdminDropdown = false;
+  
+  // Initialize with default values, will be updated from API
+  todayEvents = 0; 
+  unreadNotifications = 0;
+  adminName = '';
 
   constructor(private authService: AuthService, private router: Router) {}
 
+  ngOnInit() {
+    // If user is admin, fetch the required data for badges
+    if (this.isAdmin) {
+      this.loadAdminData();
+    }
+  }
+
+  loadAdminData() {
+    // Get today's events count
+    this.authService.getTodayEventsCount().subscribe({
+      next: (count) => this.todayEvents = count,
+      error: (err) => console.error('Failed to load today\'s events count', err)
+    });
+
+    // Get unread notifications count
+    this.authService.getUnreadNotificationsCount().subscribe({
+      next: (count) => this.unreadNotifications = count,
+      error: (err) => console.error('Failed to load unread notifications count', err)
+    });
+
+    // Get admin profile for name display
+    this.authService.getAdminProfile().subscribe({
+      next: (profile) => {
+        if (profile && profile.firstName) {
+          this.adminName = profile.firstName + ' ' + (profile.lastName || '');
+        }
+      },
+      error: (err) => console.error('Failed to load admin profile', err)
+    });
+  }
+
   get isLoggedIn() {
     return this.authService.isLoggedIn();
+  }
+
+  get isAdmin() {
+    return this.authService.isAdmin();
   }
 
   toggleMenu() {
@@ -29,6 +70,7 @@ export class HeaderComponent {
     this.menuOpen = false;
     this.showProfileDropdown = false;
     this.showServicesDropdown = false;
+    this.showAdminDropdown = false;
   }
 
   toggleProfileDropdown() {
@@ -37,6 +79,10 @@ export class HeaderComponent {
 
   toggleServicesDropdown() {
     this.showServicesDropdown = !this.showServicesDropdown;
+  }
+  
+  toggleAdminDropdown() {
+    this.showAdminDropdown = !this.showAdminDropdown;
   }
 
   logout() {

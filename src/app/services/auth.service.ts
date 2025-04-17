@@ -10,6 +10,10 @@ export class AuthService {
   private loginUrl = 'http://localhost:8083/api/auth/login';
   private forgotPasswordUrl = 'http://localhost:8083/api/auth/forgot-password';
   private googleLoginUrl = 'http://localhost:8083/api/auth/google';
+  
+  // Added admin-specific API endpoints
+  private adminEventsUrl = 'http://localhost:8083/api/admin/events';
+  private adminNotificationsUrl = 'http://localhost:8083/api/admin/notifications';
 
   constructor(private http: HttpClient) { }
 
@@ -84,5 +88,23 @@ export class AuthService {
 
   isCustomer(): boolean {
     return this.getUserType() === 'CUSTOMER';
+  }
+
+  // New methods for admin functionality
+
+  // Get today's events count for admin header badge
+  getTodayEventsCount(): Observable<number> {
+    const today = new Date().toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    return this.http.get<number>(`${this.adminEventsUrl}/count/today?date=${today}`);
+  }
+
+  // Get unread notifications count for admin header badge
+  getUnreadNotificationsCount(): Observable<number> {
+    return this.http.get<number>(`${this.adminNotificationsUrl}/count/unread`);
+  }
+
+  // Get admin profile information
+  getAdminProfile(): Observable<any> {
+    return this.http.get<any>('http://localhost:8083/api/admin/profile');
   }
 }
