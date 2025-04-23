@@ -1,22 +1,22 @@
 import { Routes } from '@angular/router';
-import { HomeComponent } from './features/home/home.component';
+import { HomeComponent } from './features/Customer/home/home.component';
 import { LoginComponent } from './auth/login/login.component';
 import { RegisterComponent } from './auth/register/register.component';
-import { PortfolioComponent } from './features/portfolio/portfolio.component';
-import { ReviewsComponent } from './features/reviews/reviews.component';
+import { PortfolioComponent } from './features/Customer/portfolio/portfolio.component';
+import { ReviewsComponent } from './features/Customer/reviews/reviews.component';
 import { AppointmentsComponent } from './features/appointments/appointments.component';
-import { BookingFormComponent } from './features/bookingform/bookingform.component';
-import { OngoingComponent } from './features/ongoing/ongoing.component';
-import { CustomerdashboardComponent } from './features/customerdashboard/customerdashboard.component';
-import { ReviewFormComponent } from './features/reviewform/reviewform.component';
-import { AdmindashboardComponent } from './features/admindashboard/admindashboard.component';
+import { BookingFormComponent } from './features/Customer/bookingform/bookingform.component';
+import { OngoingComponent } from './features/Customer/ongoing/ongoing.component';
+import { CustomerdashboardComponent } from './features/Customer/customerdashboard/customerdashboard.component';
+import { ReviewFormComponent } from './features/Customer/reviewform/reviewform.component';
+import { AdmindashboardComponent } from './features/admin/admindashboard/admindashboard.component';
 import { CustomereditprofileComponent } from './auth/customereditprofile/customereditprofile.component';
 import { ResetpasswordComponent } from './auth/resetpassword/resetpassword.component';
 import { ChangepasswordComponent } from './auth/changepassword/changepassword.component';
-import { ManageportfolioComponent } from './features/manageportfolio/manageportfolio.component';
-import { ItemmanagementComponent } from './features/itemmanagement/itemmanagement.component';
-import { CategorymanagementComponent } from './features/categorymanagement/categorymanagement.component';
-import { AdmindesingsportfolioComponent } from './features/admindesingsportfolio/admindesingsportfolio.component';
+import { ManageportfolioComponent } from './features/admin/manageportfolio/manageportfolio.component';
+import { ItemmanagementComponent } from './features/admin/itemmanagement/itemmanagement.component';
+import { CategorymanagementComponent } from './features/admin/categorymanagement/categorymanagement.component';
+import { AdmindesingsportfolioComponent } from './features/admin/admindesingsportfolio/admindesingsportfolio.component';
 
 
 

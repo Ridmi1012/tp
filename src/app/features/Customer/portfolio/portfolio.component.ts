@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DesignService } from '../../services/design.service';
+import { DesignService } from '../../../services/design.service';
 
 @Component({
   selector: 'app-portfolio',
