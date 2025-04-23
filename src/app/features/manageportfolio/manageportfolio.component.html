@@ -1,0 +1,237 @@
+<div class="design-portfolio-container">
+  <div class="content-wrapper">
+    <h2>Add New Design</h2>
+
+    <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+    <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
+
+    <!-- Progress Bar Component -->
+    <div class="progress-container">
+      <div class="step-indicators">
+        <div *ngFor="let step of steps; let i = index" 
+             [ngClass]="{'step-indicator': true, 'active': i === currentStep, 'completed': i < currentStep}">
+          <div class="step-number">{{ i + 1 }}</div>
+          <div class="step-name">{{ step.title }}</div>
+        </div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress" [style.width.%]="(currentStep / (steps.length - 1)) * 100"></div>
+      </div>
+    </div>
+
+    <form (ngSubmit)="submit()">
+      <div class="step-content">
+        <h3>{{ steps[currentStep].title }}</h3>
+        <p *ngIf="steps[currentStep].description" class="step-description">{{ steps[currentStep].description }}</p>
+
+        <!-- Step 1: Basics - Thumbnail, Title, Category -->
+        <div *ngIf="currentStep === 0" class="form-step">
+          <div class="step-layout">
+            <div class="left-column">
+              <!-- Upload Thumbnail Photo -->
+              <div class="form-group">
+                <label for="thumbnail">Thumbnail Photo</label>
+                <input type="file" id="thumbnail" (change)="onThumbnailChange($event)" accept="image/*" 
+                    [disabled]="isUploading || mainImageSelected" />
+                <div class="file-info">
+                  <span *ngIf="!mainImageSelected">No thumbnail selected</span>
+                  <span *ngIf="mainImageSelected">Thumbnail selected</span>
+                </div>
+              </div>
+              
+              <!-- Thumbnail Preview (Displayed instantly) -->
+              <div class="thumbnail-preview" *ngIf="thumbnailPreviewUrl">
+                <div class="preview-container">
+                  <div class="image-preview">
+                    <img [src]="thumbnailPreviewUrl" alt="Thumbnail Preview" (error)="onImageError($event)" />
+                    <button type="button" class="btn-remove-image" (click)="removeThumbnail()">Remove</button>
+                    <span class="image-label">Main Image</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="right-column">
+              <!-- Title -->
+              <div class="form-group">
+                <label for="title">Title</label>
+                <input type="text" id="title" placeholder="Design Title" [(ngModel)]="formData.title" name="title" required />
+              </div>
+
+              <!-- Category -->
+              <div class="form-group">
+                <label for="category">Category</label>
+                <div class="category-selection">
+                  <select id="category" [(ngModel)]="formData.category" name="category" required>
+                    <option value="" disabled>Select a category</option>
+                    <option *ngFor="let category of categories" [value]="category.name">{{ category.name }}</option>
+                  </select>
+                </div>
+              </div>
+              
+              <!-- Description -->
+              <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" placeholder="Design Description" [(ngModel)]="formData.description" name="description" rows="4"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Items Selection -->
+        <div *ngIf="currentStep === 1" class="form-step">
+          <div class="step-layout">
+            <div class="left-column">
+              <!-- Summary of selected info -->
+              <div class="selection-summary">
+                <h4>Design Information</h4>
+                <div class="summary-item" *ngIf="thumbnailPreviewUrl">
+                  <div class="thumbnail-small">
+                    <img [src]="thumbnailPreviewUrl" alt="Thumbnail" />
+                  </div>
+                </div>
+                <div class="summary-item">
+                  <strong>Title:</strong> {{ formData.title }}
+                </div>
+                <div class="summary-item">
+                  <strong>Category:</strong> {{ formData.category }}
+                </div>
+              </div>
+            </div>
+            
+            <div class="right-column">
+              <!-- Included Items -->
+              <div class="form-group">
+                <label>Included Items</label>
+                <div class="item-selection">
+                  <div class="item-search">
+                    <input type="text" placeholder="Search items..." [(ngModel)]="itemSearchQuery" (input)="searchItems()"
+                      name="itemSearch" />
+                  </div>
+
+                  <div class="items-list">
+                    <div *ngFor="let item of filteredItems" class="item-option" (click)="addItem(item)">
+                      {{ item.name }} - ${{ item.unitPrice }}
+                    </div>
+
+                    <div *ngIf="filteredItems.length === 0" class="no-items">
+                      No items found.
+                    </div>
+                  </div>
+
+                  <div class="selected-items">
+                    <div *ngIf="selectedItemsWithQty.length > 0" class="selected-items-table">
+                      <table>
+                        <thead>
+                          <tr>
+                            <th>Item</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Subtotal</th>
+                            <th>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr *ngFor="let selection of selectedItemsWithQty; let i = index">
+                            <td>{{ getItemName(selection.itemId) }}</td>
+                            <td>${{ getItemPrice(selection.itemId) }}</td>
+                            <td>
+                              <input type="number" [(ngModel)]="selection.quantity" name="quantity_{{i}}" min="1" 
+                                (change)="validateItemQuantity(selection)" />
+                            </td>
+                            <td>${{ getItemPrice(selection.itemId) * selection.quantity }}</td>
+                            <td>
+                              <button type="button" class="btn-remove" (click)="removeSelectedItem(selection.itemId)">Remove</button>
+                            </td>
+                          </tr>
+                        </tbody>
+                        <tfoot>
+                          <tr>
+                            <td colspan="3" class="total-label">Total Price:</td>
+                            <td class="total-price">${{ calculatedPrice }}</td>
+                            <td></td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                    <p *ngIf="selectedItemsWithQty.length === 0">No items selected</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Price Information -->
+        <div *ngIf="currentStep === 2" class="form-step">
+          <div class="step-layout centered">
+            <!-- Price (Calculated from items) -->
+            <div class="price-section">
+              <h4>Price Summary</h4>
+              <div class="items-summary">
+                <div *ngFor="let selection of selectedItemsWithQty" class="item-summary-row">
+                  <span class="item-name">{{ getItemName(selection.itemId) }} (x{{ selection.quantity }})</span>
+                  <span class="item-subtotal">${{ getItemPrice(selection.itemId) * selection.quantity }}</span>
+                </div>
+              </div>
+              
+              <div class="price-total">
+                <span class="total-label">Total Price:</span>
+                <span class="total-amount">${{ calculatedPrice }}</span>
+              </div>
+              
+              <div class="form-group">
+                <label for="price">Final Price</label>
+                <input type="number" id="price" placeholder="Price" [(ngModel)]="formData.price" name="price" required readonly />
+                <div class="price-note">Price is automatically calculated based on selected items</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: Additional Images -->
+        <div *ngIf="currentStep === 3" class="form-step">
+          <!-- Additional Photos (max 2) -->
+          <div class="form-group">
+            <label for="additionalImages">Additional Images (Max 2)</label>
+            <input type="file" id="additionalImages" (change)="onAdditionalImagesChange($event)" accept="image/*" 
+                [disabled]="isUploading || additionalImages.length >= 2" />
+            <div class="file-info">
+              <span *ngIf="additionalImages.length > 0">Selected files: {{ additionalImages.length }}/2</span>
+              <span *ngIf="additionalImages.length === 0">No additional images selected</span>
+            </div>
+          </div>
+
+          <!-- Additional Images Preview -->
+          <div class="image-preview-section" *ngIf="additionalImagePreviewUrls.length > 0">
+            <h4>Additional Images</h4>
+            <div class="preview-container">
+              <div *ngFor="let preview of additionalImagePreviewUrls; let i = index" class="image-preview">
+                <img [src]="preview" alt="Additional Image Preview" (error)="onImageError($event)" />
+                <button type="button" class="btn-remove-image" (click)="removeAdditionalImage(i)">Remove</button>
+                <span class="image-label">Additional Image {{i+1}}</span>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="isUploading" class="uploading-message">
+            <span class="spinner"></span> Uploading images to Cloudinary...
+          </div>
+        </div>
+      </div>
+
+      <div class="buttons">
+        <button type="button" class="btn-back" (click)="prevStep()" [disabled]="currentStep === 0">
+          <i class="fas fa-chevron-left"></i> Back
+        </button>
+        <button type="button" class="btn-next" *ngIf="currentStep < steps.length - 1" (click)="nextStep()">
+          Next <i class="fas fa-chevron-right"></i>
+        </button>
+        <button type="submit" class="btn-submit" *ngIf="currentStep === steps.length - 1" [disabled]="!isFormValid() || isUploading">
+          <span *ngIf="isUploading">Uploading...</span>
+          <span *ngIf="!isUploading">Add Design</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
