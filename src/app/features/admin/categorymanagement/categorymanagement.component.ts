@@ -23,6 +23,7 @@ export class CategorymanagementComponent implements OnInit {
     this.fetchCategories();
   }
 
+  
   fetchCategories(): void {
     this.categoryService.getCategories().subscribe({
       next: (data) => {

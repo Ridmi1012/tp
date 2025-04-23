@@ -13,7 +13,7 @@
           <div class="design-content">
             <h3 class="design-title">{{ design.name }}</h3>
             <p class="design-category"><strong>Category:</strong> {{ design.category.name }}</p>
-            <p class="design-price"><strong>Price:</strong> ₹{{ design.basePrice }}</p>
+            <p class="design-price"><strong>Price:</strong> Rs.{{ design.basePrice }}</p>
   
             <!-- Description if available -->
             <p *ngIf="design.description" class="design-description">{{ design.description }}</p>

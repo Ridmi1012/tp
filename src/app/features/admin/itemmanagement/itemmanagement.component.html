@@ -32,7 +32,7 @@
     </div>
     
     <div class="management-card">
-      <h3>Inventory Items</h3>
+      <h3>All Items</h3>
       
       <div class="filters">
         <div class="search-box">
@@ -52,7 +52,7 @@
           <tbody>
             <tr *ngFor="let item of filteredItems; let i = index">
               <td>{{item.name}}</td>
-              <td>${{item.price ? item.price.toFixed(2) : '0.00'}}</td>
+              <td>Rs.{{item.price ? item.price.toFixed(2) : '0.00'}}</td>
               <td class="actions">
                 <button class="btn-edit" (click)="editItem(i)">Edit</button>
                 <button class="btn-delete" (click)="deleteItem(i)">Delete</button>
@@ -66,10 +66,6 @@
         </div>
       </div>
     </div>
-  </div>
-  
-  <div class="action-buttons">
-    <button class="btn-secondary" routerLink="/admin">Back to Dashboard</button>
   </div>
   
   <!-- Edit Item Modal -->
