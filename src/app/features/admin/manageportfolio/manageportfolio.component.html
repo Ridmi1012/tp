@@ -1,6 +1,9 @@
 <div class="design-portfolio-container">
-  <div class="content-wrapper">
-    <h2>Add New Design</h2>
+
+ <div class="dashboard-header">
+    <h1>Manage Designs</h1>
+    <p>Add, edit, and organize your designs</p>
+  </div>
 
     <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
     <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
@@ -111,7 +114,7 @@
 
                   <div class="items-list">
                     <div *ngFor="let item of filteredItems" class="item-option" (click)="addItem(item)">
-                      {{ item.name }} - ${{ item.unitPrice }}
+                      {{ item.name }} - Rs.{{ item.unitPrice }}
                     </div>
 
                     <div *ngIf="filteredItems.length === 0" class="no-items">
@@ -134,12 +137,12 @@
                         <tbody>
                           <tr *ngFor="let selection of selectedItemsWithQty; let i = index">
                             <td>{{ getItemName(selection.itemId) }}</td>
-                            <td>${{ getItemPrice(selection.itemId) }}</td>
+                            <td>Rs.{{ getItemPrice(selection.itemId) }}</td>
                             <td>
                               <input type="number" [(ngModel)]="selection.quantity" name="quantity_{{i}}" min="1" 
                                 (change)="validateItemQuantity(selection)" />
                             </td>
-                            <td>${{ getItemPrice(selection.itemId) * selection.quantity }}</td>
+                            <td>Rs.{{ getItemPrice(selection.itemId) * selection.quantity }}</td>
                             <td>
                               <button type="button" class="btn-remove" (click)="removeSelectedItem(selection.itemId)">Remove</button>
                             </td>
@@ -148,7 +151,7 @@
                         <tfoot>
                           <tr>
                             <td colspan="3" class="total-label">Total Price:</td>
-                            <td class="total-price">${{ calculatedPrice }}</td>
+                            <td class="total-price">Rs.{{ calculatedPrice }}</td>
                             <td></td>
                           </tr>
                         </tfoot>
@@ -171,13 +174,13 @@
               <div class="items-summary">
                 <div *ngFor="let selection of selectedItemsWithQty" class="item-summary-row">
                   <span class="item-name">{{ getItemName(selection.itemId) }} (x{{ selection.quantity }})</span>
-                  <span class="item-subtotal">${{ getItemPrice(selection.itemId) * selection.quantity }}</span>
+                  <span class="item-subtotal">Rs.{{ getItemPrice(selection.itemId) * selection.quantity }}</span>
                 </div>
               </div>
               
               <div class="price-total">
                 <span class="total-label">Total Price:</span>
-                <span class="total-amount">${{ calculatedPrice }}</span>
+                <span class="total-amount">Rs.{{ calculatedPrice }}</span>
               </div>
               
               <div class="form-group">
@@ -225,7 +228,7 @@
           <i class="fas fa-chevron-left"></i> Back
         </button>
         <button type="button" class="btn-next" *ngIf="currentStep < steps.length - 1" (click)="nextStep()">
-          Next <i class="fas fa-chevron-right"></i>
+          Next <i class="fas fa-chevron-right" style="font-size: 24px; color: black;"></i>
         </button>
         <button type="submit" class="btn-submit" *ngIf="currentStep === steps.length - 1" [disabled]="!isFormValid() || isUploading">
           <span *ngIf="isUploading">Uploading...</span>
@@ -234,4 +237,3 @@
       </div>
     </form>
   </div>
-</div>
