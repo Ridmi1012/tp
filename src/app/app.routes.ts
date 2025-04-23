@@ -16,6 +16,7 @@ import { ChangepasswordComponent } from './auth/changepassword/changepassword.co
 import { ManageportfolioComponent } from './features/manageportfolio/manageportfolio.component';
 import { ItemmanagementComponent } from './features/itemmanagement/itemmanagement.component';
 import { CategorymanagementComponent } from './features/categorymanagement/categorymanagement.component';
+import { AdmindesingsportfolioComponent } from './features/admindesingsportfolio/admindesingsportfolio.component';
 
 
 
@@ -36,13 +37,15 @@ export const routes: Routes = [
     {path: 'customer-profile', component: CustomereditprofileComponent},
     {path: 'change-password', component: ChangepasswordComponent},
     {path: 'reset-password', component: ResetpasswordComponent},
+    {path: 'admin-portfolio', component: AdmindesingsportfolioComponent},
     {
         path: 'admin',
         children: [
           { path: '', component: AdmindashboardComponent },
           { path: 'design', component: ManageportfolioComponent },
           { path: 'categories', component: CategorymanagementComponent },
-          { path: 'items', component: ItemmanagementComponent }
+          { path: 'items', component: ItemmanagementComponent },
+          
         ]
     },
     {path: '**', redirectTo: ''}
