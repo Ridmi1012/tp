@@ -1,5 +1,5 @@
 import { Component, OnInit} from '@angular/core';
-import {CategoryService, Category, CategoryRequest} from '../../services/category.service';
+import {CategoryService, Category, CategoryRequest} from '../../../services/category.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 

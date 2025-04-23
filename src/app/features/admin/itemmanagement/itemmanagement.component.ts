@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { ItemService } from '../../services/item.service';
-import { Item, ItemRequest } from '../../services/item.service';
+import { ItemService } from '../../../services/item.service';
+import { Item, ItemRequest } from '../../../services/item.service';
 import { CommonModule } from '@angular/common'; 
 import { FormsModule } from '@angular/forms';
-import { CategoryService, Category } from '../../services/category.service';
+import { CategoryService, Category } from '../../../services/category.service';
 
 interface DisplayItem {
   itemID: number;

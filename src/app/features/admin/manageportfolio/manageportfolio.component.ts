@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DesignService } from '../../services/design.service';
-import { CategoryService, Category, CategoryRequest } from '../../services/category.service';
-import { ItemService, Item, ItemRequest } from '../../services/item.service';
+import { DesignService } from '../../../services/design.service';
+import { CategoryService, Category, CategoryRequest } from '../../../services/category.service';
+import { ItemService, Item, ItemRequest } from '../../../services/item.service';
 import { Router } from '@angular/router';
-import { CloudinaryserviceService } from '../../services/cloudinaryservice.service';
+import { CloudinaryserviceService } from '../../../services/cloudinaryservice.service';
 
 interface SelectedItem {
   itemId: number;

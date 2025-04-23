@@ -1,8 +1,8 @@
 import { Component, OnInit, OnDestroy  } from '@angular/core';
-import { AuthService } from '../../services/auth.service';
+import { AuthService } from '../../../services/auth.service';
 import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { ReviewService } from '../../services/review.service';
+import  {ReviewService} from '../../../services/review.service';
 import { interval, Subscription } from 'rxjs';
 
 interface Review {
