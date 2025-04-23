@@ -4,7 +4,7 @@ import { LoginComponent } from './auth/login/login.component';
 import { RegisterComponent } from './auth/register/register.component';
 import { PortfolioComponent } from './features/Customer/portfolio/portfolio.component';
 import { ReviewsComponent } from './features/Customer/reviews/reviews.component';
-import { AppointmentsComponent } from './features/appointments/appointments.component';
+import { AppointmentsComponent } from './features/Customer/appointments/appointments.component';
 import { BookingFormComponent } from './features/Customer/bookingform/bookingform.component';
 import { OngoingComponent } from './features/Customer/ongoing/ongoing.component';
 import { CustomerdashboardComponent } from './features/Customer/customerdashboard/customerdashboard.component';
@@ -17,6 +17,7 @@ import { ManageportfolioComponent } from './features/admin/manageportfolio/manag
 import { ItemmanagementComponent } from './features/admin/itemmanagement/itemmanagement.component';
 import { CategorymanagementComponent } from './features/admin/categorymanagement/categorymanagement.component';
 import { AdmindesingsportfolioComponent } from './features/admin/admindesingsportfolio/admindesingsportfolio.component';
+import { DesigndetailsComponent } from './features/Customer/designdetails/designdetails.component';
 
 
 
@@ -38,6 +39,8 @@ export const routes: Routes = [
     {path: 'change-password', component: ChangepasswordComponent},
     {path: 'reset-password', component: ResetpasswordComponent},
     {path: 'admin-portfolio', component: AdmindesingsportfolioComponent},
+    {path: 'design-details/:id', component: DesigndetailsComponent},
+    {path: 'portfolio/category/:categoryId', component: PortfolioComponent},
     {
         path: 'admin',
         children: [
