@@ -1,0 +1,226 @@
+<div class="customize-container">
+    <div *ngIf="loading" class="loading-spinner">
+      <div class="spinner"></div>
+      <p>Loading design details...</p>
+    </div>
+  
+    <div *ngIf="error" class="error-message">
+      {{ error }}
+      <button class="back-btn" (click)="goBack()">Back to Design</button>
+    </div>
+  
+    <!-- Success Message -->
+    <div *ngIf="submitSuccess" class="success-message">
+      <h2>Order Placed Successfully!</h2>
+      <p>Your customized order has been submitted. Here are your order details:</p>
+      <div class="order-summary">
+        <p><strong>Order ID:</strong> #{{ orderResponse?.orderId || '' }}</p>
+        <p><strong>Status:</strong> {{ orderResponse?.orderStatus || '' }}</p>
+        <p><strong>Total Price:</strong> Rs.{{ orderResponse?.totalPrice || 0 }}</p>
+      </div>
+      <div class="action-buttons">
+        <button class="primary-btn" (click)="goToOrderDetails()">View Order Details</button>
+        <button class="secondary-btn" routerLink="/my-orders">View All Orders</button>
+      </div>
+    </div>
+  
+    <!-- Customization Form -->
+    <div *ngIf="!loading && !error && !submitSuccess && design" class="customize-content">
+      <div class="customize-header">
+        <button class="back-btn" (click)="goBack()">
+          ← Back to Design
+        </button>
+        <h1>Customize Your Design</h1>
+      </div>
+  
+      <div class="customize-layout">
+        <!-- Left Column: Design Details and Form -->
+        <div class="left-column">
+          <div class="design-summary">
+            <h2>Original Design</h2>
+            <div class="design-card">
+              <div class="design-image">
+                <img [src]="design?.imageUrl || ''" [alt]="design?.name || 'Design Image'" 
+                     (error)="handleImageError($event)">
+              </div>
+              <div class="design-info">
+                <h3>{{ design?.name || '' }}</h3>
+                <p class="design-category" *ngIf="design?.category?.name">{{ design.category.name }}</p>
+                <p class="design-price">Base Price: Rs.{{ design?.basePrice || 0 }}</p>
+              </div>
+            </div>
+          </div>
+  
+          <div class="customize-form">
+            <h2>Order Details</h2>
+            <form [formGroup]="customizeForm" (ngSubmit)="onSubmit()">
+              <div class="form-group">
+                <label for="customName">Name for Celebration</label>
+                <input 
+                  type="text" 
+                  id="customName" 
+                  formControlName="customName" 
+                  [ngClass]="{'invalid': customizeForm.get('customName')?.touched && customizeForm.get('customName')?.invalid}"
+                >
+                <div *ngIf="customizeForm.get('customName')?.touched && customizeForm.get('customName')?.invalid" class="error-text">
+                  <span *ngIf="customizeForm.get('customName')?.errors?.['required']">Name is required</span>
+                  <span *ngIf="customizeForm.get('customName')?.errors?.['maxlength']">Name cannot exceed 50 characters</span>
+                </div>
+              </div>
+  
+              <div class="form-group">
+                <label for="customAge">Age</label>
+                <input 
+                  type="number" 
+                  id="customAge" 
+                  formControlName="customAge" 
+                  [ngClass]="{'invalid': customizeForm.get('customAge')?.touched && customizeForm.get('customAge')?.invalid}"
+                >
+                <div *ngIf="customizeForm.get('customAge')?.touched && customizeForm.get('customAge')?.invalid" class="error-text">
+                  <span *ngIf="customizeForm.get('customAge')?.errors?.['required']">Age is required</span>
+                  <span *ngIf="customizeForm.get('customAge')?.errors?.['min']">Age cannot be negative</span>
+                  <span *ngIf="customizeForm.get('customAge')?.errors?.['max']">Age cannot exceed 150</span>
+                </div>
+              </div>
+  
+              <div class="form-group">
+                <label for="eventDate">Event Date</label>
+                <input 
+                  type="date" 
+                  id="eventDate" 
+                  formControlName="eventDate" 
+                  [ngClass]="{'invalid': customizeForm.get('eventDate')?.touched && customizeForm.get('eventDate')?.invalid}"
+                >
+                <div *ngIf="customizeForm.get('eventDate')?.touched && customizeForm.get('eventDate')?.invalid" class="error-text">
+                  <span *ngIf="customizeForm.get('eventDate')?.errors?.['required']">Event date is required</span>
+                </div>
+              </div>
+  
+              <div class="form-group">
+                <label for="deliveryAddress">Delivery Address</label>
+                <textarea 
+                  id="deliveryAddress" 
+                  formControlName="deliveryAddress" 
+                  rows="3"
+                  [ngClass]="{'invalid': customizeForm.get('deliveryAddress')?.touched && customizeForm.get('deliveryAddress')?.invalid}"
+                ></textarea>
+                <div *ngIf="customizeForm.get('deliveryAddress')?.touched && customizeForm.get('deliveryAddress')?.invalid" class="error-text">
+                  <span *ngIf="customizeForm.get('deliveryAddress')?.errors?.['required']">Delivery address is required</span>
+                  <span *ngIf="customizeForm.get('deliveryAddress')?.errors?.['maxlength']">Address cannot exceed 200 characters</span>
+                </div>
+              </div>
+  
+              <div class="form-group">
+                <label for="themeColor">Theme Color (Optional)</label>
+                <input type="text" id="themeColor" formControlName="themeColor" placeholder="e.g., Blue, Pink, Gold">
+              </div>
+  
+              <div class="form-group">
+                <label for="conceptDescription">Special Instructions (Optional)</label>
+                <textarea id="conceptDescription" formControlName="conceptDescription" rows="3" placeholder="Describe any specific changes or details"></textarea>
+              </div>
+  
+              <div *ngIf="submitError" class="error-message">
+                {{ submitError }}
+              </div>
+  
+              <div class="form-actions">
+                <button type="submit" class="submit-btn" [disabled]="submitLoading || customizeForm.invalid">
+                  <span *ngIf="submitLoading">
+                    <div class="spinner-small"></div> Processing...
+                  </span>
+                  <span *ngIf="!submitLoading">Place Order</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+  
+        <!-- Right Column: Item Customization -->
+        <div class="right-column">
+          <div class="items-customization">
+            <h2>Customize Items</h2>
+            
+            <!-- Search and add items -->
+            <div class="item-search-section">
+              <h3>Add Items</h3>
+              <div class="search-box">
+                <input 
+                  type="text" 
+                  placeholder="Search for items..." 
+                  [(ngModel)]="itemSearchQuery" 
+                  (input)="filterItems()"
+                >
+              </div>
+              
+              <div *ngIf="itemsLoading" class="items-loading">
+                <div class="spinner-small"></div>
+                <span>Loading items...</span>
+              </div>
+              
+              <div *ngIf="!itemsLoading" class="items-list">
+                <div *ngFor="let item of filteredItems" class="item-option" (click)="addItem(item)">
+                  <div class="item-details">
+                    <span class="item-name">{{ item.name }}</span>
+                    <span class="item-price">Rs.{{ item.unitPrice }}</span>
+                  </div>
+                  <button class="add-btn" type="button">Add</button>
+                </div>
+                
+                <div *ngIf="filteredItems.length === 0" class="no-items">
+                  No items found matching your search.
+                </div>
+              </div>
+            </div>
+            
+            <!-- Selected Items -->
+            <div class="selected-items-section">
+              <h3>Selected Items</h3>
+              
+              <div *ngIf="getSelectedItemsList().length === 0" class="no-selected-items">
+                No items selected yet. Add items from the list above.
+              </div>
+              
+              <div *ngIf="getSelectedItemsList().length > 0" class="selected-items-table">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Item</th>
+                      <th>Price</th>
+                      <th>Qty</th>
+                      <th>Total</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let item of getSelectedItemsList()">
+                      <td>{{ item.name }}</td>
+                      <td>Rs.{{ item.price }}</td>
+                      <td>
+                        <input 
+                          type="number" 
+                          [value]="item.quantity" 
+                          min="1" 
+                          (change)="updateQuantity(item.itemId, $event)"
+                        >
+                      </td>
+                      <td>Rs.{{ item.total }}</td>
+                      <td>
+                        <button class="remove-btn" type="button" (click)="removeItem(item.itemId)">Remove</button>
+                      </td>
+                    </tr>
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colspan="3" class="total-label">Total Price:</td>
+                      <td colspan="2" class="total-value">Rs.{{ getTotalPrice() }}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

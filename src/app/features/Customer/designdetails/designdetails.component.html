@@ -1,101 +1,102 @@
 <div class="design-details-container">
-    <div *ngIf="loading" class="loading-spinner">
-      <div class="spinner"></div>
-      <p>Loading design details...</p>
+  <div *ngIf="loading" class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Loading design details...</p>
+  </div>
+
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+    <button class="back-btn" (click)="goBack()">Back to Portfolio</button>
+  </div>
+
+  <div *ngIf="!loading && !error && design" class="design-details">
+    <div class="design-back">
+      <button class="back-btn" (click)="goBack()">
+        ← Back to Portfolio
+      </button>
     </div>
-  
-    <div *ngIf="error" class="error-message">
-      {{ error }}
-      <button class="back-btn" (click)="goBack()">Back to Portfolio</button>
-    </div>
-  
-    <div *ngIf="!loading && !error && design" class="design-details">
-      <div class="design-back">
-        <button class="back-btn" (click)="goBack()">
-          ← Back to Portfolio
-        </button>
-      </div>
-  
-      <div class="design-content-wrapper">
-        <!-- Design Images Section -->
-        <div class="design-images-section">
-          <div class="main-image">
-            <img [src]="selectedImage" alt="{{ design.name }}" (error)="onImageError($event)">
+
+    <div class="design-content-wrapper">
+      <!-- Design Images Section -->
+      <div class="design-images-section">
+        <div class="main-image">
+          <img [src]="selectedImage" alt="{{ design.name }}" (error)="onImageError($event)">
+        </div>
+        
+        <!-- Fixed conditional check for additional images -->
+        <div *ngIf="design.additionalImages && design.additionalImages.length > 0" class="image-thumbnails">
+          <div class="thumbnail" 
+               [class.active]="selectedImage === design.imageUrl"
+               (click)="setSelectedImage(design.imageUrl)">
+            <img [src]="design.imageUrl" alt="Main image" (error)="onImageError($event)">
           </div>
+          <div *ngFor="let image of design.additionalImages" 
+               class="thumbnail"
+               [class.active]="selectedImage === image"
+               (click)="setSelectedImage(image)">
+            <img [src]="image" alt="Additional view" (error)="onImageError($event)">
+          </div>
+        </div>
+      </div>
+
+      <!-- Design Info Section -->
+      <div class="design-info-section">
+        <h1 class="design-title">{{ design.name }}</h1>
+        <p class="design-category">Category: {{ design.category.name }}</p>
+        
+        <div class="design-price-info">
+          <h2 class="design-price">Base Price: Rs.{{ design.basePrice }}</h2>
+          <p class="price-note">
+            Final price may vary based on location due to transportation costs.
+            Additional customizations may affect the final price.
+          </p>
+        </div>
+        
+        <div class="design-description">
+          <h3>Description</h3>
+          <p>{{ design.description }}</p>
+        </div>
+        
+        <div class="design-items">
+          <h3>What's Included</h3>
+          <ul>
+            <li *ngFor="let item of design.items">
+              {{ item.item.name }} ({{ item.defaultQuantity }})
+              <span *ngIf="item.isOptional" class="optional-tag">Optional</span>
+            </li>
+          </ul>
+        </div>
+        
+        <div class="order-options">
+          <h3>How would you like to proceed?</h3>
           
-          <div *ngIf="design.additionalImages && design.additionalImages.length > 0" class="image-thumbnails">
-            <div class="thumbnail" 
-                 [class.active]="selectedImage === design.imageUrl"
-                 (click)="setSelectedImage(design.imageUrl)">
-              <img [src]="design.imageUrl" alt="Main image" (error)="onImageError($event)">
+          <div class="option-cards">
+            <div class="option-card">
+              <h4>Order As Is</h4>
+              <p>Get this exact design without any changes</p>
+              <button class="option-btn as-is-btn" (click)="orderAsIs()">Order As Is</button>
             </div>
-            <div *ngFor="let image of design.additionalImages" 
-                 class="thumbnail"
-                 [class.active]="selectedImage === image"
-                 (click)="setSelectedImage(image)">
-              <img [src]="image" alt="Additional view" (error)="onImageError($event)">
+            
+            <div class="option-card">
+              <h4>Customize</h4>
+              <p>Change colors, materials, or modify elements of this design</p>
+              <button class="option-btn customize-btn" (click)="customizeDesign()">Customize Design</button>
+            </div>
+            
+            <div class="option-card">
+              <h4>Similar Design</h4>
+              <p>Request a design inspired by this one but with significant changes</p>
+              <button class="option-btn similar-btn" (click)="requestSimilarDesign()">Request Similar</button>
             </div>
           </div>
         </div>
-  
-        <!-- Design Info Section -->
-        <div class="design-info-section">
-          <h1 class="design-title">{{ design.name }}</h1>
-          <p class="design-category">Category: {{ design.category.name }}</p>
-          
-          <div class="design-price-info">
-            <h2 class="design-price">Base Price: Rs.{{ design.basePrice }}</h2>
-            <p class="price-note">
-              Final price may vary based on location due to transportation costs.
-              Additional customizations may affect the final price.
-            </p>
-          </div>
-          
-          <div class="design-description">
-            <h3>Description</h3>
-            <p>{{ design.description }}</p>
-          </div>
-          
-          <div class="design-items">
-            <h3>What's Included</h3>
-            <ul>
-              <li *ngFor="let item of design.items">
-                {{ item.item.name }} ({{ item.defaultQuantity }})
-                <span *ngIf="item.isOptional" class="optional-tag">Optional</span>
-              </li>
-            </ul>
-          </div>
-          
-          <div class="order-options">
-            <h3>How would you like to proceed?</h3>
-            
-            <div class="option-cards">
-              <div class="option-card">
-                <h4>Order As Is</h4>
-                <p>Get this exact design without any changes</p>
-                <button class="option-btn as-is-btn" (click)="orderAsIs()">Order As Is</button>
-              </div>
-              
-              <div class="option-card">
-                <h4>Customize</h4>
-                <p>Change colors, materials, or modify elements of this design</p>
-                <button class="option-btn customize-btn" (click)="customizeDesign()">Customize Design</button>
-              </div>
-              
-              <div class="option-card">
-                <h4>Similar Design</h4>
-                <p>Request a design inspired by this one but with significant changes</p>
-                <button class="option-btn similar-btn" (click)="requestSimilarDesign()">Request Similar</button>
-              </div>
-            </div>
-          </div>
-          
-          <div class="customer-assistance">
-            <h3>Need Help?</h3>
-            <p>Our design experts are ready to assist you in making the perfect choice for your needs.</p>
-            <button class="contact-btn">Contact Us</button>
-          </div>
+        
+        <div class="customer-assistance">
+          <h3>Need Help?</h3>
+          <p>Our design experts are ready to assist you in making the perfect choice for your needs.</p>
+          <button class="contact-btn">Contact Us</button>
         </div>
       </div>
     </div>
   </div>
+</div>

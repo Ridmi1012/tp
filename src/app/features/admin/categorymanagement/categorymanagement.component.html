@@ -4,7 +4,8 @@
   
   <div class="dashboard-header">
     <h1>Manage Categories</h1>
-    <p>Create, edit, and organize your content categories</p>
+    <p *ngIf="isAdmin">Create, edit, and organize your content categories</p>
+    <p *ngIf="!isAdmin">View available content categories</p>
   </div>
   
   <!-- Messages -->
@@ -12,7 +13,8 @@
   <div *ngIf="successMessage" class="alert alert-success">{{ successMessage }}</div>
   
   <div class="management-content">
-    <div class="management-card">
+    <!-- Only show Add New Category for admins -->
+    <div class="management-card" *ngIf="isAdmin">
       <h3>Add New Category</h3>
       
       <div class="form-group">
@@ -42,7 +44,7 @@
       
       <div class="categories-list">
         <div *ngIf="categories.length === 0" class="empty-state">
-          <p>No categories found. Add your first category!</p>
+          <p>No categories found.</p>
         </div>
         
         <div *ngFor="let category of categories" class="category-item">
@@ -51,7 +53,8 @@
             <p>{{ category.description }}</p>
           </div>
           
-          <div class="category-actions">
+          <!-- Only show edit/delete for admins -->
+          <div class="category-actions" *ngIf="isAdmin">
             <button class="btn-edit" (click)="startEdit(category)">Edit</button>
             <button class="btn-delete" (click)="deleteCategory(category.categoryID)">Delete</button>
           </div>
@@ -60,8 +63,8 @@
     </div>
   </div>
   
-  <!-- Edit Category Modal -->
-  <div class="modal-overlay" *ngIf="showEditSection">
+  <!-- Edit Category Modal - Only shown for admins -->
+  <div class="modal-overlay" *ngIf="showEditSection && isAdmin">
     <div class="modal-content">
       <h3>Edit Category</h3>
       

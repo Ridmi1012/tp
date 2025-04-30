@@ -1,57 +1,57 @@
 <div class="admin-designs-portfolio-container">
-    <div class="designs-container">
-      <h3 class="designs-title">Existing Designs</h3>
-  
-      <div class="designs-grid">
-        <div *ngFor="let design of designs" class="design-card">
-          <!-- Design Image -->
-          <div class="design-image">
-            <img [src]="design.imageUrl" alt="Design thumbnail" (error)="onImageError($event)" />
-          </div>
-  
-          <!-- Design Content -->
-          <div class="design-content">
-            <h3 class="design-title">{{ design.name }}</h3>
-            <p class="design-category"><strong>Category:</strong> {{ design.category.name }}</p>
-            <p class="design-price"><strong>Price:</strong> Rs.{{ design.basePrice }}</p>
-  
-            <!-- Description if available -->
-            <p *ngIf="design.description" class="design-description">{{ design.description }}</p>
-  
-            <!-- Included Items -->
-            <div class="design-items">
-              <h4>Included items:</h4>
-              <ul>
-                <li *ngFor="let item of design.items">
-                  {{ item.item.name }} ({{ item.defaultQuantity }})
-                </li>
-              </ul>
-            </div>
-          </div>
-  
-          <!-- Action Buttons -->
-          <div class="design-actions">
-            <button class="edit-btn" (click)="editDesign(design.designID)">Edit</button>
-            <button class="delete-btn" (click)="confirmDelete(design)">Delete</button>
+  <div class="designs-container">
+    <h3 class="designs-title">Existing Designs</h3>
+
+    <div class="designs-grid">
+      <div *ngFor="let design of designs" class="design-card">
+        <!-- Design Image -->
+        <div class="design-image">
+          <img [src]="design.imageUrl" alt="Design thumbnail" (error)="onImageError($event)" />
+        </div>
+
+        <!-- Design Content -->
+        <div class="design-content">
+          <h3 class="design-title">{{ design.name }}</h3>
+          <p class="design-category"><strong>Category:</strong> {{ design.category.name }}</p>
+          <p class="design-price"><strong>Price:</strong> Rs.{{ design.basePrice }}</p>
+
+          <!-- Description if available -->
+          <p *ngIf="design.description" class="design-description">{{ design.description }}</p>
+
+          <!-- Included Items -->
+          <div class="design-items">
+            <h4>Included items:</h4>
+            <ul>
+              <li *ngFor="let item of design.items">
+                {{ item.item.name }} ({{ item.defaultQuantity }})
+              </li>
+            </ul>
           </div>
         </div>
-      </div>
-  
-      <!-- No designs message -->
-      <div *ngIf="designs.length === 0" class="no-designs-message">
-        No designs available. Add your first design using the "Add New Design" button.
+
+        <!-- Action Buttons -->
+        <div class="design-actions">
+          <button class="edit-btn" (click)="editDesign(design.designID)">Edit</button>
+          <button class="delete-btn" (click)="confirmDelete(design)">Delete</button>
+        </div>
       </div>
     </div>
-  
-    <!-- Confirmation Dialog -->
-    <div *ngIf="showDeleteConfirm" class="delete-confirm-dialog">
-      <div class="dialog-content">
-        <h3>Confirm Delete</h3>
-        <p>Are you sure you want to delete "{{ designToDelete?.name }}"?</p>
-        <div class="dialog-actions">
-          <button class="cancel-btn" (click)="cancelDelete()">Cancel</button>
-          <button class="confirm-delete-btn" (click)="deleteDesign()">Delete</button>
-        </div>
+
+    <!-- No designs message -->
+    <div *ngIf="designs.length === 0" class="no-designs-message">
+      No designs available. Add your first design using the "Add New Design" button.
+    </div>
+  </div>
+
+  <!-- Confirmation Dialog -->
+  <div *ngIf="showDeleteConfirm && designToDelete" class="delete-confirm-dialog">
+    <div class="dialog-content">
+      <h3>Confirm Delete</h3>
+      <p>Are you sure you want to delete "{{ designToDelete.name }}"?</p>
+      <div class="dialog-actions">
+        <button class="cancel-btn" (click)="cancelDelete()">Cancel</button>
+        <button class="confirm-delete-btn" (click)="deleteDesign()">Delete</button>
       </div>
     </div>
   </div>
+</div>

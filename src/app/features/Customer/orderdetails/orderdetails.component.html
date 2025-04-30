@@ -1,0 +1,90 @@
+<div class="order-details-container">
+    <div class="back-navigation">
+      <button class="back-btn" (click)="goToOrders()">← Back to My Orders</button>
+    </div>
+  
+    <div *ngIf="loading" class="loading-spinner">
+      <div class="spinner"></div>
+      <p>Loading order details...</p>
+    </div>
+  
+    <div *ngIf="error" class="error-message">
+      {{ error }}
+    </div>
+  
+    <div *ngIf="!loading && !error && order" class="order-details-content">
+      <div class="order-header">
+        <h1>Order #{{ order.orderId }}</h1>
+        <div class="order-status" [ngClass]="'status-' + order.orderStatus.toLowerCase()">
+          {{ order.orderStatus }}
+        </div>
+    </div>
+
+    <div class="order-info-card">
+      <div class="order-section">
+        <h3>Order Summary</h3>
+        <div class="order-summary-details">
+          <div class="summary-row">
+            <span class="label">Order Type:</span>
+            <span class="value">{{ order.orderType }}</span>
+          </div>
+          <div class="summary-row">
+            <span class="label">Design:</span>
+            <span class="value">{{ order.designName }}</span>
+          </div>
+          <div class="summary-row">
+            <span class="label">Order Date:</span>
+            <span class="value">{{ order.orderDate | date:'medium' }}</span>
+          </div>
+          <div class="summary-row">
+            <span class="label">Event Date:</span>
+            <span class="value">{{ order.eventDate | date:'mediumDate' }}</span>
+          </div>
+          <div class="summary-row total-price">
+            <span class="label">Total Price:</span>
+            <span class="value">Rs.{{ order.totalPrice }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="order-timeline">
+      <h3>Order Timeline</h3>
+      <div class="timeline">
+        <div class="timeline-item" [ngClass]="{'completed': order.orderStatus === 'PENDING' || order.orderStatus === 'CONFIRMED' || order.orderStatus === 'IN_PROGRESS' || order.orderStatus === 'COMPLETED'}">
+          <div class="timeline-indicator"></div>
+          <div class="timeline-content">
+            <h4>Order Placed</h4>
+            <p>Your order has been received</p>
+          </div>
+        </div>
+        <div class="timeline-item" [ngClass]="{'completed': order.orderStatus === 'CONFIRMED' || order.orderStatus === 'IN_PROGRESS' || order.orderStatus === 'COMPLETED'}">
+          <div class="timeline-indicator"></div>
+          <div class="timeline-content">
+            <h4>Order Confirmed</h4>
+            <p>Your order has been confirmed and payment received</p>
+          </div>
+        </div>
+        <div class="timeline-item" [ngClass]="{'completed': order.orderStatus === 'IN_PROGRESS' || order.orderStatus === 'COMPLETED'}">
+          <div class="timeline-indicator"></div>
+          <div class="timeline-content">
+            <h4>In Progress</h4>
+            <p>We're working on creating your backdrop</p>
+          </div>
+        </div>
+        <div class="timeline-item" [ngClass]="{'completed': order.orderStatus === 'COMPLETED'}">
+          <div class="timeline-indicator"></div>
+          <div class="timeline-content">
+            <h4>Completed</h4>
+            <p>Your order has been delivered</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions-container">
+      <button class="secondary-btn" (click)="goToPortfolio()">Browse More Designs</button>
+      <!-- Additional buttons like "Contact Support" could be added here -->
+    </div>
+  </div>
+</div>

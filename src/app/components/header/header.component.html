@@ -1,54 +1,39 @@
 <header class="header">
-  <!-- For normal users -->
-  <ng-container *ngIf="!isAdmin">
-    <div class="logo" routerLink="/home">RS SHANISHA DECORATIONS</div>
-  </ng-container>
+  <!-- Logo for all users -->
+  <div class="logo" routerLink="/home">RS SHANISHA DECORATIONS</div>
   
-  <!-- For admin users -->
-  <ng-container *ngIf="isAdmin">
-    <div class="logo admin-logo" routerLink="/admin/dashboard">RS SHANISHA DECORATION ADMIN</div>
-  </ng-container>
-
   <div class="hamburger" (click)="toggleMenu()">
     <span>{{ menuOpen ? '✖' : '☰' }}</span>
   </div>
 
-  <!-- Regular User Navigation -->
+  <!-- CUSTOMER NAVIGATION - Only show when user is NOT an admin -->
   <nav class="nav-links" [ngClass]="{ 'open': menuOpen }" *ngIf="!isAdmin">
+    <!-- Common links for all users -->
     <a routerLink="/home" routerLinkActive="active-link" (click)="closeMenu()">Home</a>
     <a routerLink="/portfolio" routerLinkActive="active-link" (click)="closeMenu()">Portfolio</a>
-
-    <!-- Our Services logic -->
-    <ng-container *ngIf="!isLoggedIn; else loggedInServices">
-      <div class="dropdown">
-        <span (click)="toggleServicesDropdown()">Our Services</span>
-        <div class="dropdown-menu" [ngClass]="{ 'show': showServicesDropdown }">
-          <a routerLink="/appointments" (click)="closeMenu()">Appointments</a>
-          <a routerLink="/reviews" (click)="closeMenu()">Reviews</a>
-        </div>
-      </div>
-    </ng-container>
-    <ng-template #loggedInServices>
-      <a routerLink="/log2book" routerLinkActive="active-link" (click)="closeMenu()">Our Services</a>
-    </ng-template>
-
+    
+    <!-- Link visible only for non-logged in users -->
+    <a routerLink="/reviews" routerLinkActive="active-link" *ngIf="!isLoggedIn" (click)="closeMenu()">Reviews</a>
     <a routerLink="/login" routerLinkActive="active-link" *ngIf="!isLoggedIn" (click)="closeMenu()">Login</a>
+    
+    <!-- Links visible only for logged-in customers -->
+    <a routerLink="/review-form" routerLinkActive="active-link" *ngIf="isLoggedIn" (click)="closeMenu()">Leave Reviews</a>
     <a routerLink="/ongoing" routerLinkActive="active-link" *ngIf="isLoggedIn" (click)="closeMenu()">Ongoing</a>
-
-    <!-- Profile Dropdown for regular users -->
+    
+    <!-- Profile Dropdown for logged-in customers -->
     <div class="profile-dropdown" *ngIf="isLoggedIn">
       <div class="profile-icon" (click)="toggleProfileDropdown()">
         <img src="assets/images/profile-icon.png" alt="Profile" class="profile-image" />
       </div>
       <div class="dropdown-menu" [ngClass]="{ 'show': showProfileDropdown }">
-        <a routerLink="/customer-profile" (click)="closeMenu()">Edit Profile</a>
-        <a routerLink="/reset-password" (click)="closeMenu()">Change Password</a>
+        <a [routerLink]="['/edit-customer-details', customerId]" (click)="closeMenu()">Edit Profile</a>
+        <a routerLink="/change-password" (click)="closeMenu()">Change Password</a>
         <a (click)="logout()">Logout</a>
       </div>
     </div>
   </nav>
 
-  <!-- Admin Navigation -->
+  <!-- ADMIN NAVIGATION - Only show when user is an admin -->
   <nav class="nav-links admin-nav" [ngClass]="{ 'open': menuOpen }" *ngIf="isAdmin">
     <a routerLink="/admin-dashboard" routerLinkActive="active-link" (click)="closeMenu()">Dashboard</a>
     <a routerLink="/admin/events" routerLinkActive="active-link" (click)="closeMenu()">
@@ -72,9 +57,9 @@
     
     <!-- Admin Profile Dropdown -->
     <div class="profile-dropdown">
-      <div class="admin-name" *ngIf="adminName">{{adminName}}</div>
+
       <div class="profile-icon" (click)="toggleProfileDropdown()">
-        <img src="assets/images/admin-icon.png" alt="Admin Profile" class="profile-image" />
+        <img src="assets/images/profile-icon.png" alt="Admin Profile" class="profile-image" />
       </div>
       <div class="dropdown-menu" [ngClass]="{ 'show': showProfileDropdown }">
         <a routerLink="/admin/profile" (click)="closeMenu()">Edit Profile</a>

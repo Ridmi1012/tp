@@ -1,47 +1,46 @@
-<!-- admin-dashboard.component.html -->
 <div class="dashboard-container">
-    <!-- Decorative shapes -->
-    <div class="shape shape-1"></div>
-    <div class="shape shape-2"></div>
-    <div class="shape shape-3"></div>
-    <div class="shape shape-4"></div>
-  
-    <!-- User greeting -->
-    <div class="user-greeting">
-      <div class="user-avatar">A</div>
-      <span class="user-name">Admin</span>
+  <!-- Decorative shapes -->
+  <div class="shape shape-1"></div>
+  <div class="shape shape-2"></div>
+  <div class="shape shape-3"></div>
+  <div class="shape shape-4"></div>
+
+  <!-- User greeting -->
+  <div class="user-greeting">
+    <div class="user-avatar">{{adminInitial}}</div>
+    <span class="user-name">{{adminName}}</span>
+  </div>
+
+  <!-- Dashboard Header -->
+  <div class="dashboard-header">
+    <h1>Admin Dashboard</h1>
+    <p>Manage your website content, categories, and design elements all in one place.</p>
+  </div>
+
+  <!-- Content Area -->
+  <div class="dashboard-content">
+    <!-- Design Management Card -->
+    <div class="dashboard-card">
+      <i class="card-icon fas fa-paint-brush"></i>
+      <h3>Manage Portfolio</h3>
+      <p>Update portfolio items and showcase your latest best work.</p>
+      <button class="btn-primary" (click)="navigateTo('design')">Manage Portfolio</button>
     </div>
-  
-    <!-- Dashboard Header -->
-    <div class="dashboard-header">
-      <h1>Admin Dashboard</h1>
-      <p>Manage your website content, categories, and design elements all in one place.</p>
+
+    <!-- Categories Management Card -->
+    <div class="dashboard-card">
+      <i class="card-icon fas fa-folder"></i>
+      <h3>Manage Categories</h3>
+      <p>Create, edit, and organize your content categories for better organization.</p>
+      <button class="btn-primary" (click)="navigateTo('categories')">Manage Categories</button>
     </div>
-  
-    <!-- Content Area -->
-    <div class="dashboard-content">
-      <!-- Design Management Card -->
-      <div class="dashboard-card">
-        <i class="card-icon fas fa-paint-brush"></i>
-        <h3>Manage Portfolio</h3>
-        <p>Update portfolio items and showcase your latest best work.</p>
-        <button class="btn-primary" (click)="navigateTo('design')">Manage Portfolio</button>
-      </div>
-  
-      <!-- Categories Management Card -->
-      <div class="dashboard-card">
-        <i class="card-icon fas fa-folder"></i>
-        <h3>Manage Categories</h3>
-        <p>Create, edit, and organize your content categories for better organization.</p>
-        <button class="btn-primary" (click)="navigateTo('categories')">Manage Categories</button>
-      </div>
-  
-      <!-- Items Management Card -->
-      <div class="dashboard-card">
-        <i class="card-icon fas fa-box"></i>
-        <h3>Manage Items</h3>
-        <p>Add, edit, or remove items from your inventory and update their details.</p>
-        <button class="btn-primary" (click)="navigateTo('items')">Manage Items</button>
-      </div>
+
+    <!-- Items Management Card -->
+    <div class="dashboard-card">
+      <i class="card-icon fas fa-box"></i>
+      <h3>Manage Items</h3>
+      <p>Add, edit, or remove items from your inventory and update their details.</p>
+      <button class="btn-primary" (click)="navigateTo('items')">Manage Items</button>
     </div>
   </div>
+</div>

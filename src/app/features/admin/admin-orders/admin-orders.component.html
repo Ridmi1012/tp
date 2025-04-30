@@ -1,0 +1,148 @@
+<div class="admin-orders-container">
+    <div class="dashboard-header">
+      <h1>Manage Orders</h1>
+      <p>View, update, and track customer orders</p>
+    </div>
+  
+    <!-- Messages -->
+    <div *ngIf="errorMessage" class="error-message">{{ errorMessage }}</div>
+    <div *ngIf="successMessage" class="success-message">{{ successMessage }}</div>
+  
+    <!-- Filters -->
+    <div class="filters-section">
+      <div class="filter-group">
+        <label for="status-filter">Status:</label>
+        <select id="status-filter" [(ngModel)]="selectedStatus" (change)="applyFilters()">
+          <option *ngFor="let status of statusOptions" [value]="status">{{ status }}</option>
+        </select>
+      </div>
+  
+      <div class="filter-group">
+        <label for="type-filter">Type:</label>
+        <select id="type-filter" [(ngModel)]="selectedType" (change)="applyFilters()">
+          <option *ngFor="let type of typeOptions" [value]="type">{{ type }}</option>
+        </select>
+      </div>
+  
+      <button class="refresh-btn" (click)="loadAllOrders()">
+        <span *ngIf="!loading">Refresh</span>
+        <span *ngIf="loading">Loading...</span>
+      </button>
+    </div>
+  
+    <!-- Orders Table -->
+    <div class="orders-table-container">
+      <table class="orders-table">
+        <thead>
+          <tr>
+            <th>Order ID</th>
+            <th>Date</th>
+            <th>Design</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Price</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let order of filteredOrders">
+            <td>{{ order.orderId }}</td>
+            <td>{{ formatDate(order.orderDate) }}</td>
+            <td>{{ order.designName }}</td>
+            <td>{{ order.orderType }}</td>
+            <td>
+              <span [ngClass]="'status-badge status-' + order.orderStatus.toLowerCase()">
+                {{ order.orderStatus }}
+              </span>
+            </td>
+            <td>Rs.{{ order.totalPrice }}</td>
+            <td class="actions-cell">
+              <button class="view-btn" (click)="viewOrderDetails(order)">View</button>
+              <div class="status-dropdown">
+                <!-- Fixed event binding to use the new onStatusChange method -->
+                <select [value]="order.orderStatus" (change)="onStatusChange(order, $event)">
+                  <option *ngFor="let status of statusOptions" [value]="status" [disabled]="status === 'ALL'">
+                    {{ status }}
+                  </option>
+                </select>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+  
+      <div *ngIf="filteredOrders.length === 0" class="no-orders-message">
+        No orders found matching your filters.
+      </div>
+    </div>
+  
+    <!-- Order Details Modal -->
+    <div *ngIf="showOrderDetails && selectedOrder" class="order-details-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Order #{{ selectedOrder.orderId }} Details</h3>
+          <button class="close-btn" (click)="closeOrderDetails()">×</button>
+        </div>
+  
+        <div class="modal-body">
+          <div class="order-info-section">
+            <div class="order-info-group">
+              <h4>Order Information</h4>
+              <div class="info-row">
+                <span class="info-label">Order ID:</span>
+                <span class="info-value">{{ selectedOrder.orderId }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Order Date:</span>
+                <span class="info-value">{{ formatDate(selectedOrder.orderDate) }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Order Type:</span>
+                <span class="info-value">{{ selectedOrder.orderType }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Status:</span>
+                <span class="info-value" [ngClass]="'status-' + selectedOrder.orderStatus.toLowerCase()">
+                  {{ selectedOrder.orderStatus }}
+                </span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">Total Price:</span>
+                <span class="info-value">Rs.{{ selectedOrder.totalPrice }}</span>
+              </div>
+            </div>
+  
+            <div class="order-info-group">
+              <h4>Event Details</h4>
+              <div class="info-row">
+                <span class="info-label">Event Date:</span>
+                <span class="info-value">{{ formatDate(selectedOrder.eventDate) }}</span>
+              </div>
+              <div class="info-row" *ngIf="selectedOrder.customName">
+                <span class="info-label">Custom Name:</span>
+                <span class="info-value">{{ selectedOrder.customName }}</span>
+              </div>
+              <div class="info-row" *ngIf="selectedOrder.customAge">
+                <span class="info-label">Custom Age:</span>
+                <span class="info-value">{{ selectedOrder.customAge }}</span>
+              </div>
+            </div>
+          </div>
+  
+          <div class="order-actions">
+            <h4>Update Status</h4>
+            <div class="status-update-form">
+              <select [(ngModel)]="selectedOrder.orderStatus">
+                <option *ngFor="let status of statusOptions" [value]="status" [disabled]="status === 'ALL'">
+                  {{ status }}
+                </option>
+              </select>
+              <button class="update-btn" (click)="updateStatus(selectedOrder, selectedOrder.orderStatus)">
+                Update Status
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

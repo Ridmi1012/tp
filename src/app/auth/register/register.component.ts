@@ -37,32 +37,48 @@ export class RegisterComponent {
       username: ['', Validators.required],
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', Validators.required]
+    }, {
+      validator: this.passwordMatchValidator
     });
+  }
+
+  // Custom validator to check if password and confirmPassword match
+  passwordMatchValidator(form: FormGroup) {
+    const password = form.get('password')?.value;
+    const confirmPassword = form.get('confirmPassword')?.value;
+    
+    if (password !== confirmPassword) {
+      form.get('confirmPassword')?.setErrors({ passwordMismatch: true });
+      return { passwordMismatch: true };
+    }
+    
+    return null;
   }
 
   onSubmit() {
     if (this.registerForm.invalid) {
-      return;
-    }
-
-    if (this.registerForm.value.password !== this.registerForm.value.confirmPassword) {
-      this.errorMessage = "Passwords do not match!";
+      // Mark all fields as touched to trigger validation messages
+      Object.keys(this.registerForm.controls).forEach(key => {
+        this.registerForm.get(key)?.markAsTouched();
+      });
       return;
     }
 
     this.isSubmitting = true;
+    this.errorMessage = '';
 
     this.authService.register(this.registerForm.value).subscribe({
       next: (response) => {
-        alert('Registration successful!');
-        this.registerForm.reset();
-        this.router.navigate(['/login']);  
+        console.log('Registration successful:', response);
         this.isSubmitting = false;
-
+        this.registerForm.reset();
+        alert('Registration successful! Please login.');
+        this.router.navigate(['/login']);  
       },
       error: (err) => {
-        alert('Registration failed!');
+        console.error('Registration error:', err);
         this.isSubmitting = false;
+        this.errorMessage = err.error?.message || 'Registration failed. Please try again.';
       }
     });
   }

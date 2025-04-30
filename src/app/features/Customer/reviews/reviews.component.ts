@@ -26,7 +26,7 @@ interface Review {
   templateUrl: './reviews.component.html',
   styleUrl: './reviews.component.css'
 })
-export class ReviewsComponent implements OnDestroy {
+export class ReviewsComponent implements OnInit, OnDestroy {
   reviews: Review[] = [];
   visibleReviews: Review[] = [];
   isLoading = true;
@@ -80,6 +80,11 @@ export class ReviewsComponent implements OnDestroy {
         console.error('Error fetching reviews:', err);
         this.error = 'Failed to load reviews. Please try again later.';
         this.isLoading = false;
+        
+        // Add some debugging to help with this error
+        if (err.status === 403) {
+          console.log('Authorization error when fetching reviews. Token available:', !!this.authService.getToken());
+        }
       }
     });
   }

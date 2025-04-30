@@ -1,0 +1,122 @@
+<div class="orderasis-container">
+  <div *ngIf="loading" class="loading-spinner">
+    <div class="spinner"></div>
+    <p>Loading...</p>
+  </div>
+
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+    <button class="back-btn" (click)="goBack()">Back to Design</button>
+  </div>
+
+  <!-- Order Success Message -->
+  <div *ngIf="orderSuccess" class="success-message">
+    <h2>Order Placed Successfully!</h2>
+    <p>Your order has been confirmed. Here are your order details:</p>
+    <div class="order-summary">
+      <p><strong>Order ID:</strong> #{{ orderResponse.orderId }}</p>
+      <p><strong>Status:</strong> {{ orderResponse.orderStatus }}</p>
+      <p><strong>Total Price:</strong> Rs.{{ orderResponse.totalPrice }}</p>
+    </div>
+    <div class="action-buttons">
+      <button class="primary-btn" (click)="goToOrderDetails()">View Order Details</button>
+      <button class="secondary-btn" routerLink="/my-orders">View All Orders</button>
+    </div>
+  </div>
+
+  <!-- Order Form -->
+  <div *ngIf="!loading && !error && !orderSuccess && design" class="order-form-section">
+    <div class="order-header">
+      <button class="back-btn" (click)="goBack()">
+        ← Back to Design
+      </button>
+      <h1>Complete Your Order</h1>
+    </div>
+
+    <div class="order-content">
+      <div class="design-summary">
+        <h2>Order Summary</h2>
+        <div class="design-card">
+          <div class="design-image">
+            <!-- Fixed with safe navigation operator -->
+            <img [src]="design.imageUrl" alt="{{ design.name }}" (error)="onImageError($event)">
+          </div>
+          <div class="design-info">
+            <h3>{{ design.name }}</h3>
+            <!-- Fixed with safe navigation operators -->
+            <p class="design-category">{{ design.category.name }}</p>
+            <p class="design-price">Base Price: Rs.{{ design.basePrice }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="order-details-form">
+        <h2>Order Details</h2>
+        <form [formGroup]="orderForm" (ngSubmit)="onSubmit()">
+          <div class="form-group">
+            <label for="customName">Name for the Celebration</label>
+            <input 
+              type="text" 
+              id="customName" 
+              formControlName="customName" 
+              [ngClass]="{ 'invalid': submitted && f['customName'].errors }"
+            >
+            <div *ngIf="submitted && f['customName'].errors" class="error-text">
+              <span *ngIf="f['customName'].errors['required']">Name is required</span>
+              <span *ngIf="f['customName'].errors['maxlength']">Name cannot exceed 50 characters</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="customAge">Age (if applicable)</label>
+            <input 
+              type="number" 
+              id="customAge" 
+              formControlName="customAge" 
+              [ngClass]="{ 'invalid': submitted && f['customAge'].errors }"
+            >
+            <div *ngIf="submitted && f['customAge'].errors" class="error-text">
+              <span *ngIf="f['customAge'].errors['required']">Age is required</span>
+              <span *ngIf="f['customAge'].errors['min']">Age cannot be negative</span>
+              <span *ngIf="f['customAge'].errors['max']">Age cannot exceed 150</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="eventDate">Event Date</label>
+            <input 
+              type="date" 
+              id="eventDate" 
+              formControlName="eventDate" 
+              [ngClass]="{ 'invalid': submitted && f['eventDate'].errors }"
+            >
+            <div *ngIf="submitted && f['eventDate'].errors" class="error-text">
+              <span *ngIf="f['eventDate'].errors['required']">Event date is required</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="deliveryAddress">Delivery Address</label>
+            <textarea 
+              id="deliveryAddress" 
+              formControlName="deliveryAddress" 
+              rows="3"
+              [ngClass]="{ 'invalid': submitted && f['deliveryAddress'].errors }"
+            ></textarea>
+            <div *ngIf="submitted && f['deliveryAddress'].errors" class="error-text">
+              <span *ngIf="f['deliveryAddress'].errors['required']">Delivery address is required</span>
+              <span *ngIf="f['deliveryAddress'].errors['maxlength']">Address cannot exceed 200 characters</span>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="submit-btn" [disabled]="loading">
+              <span *ngIf="loading">Processing...</span>
+              <span *ngIf="!loading">Place Order</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
