@@ -17,11 +17,9 @@ interface Review {
   };
 }
 
-
 @Injectable({
   providedIn: 'root'
 })
-
 export class ReviewService {
   private apiUrl = 'http://localhost:8083/api/reviews';
 
@@ -32,24 +30,23 @@ export class ReviewService {
 
   submitReview(rating: number, review: string): Observable<any> {
     const body = { rating, review };
-    
-    // Get token from AuthService
-    const token = this.authService.getToken();
-    console.log('Token being used for review submission:', token);
-    
-    // Set headers with authorization token
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
-    });
-
-    console.log('Headers being sent:', headers);
-
+    const headers = this.getAuthHeaders();
     return this.http.post(this.apiUrl, body, { headers });
   }
 
-  // New method to get all reviews
+  // Get all reviews - this is a public endpoint that doesn't require authentication
   getReviews(): Observable<Review[]> {
+    // For GET requests to the reviews endpoint, we don't need authentication
+    // as we've updated the backend security config to allow public access
     return this.http.get<Review[]>(this.apiUrl);
+  }
+
+  // Helper method to get auth headers
+  private getAuthHeaders(): HttpHeaders {
+    const token = this.authService.getToken();
+    return new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : ''
+    });
   }
 }

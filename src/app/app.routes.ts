@@ -1,55 +1,165 @@
 import { Routes } from '@angular/router';
-import { HomeComponent } from './features/Customer/home/home.component';
+import { authGuard } from './guards/auth.guard';
+import { adminGuard } from './guards/admin.guard';
+
+// Basic Pages
 import { LoginComponent } from './auth/login/login.component';
 import { RegisterComponent } from './auth/register/register.component';
+import { HomeComponent } from './features/Customer/home/home.component';
+import { UnauthorizedComponent } from './features/unauthorized/unauthorized/unauthorized.component';
+
+// Customer Pages
 import { PortfolioComponent } from './features/Customer/portfolio/portfolio.component';
-import { ReviewsComponent } from './features/Customer/reviews/reviews.component';
-import { AppointmentsComponent } from './features/Customer/appointments/appointments.component';
-import { BookingFormComponent } from './features/Customer/bookingform/bookingform.component';
+import { DesigndetailsComponent } from './features/Customer/designdetails/designdetails.component';
+import { OrderasisComponent } from './features/Customer/orderasis/orderasis.component';
+import { CustomDesignComponent } from './features/Customer/custom-design/custom-design.component';
 import { OngoingComponent } from './features/Customer/ongoing/ongoing.component';
-import { CustomerdashboardComponent } from './features/Customer/customerdashboard/customerdashboard.component';
-import { ReviewFormComponent } from './features/Customer/reviewform/reviewform.component';
-import { AdmindashboardComponent } from './features/admin/admindashboard/admindashboard.component';
+import { OrderdetailsComponent } from './features/Customer/orderdetails/orderdetails.component';
+
+import { ReviewsComponent } from './features/Customer/reviews/reviews.component';
+
 import { CustomereditprofileComponent } from './auth/customereditprofile/customereditprofile.component';
 import { ResetpasswordComponent } from './auth/resetpassword/resetpassword.component';
-import { ChangepasswordComponent } from './auth/changepassword/changepassword.component';
-import { ManageportfolioComponent } from './features/admin/manageportfolio/manageportfolio.component';
+import { RequestCustomDesignComponent } from './features/Customer/request-custom-design/request-custom-design.component';
+
+// Admin Pages
+import { AdmindashboardComponent } from './features/admin/admindashboard/admindashboard.component';
 import { ItemmanagementComponent } from './features/admin/itemmanagement/itemmanagement.component';
 import { CategorymanagementComponent } from './features/admin/categorymanagement/categorymanagement.component';
+import { ManageportfolioComponent } from './features/admin/manageportfolio/manageportfolio.component';
+
 import { AdmindesingsportfolioComponent } from './features/admin/admindesingsportfolio/admindesingsportfolio.component';
-import { DesigndetailsComponent } from './features/Customer/designdetails/designdetails.component';
-
-
-
-
+import { ReviewFormComponent } from './features/Customer/reviewform/reviewform.component';
 
 export const routes: Routes = [
-    {path: '', component: HomeComponent},
-    {path: 'login', component: LoginComponent},
-    {path: 'register', component: RegisterComponent},
-    {path: 'portfolio', component: PortfolioComponent},
-    {path: 'appointments', component: AppointmentsComponent},
-    {path: 'reviews', component: ReviewsComponent},
-    {path: 'log2book', component: CustomerdashboardComponent},
-    {path: 'ongoing', component: OngoingComponent},
-    {path: 'booking-form', component: BookingFormComponent},
-    {path: 'review-form', component: ReviewFormComponent},
-    {path: 'admin-dashboard', component: AdmindashboardComponent},
-    {path: 'customer-profile', component: CustomereditprofileComponent},
-    {path: 'change-password', component: ChangepasswordComponent},
-    {path: 'reset-password', component: ResetpasswordComponent},
-    {path: 'admin-portfolio', component: AdmindesingsportfolioComponent},
-    {path: 'design-details/:id', component: DesigndetailsComponent},
-    {path: 'portfolio/category/:categoryId', component: PortfolioComponent},
-    {
-        path: 'admin',
-        children: [
-          { path: '', component: AdmindashboardComponent },
-          { path: 'design', component: ManageportfolioComponent },
-          { path: 'categories', component: CategorymanagementComponent },
-          { path: 'items', component: ItemmanagementComponent },
-          
-        ]
-    },
-    {path: '**', redirectTo: ''}
+ // Public Routes
+ { path: '', redirectTo: 'home', pathMatch: 'full' },
+ { path: 'home', component: HomeComponent },
+ { path: 'login', component: LoginComponent },
+ { path: 'register', component: RegisterComponent },
+ { path: 'unauthorized', component: UnauthorizedComponent },
+ { path: 'portfolio', component: PortfolioComponent },
+ { path: 'portfolio/category/:categoryId', component: PortfolioComponent },
+ { path: 'design-details/:id', component: DesigndetailsComponent },
+ 
+ // Customer Service Routes (available to non-logged in users)
+ { path: 'reviews', component: ReviewsComponent},
+ 
+ // Protected Customer Routes
+ {path:'review-form',
+  component: ReviewFormComponent,
+   canActivate: [authGuard]
+  },
+
+ { 
+   path: 'ongoing', 
+   component: OngoingComponent,
+   canActivate: [authGuard]
+ },
+ { 
+   path: 'edit-customer-details/:customerId', 
+   component: CustomereditprofileComponent,
+   canActivate: [authGuard]
+ },
+ { 
+   path: 'change-password', 
+   component: ResetpasswordComponent,
+   canActivate: [authGuard]
+ },
+ { 
+   path: 'order-as-is/:id', 
+   component: OrderasisComponent,
+   canActivate: [authGuard]
+ },
+ { 
+   path: 'customize/:id', 
+   component: CustomDesignComponent,
+   canActivate: [authGuard]
+ },
+ { 
+   path: 'request-new-design', 
+   component: RequestCustomDesignComponent,
+   canActivate: [authGuard]
+ },
+ { 
+   path: 'order-details/:id', 
+   component: OrderdetailsComponent,
+   canActivate: [authGuard]
+ },
+ 
+ // Admin Routes
+ { 
+   path: 'admin-dashboard', 
+   component: AdmindashboardComponent,
+   canActivate: [adminGuard]
+ },
+//  { 
+//    path: 'admin/events', 
+//    component: AdminEventsComponent,
+//    canActivate: [adminGuard]
+//  },
+ { 
+   path: 'admin-portfolio', 
+   component: AdmindesingsportfolioComponent,
+   canActivate: [adminGuard]
+ },
+//  { 
+//    path: 'admin/inventory', 
+//    component: AdminInventoryComponent,
+//    canActivate: [adminGuard]
+//  },
+//  { 
+//    path: 'admin/bookings', 
+//    component: AdminBookingsComponent,
+//    canActivate: [adminGuard]
+//  },
+//  { 
+//    path: 'admin/reports', 
+//    component: AdminReportsComponent,
+//    canActivate: [adminGuard]
+//  },
+ // Admin Dashboard specific navigation routes
+ {
+   path: 'admin/design',
+   component: ManageportfolioComponent,
+   canActivate: [adminGuard]
+ },
+ {
+   path: 'admin/categories',
+   component: CategorymanagementComponent,
+   canActivate: [adminGuard]
+ },
+ {
+   path: 'admin/items',
+   component: ItemmanagementComponent,
+   canActivate: [adminGuard]
+ },
+//  { 
+//    path: 'admin/notifications', 
+//    component: AdminNotificationsComponent,
+//    canActivate: [adminGuard]
+//  },
+//  { 
+//    path: 'admin/notifications/settings', 
+//    component: AdminNotificationSettingsComponent,
+//    canActivate: [adminGuard]
+//  },
+//  { 
+//    path: 'admin/profile', 
+//    component: AdminProfileComponent,
+//    canActivate: [adminGuard]
+//  },
+//  { 
+//    path: 'admin/settings', 
+//    component: AdminSettingsComponent,
+//    canActivate: [adminGuard]
+//  },
+//  { 
+//    path: 'admin/reset-password', 
+//    component: AdminResetPasswordComponent,
+//    canActivate: [adminGuard]
+//  },
+ 
+ // Default redirect to home
+ { path: '**', redirectTo: 'home' }
 ];

@@ -1,9 +1,11 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ItemService } from '../../../services/item.service';
 import { Item, ItemRequest } from '../../../services/item.service';
 import { CommonModule } from '@angular/common'; 
 import { FormsModule } from '@angular/forms';
-import { CategoryService, Category } from '../../../services/category.service';
+import { AuthService } from '../../../services/auth.service';
+import { Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 
 interface DisplayItem {
   itemID: number;
@@ -18,15 +20,20 @@ interface DisplayItem {
   templateUrl: './itemmanagement.component.html',
   styleUrl: './itemmanagement.component.css'
 })
-export class ItemmanagementComponent implements OnInit {
+export class ItemmanagementComponent implements OnInit, OnDestroy {
   items: DisplayItem[] = [];
   filteredItems: DisplayItem[] = [];
   searchText: string = '';
+  loading: boolean = false;
+  error: string | null = null;
+  isAdmin: boolean = false;
+  
+  // Track authentication changes
+  private authSubscription?: Subscription;
   
   newItem = {
     name: '',
     price: 0,
-    unitPrice: 0,
     description: ''
   };
   
@@ -41,27 +48,73 @@ export class ItemmanagementComponent implements OnInit {
   currentEditIndex: number = -1;
 
   constructor(
-    private itemService: ItemService
+    private itemService: ItemService,
+    private authService: AuthService,
+    private router: Router
   ) { }
 
   ngOnInit(): void {
+    // Check if user is admin
+    this.isAdmin = this.authService.isAdmin();
+    
+    // Subscribe to auth changes
+    this.authSubscription = this.authService.authChange.subscribe(isAuthenticated => {
+      this.isAdmin = isAuthenticated && this.authService.isAdmin();
+      
+      // If user is no longer authenticated, redirect to login
+      if (!isAuthenticated) {
+        this.router.navigate(['/login'], { 
+          queryParams: { returnUrl: '/admin/items' }
+        });
+      }
+    });
+    
+    // Fetch items (everyone can view)
     this.fetchItems();
+    
+    // Alert non-admin users that they can only view items
+    if (!this.isAdmin) {
+      setTimeout(() => {
+        alert('You are viewing items in read-only mode. Admin privileges are required to add, edit, or delete items.');
+      }, 500);
+    }
+  }
+  
+  ngOnDestroy(): void {
+    // Clean up subscription to prevent memory leaks
+    if (this.authSubscription) {
+      this.authSubscription.unsubscribe();
+    }
   }
 
   fetchItems(): void {
+    this.loading = true;
+    this.error = null;
+    
     this.itemService.getItems().subscribe({
       next: (data) => {
+        console.log('Items fetched successfully:', data);
         // Convert the API item format to our component format
         this.items = data.map(item => ({
           itemID: item.itemID,
           name: item.name,
           price: item.unitPrice,
-          description: item.description
+          description: item.description || ''
         }));
         this.filteredItems = [...this.items];
+        this.loading = false;
       },
       error: (error) => {
         console.error('Error fetching items:', error);
+        this.error = 'Failed to load items. Please try again later.';
+        this.loading = false;
+        
+        // If unauthorized, redirect to login
+        if (error.status === 401 || error.status === 403) {
+          this.router.navigate(['/login'], { 
+            queryParams: { returnUrl: '/admin/items' }
+          });
+        }
       }
     });
   }
@@ -75,6 +128,12 @@ export class ItemmanagementComponent implements OnInit {
   }
 
   addItem(): void {
+    // Check if user is admin
+    if (!this.isAdmin) {
+      alert('You do not have permission to add items. Admin privileges are required.');
+      return;
+    }
+    
     console.log('Starting addItem with values:', this.newItem);
     
     if (!this.newItem.name) {
@@ -105,7 +164,7 @@ export class ItemmanagementComponent implements OnInit {
           itemID: response.itemID,
           name: response.name,
           price: response.unitPrice,
-          description: response.description
+          description: response.description || ''
         };
         
         this.items.push(newDisplayItem);
@@ -115,18 +174,27 @@ export class ItemmanagementComponent implements OnInit {
         this.newItem = {
           name: '',
           price: 0,
-          unitPrice: 0,
           description: ''
         };
       },
       error: (error) => {
         console.error('Error details:', error);
-        alert('Failed to add item. Please make sure all required fields are filled correctly.');
+        if (error.status === 403) {
+          alert('You do not have permission to add items. Admin privileges are required.');
+        } else {
+          alert('Failed to add item. Please make sure all required fields are filled correctly.');
+        }
       }
     });
   }
 
   editItem(index: number): void {
+    // Check if user is admin
+    if (!this.isAdmin) {
+      alert('You do not have permission to edit items. Admin privileges are required.');
+      return;
+    }
+    
     const item = this.filteredItems[index];
     this.editedItem = { ...item };
     this.currentEditIndex = index;
@@ -139,6 +207,14 @@ export class ItemmanagementComponent implements OnInit {
   }
 
   updateItem(): void {
+    // Check if user is admin
+    if (!this.isAdmin) {
+      alert('You do not have permission to update items. Admin privileges are required.');
+      this.showEditModal = false;
+      this.currentEditIndex = -1;
+      return;
+    }
+    
     const originalItem = this.filteredItems[this.currentEditIndex];
     
     // Convert to API format
@@ -161,11 +237,22 @@ export class ItemmanagementComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error updating item:', error);
+        if (error.status === 403) {
+          alert('You do not have permission to update items. Admin privileges are required.');
+        } else {
+          alert('Failed to update item. Please try again.');
+        }
       }
     });
   }
 
   deleteItem(index: number): void {
+    // Check if user is admin
+    if (!this.isAdmin) {
+      alert('You do not have permission to delete items. Admin privileges are required.');
+      return;
+    }
+    
     const item = this.filteredItems[index];
     
     if (confirm(`Are you sure you want to delete ${item.name}?`)) {
@@ -177,6 +264,11 @@ export class ItemmanagementComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error deleting item:', error);
+          if (error.status === 403) {
+            alert('You do not have permission to delete items. Admin privileges are required.');
+          } else {
+            alert('Failed to delete item. Please try again.');
+          }
         }
       });
     }

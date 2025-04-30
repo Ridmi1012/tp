@@ -1,55 +1,109 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';  
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { catchError, tap } from 'rxjs/operators';
+import { throwError } from 'rxjs';  
+import { AuthService } from './auth.service';
 
 export interface Item {
   itemID: number;
   name: string;
   description: string;
   unitPrice: number;
+
 }
 
 export interface ItemRequest {
   name: string;
   description: string;
-  unitPrice: number; 
-}
+  unitPrice: number;
 
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class ItemService {
-
   private apiUrl = 'http://localhost:8083/api/items';
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    private authService: AuthService
+  ) { }
 
   getItems(): Observable<Item[]> {
-    return this.http.get<Item[]>(this.apiUrl);
+    console.log('Fetching items from:', this.apiUrl);
+    // GET requests don't need authentication
+    return this.http.get<Item[]>(this.apiUrl).pipe(
+      tap(items => console.log('Fetched items:', items)),
+      catchError(this.handleError)
+    );
   }
 
   getItemById(id: number): Observable<Item> {
-    return this.http.get<Item>(`${this.apiUrl}/${id}`);
+    // GET requests don't need authentication
+    return this.http.get<Item>(`${this.apiUrl}/${id}`).pipe(
+      catchError(this.handleError)
+    );
   }
 
   addItem(item: ItemRequest): Observable<Item> {
-    const formattedItem = {
+    // Ensure unitPrice is a number and not null/undefined
+    const formattedItem: ItemRequest = {
       name: item.name,
-      description: item.description,
-      unitPrice: item.unitPrice,
+      description: item.description || '',
+      unitPrice: typeof item.unitPrice === 'number' ? item.unitPrice : 0,
+      
     };
     
     console.log('Sending item to API:', formattedItem);
     
-    return this.http.post<Item>(this.apiUrl, formattedItem);
+    // Use auth headers for POST requests
+    return this.http.post<Item>(this.apiUrl, formattedItem, { 
+      headers: this.authService.getAuthHeaders() 
+    }).pipe(
+      tap(response => console.log('Add item response:', response)),
+      catchError(this.handleError)
+    );
   }
 
   updateItem(id: number, item: ItemRequest): Observable<Item> {
-    return this.http.put<Item>(`${this.apiUrl}/${id}`, item);
+    // Ensure unitPrice is a number and not null/undefined
+    const formattedItem: ItemRequest = {
+      name: item.name,
+      description: item.description || '',
+      unitPrice: typeof item.unitPrice === 'number' ? item.unitPrice : 0
+    };
+
+    // Use auth headers for PUT requests
+    return this.http.put<Item>(`${this.apiUrl}/${id}`, formattedItem, { 
+      headers: this.authService.getAuthHeaders() 
+    }).pipe(
+      catchError(this.handleError)
+    );
   }
 
   deleteItem(id: number): Observable<any> {
-    return this.http.delete(`${this.apiUrl}/${id}`);
+    // Use auth headers for DELETE requests
+    return this.http.delete(`${this.apiUrl}/${id}`, { 
+      headers: this.authService.getAuthHeaders() 
+    }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  private handleError(error: HttpErrorResponse) {
+    console.error('API Error:', error);
+    
+    let errorMessage = 'An unknown error occurred';
+    if (error.error instanceof ErrorEvent) {
+      // Client-side error
+      errorMessage = `Error: ${error.error.message}`;
+    } else {
+      // Server-side error
+      errorMessage = `Error Code: ${error.status}\nMessage: ${error.message}`;
+    }
+    
+    return throwError(() => new Error(errorMessage));
   }
 }

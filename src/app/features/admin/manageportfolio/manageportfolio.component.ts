@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DesignService } from '../../../services/design.service';
@@ -6,6 +6,8 @@ import { CategoryService, Category, CategoryRequest } from '../../../services/ca
 import { ItemService, Item, ItemRequest } from '../../../services/item.service';
 import { Router } from '@angular/router';
 import { CloudinaryserviceService } from '../../../services/cloudinaryservice.service';
+import { AuthService } from '../../../services/auth.service';
+import { Subscription } from 'rxjs';
 
 interface SelectedItem {
   itemId: number;
@@ -13,14 +15,13 @@ interface SelectedItem {
   price: number;
 }
 
-
 @Component({
   selector: 'app-manageportfolio',
   imports: [CommonModule, FormsModule],
   templateUrl: './manageportfolio.component.html',
   styleUrl: './manageportfolio.component.css'
 })
-export class ManageportfolioComponent implements OnInit {
+export class ManageportfolioComponent implements OnInit, OnDestroy {
 
   steps = [
     { title: 'Basic Information', description: 'Add thumbnail, title and category' },
@@ -35,6 +36,10 @@ export class ManageportfolioComponent implements OnInit {
   items: Item[] = [];
   filteredItems: Item[] = [];
   selectedItemsWithQty: SelectedItem[] = [];
+  isAdmin: boolean = false;
+
+  // Track authentication changes
+  private authSubscription?: Subscription;
 
   // Separate main thumbnail from additional images
   thumbnailFile: File | null = null;
@@ -63,12 +68,50 @@ export class ManageportfolioComponent implements OnInit {
     private categoryService: CategoryService,
     private itemService: ItemService,
     private cloudinaryService: CloudinaryserviceService,
+    private authService: AuthService,
     private router: Router
   ) { }
 
   ngOnInit(): void {
+    // Check if user is authenticated
+    if (!this.authService.isLoggedIn()) {
+      this.router.navigate(['/login'], { 
+        queryParams: { returnUrl: '/admin/portfolio/add' }
+      });
+      return;
+    }
+    
+    // Check if user is admin
+    this.isAdmin = this.authService.isAdmin();
+    
+    // If not admin, redirect to unauthorized page
+    if (!this.isAdmin) {
+      alert('You do not have permission to manage designs. Admin privileges are required.');
+      this.router.navigate(['/unauthorized']);
+      return;
+    }
+    
+    // Subscribe to auth changes
+    this.authSubscription = this.authService.authChange.subscribe(isAuthenticated => {
+      this.isAdmin = isAuthenticated && this.authService.isAdmin();
+      
+      // If user is no longer authenticated or is not admin, redirect
+      if (!isAuthenticated || !this.isAdmin) {
+        this.router.navigate(['/login'], { 
+          queryParams: { returnUrl: '/admin/portfolio/add' }
+        });
+      }
+    });
+    
     this.loadCategories();
     this.loadItems();
+  }
+  
+  ngOnDestroy(): void {
+    // Clean up subscription to prevent memory leaks
+    if (this.authSubscription) {
+      this.authSubscription.unsubscribe();
+    }
   }
 
   nextStep(): void {
@@ -225,6 +268,12 @@ export class ManageportfolioComponent implements OnInit {
   }
 
   isFormValid(): boolean {
+    // Check if user is admin
+    if (!this.isAdmin) {
+      this.errorMessage = 'You do not have permission to add designs. Admin privileges are required.';
+      return false;
+    }
+    
     // Check if title is provided and not just whitespace
     if (!this.formData.title.trim()) {
       return false;
@@ -327,6 +376,12 @@ export class ManageportfolioComponent implements OnInit {
   }
 
   submit() {
+    // Check if user is admin
+    if (!this.isAdmin) {
+      this.errorMessage = 'You do not have permission to add designs. Admin privileges are required.';
+      return;
+    }
+    
     if (!this.isFormValid()) {
       if (!this.formData.title.trim()) {
         this.errorMessage = 'Please enter a design title.';
@@ -395,14 +450,14 @@ export class ManageportfolioComponent implements OnInit {
   }
 
   createDesignWithImages(categoryId: number, selectedItemsData: SelectedItem[], mainImageUrl: string, additionalImageUrls: string[]) {
-    // Map selected items with quantities to the format expected by the API
+    // Map selected items with quantities to the format expected by the API (DesignItemRequest format)
     const itemsForRequest = selectedItemsData.map(selection => ({
       itemId: selection.itemId,
       defaultQuantity: selection.quantity,
       isOptional: false
     }));
-
-    // Create the design request object
+  
+    // Create the design request object that matches the DesignRequest interface
     const designRequest = {
       name: this.formData.title,
       categoryId: categoryId,
@@ -411,12 +466,14 @@ export class ManageportfolioComponent implements OnInit {
       imageUrl: mainImageUrl,
       additionalImages: additionalImageUrls,
       createdBy: 1, // You might want to get this from a user service
-      items: itemsForRequest
+      items: itemsForRequest // This is now correctly typed as DesignItemRequest[]
     };
-
+  
+    console.log('Design request payload:', designRequest);
+  
     // Prepare the form data
     const formData = this.designService.prepareFormData(designRequest);
-
+  
     this.designService.addDesign(formData).subscribe({
       next: (response: any) => {
         console.log('Design added successfully:', response);
@@ -438,13 +495,17 @@ export class ManageportfolioComponent implements OnInit {
         this.errorMessage = '';
         this.successMessage = 'Design added successfully!';
         setTimeout(() => this.successMessage = '', 3000);
-
+  
         // Navigate to the admin portfolio page
         this.router.navigate(['/admin-portfolio']);
       },
       error: (err: any) => {
         console.error('Error adding design', err);
-        this.errorMessage = 'Failed to add design: ' + (err.error?.message || err.message);
+        if (err.status === 403) {
+          this.errorMessage = 'You do not have permission to add designs. Admin privileges are required.';
+        } else {
+          this.errorMessage = 'Failed to add design: ' + (err.error?.message || err.message);
+        }
       }
     });
   }
