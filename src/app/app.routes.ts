@@ -1,6 +1,7 @@
-import { Routes } from '@angular/router';
+
 import { authGuard } from './guards/auth.guard';
 import { adminGuard } from './guards/admin.guard';
+import { Routes } from '@angular/router';
 
 // Basic Pages
 import { LoginComponent } from './auth/login/login.component';
@@ -11,16 +12,12 @@ import { UnauthorizedComponent } from './features/unauthorized/unauthorized/unau
 // Customer Pages
 import { PortfolioComponent } from './features/Customer/portfolio/portfolio.component';
 import { DesigndetailsComponent } from './features/Customer/designdetails/designdetails.component';
-import { OrderasisComponent } from './features/Customer/orderasis/orderasis.component';
-import { CustomDesignComponent } from './features/Customer/custom-design/custom-design.component';
 import { OngoingComponent } from './features/Customer/ongoing/ongoing.component';
-import { OrderdetailsComponent } from './features/Customer/orderdetails/orderdetails.component';
 
 import { ReviewsComponent } from './features/Customer/reviews/reviews.component';
 
 import { CustomereditprofileComponent } from './auth/customereditprofile/customereditprofile.component';
 import { ResetpasswordComponent } from './auth/resetpassword/resetpassword.component';
-import { RequestCustomDesignComponent } from './features/Customer/request-custom-design/request-custom-design.component';
 
 // Admin Pages
 import { AdmindashboardComponent } from './features/admin/admindashboard/admindashboard.component';
@@ -66,59 +63,18 @@ export const routes: Routes = [
    component: ResetpasswordComponent,
    canActivate: [authGuard]
  },
- { 
-   path: 'order-as-is/:id', 
-   component: OrderasisComponent,
-   canActivate: [authGuard]
- },
- { 
-   path: 'customize/:id', 
-   component: CustomDesignComponent,
-   canActivate: [authGuard]
- },
- { 
-   path: 'request-new-design', 
-   component: RequestCustomDesignComponent,
-   canActivate: [authGuard]
- },
- { 
-   path: 'order-details/:id', 
-   component: OrderdetailsComponent,
-   canActivate: [authGuard]
- },
- 
  // Admin Routes
  { 
    path: 'admin-dashboard', 
    component: AdmindashboardComponent,
    canActivate: [adminGuard]
  },
-//  { 
-//    path: 'admin/events', 
-//    component: AdminEventsComponent,
-//    canActivate: [adminGuard]
-//  },
  { 
    path: 'admin-portfolio', 
    component: AdmindesingsportfolioComponent,
    canActivate: [adminGuard]
  },
-//  { 
-//    path: 'admin/inventory', 
-//    component: AdminInventoryComponent,
-//    canActivate: [adminGuard]
-//  },
-//  { 
-//    path: 'admin/bookings', 
-//    component: AdminBookingsComponent,
-//    canActivate: [adminGuard]
-//  },
-//  { 
-//    path: 'admin/reports', 
-//    component: AdminReportsComponent,
-//    canActivate: [adminGuard]
-//  },
- // Admin Dashboard specific navigation routes
+
  {
    path: 'admin/design',
    component: ManageportfolioComponent,
@@ -134,32 +90,6 @@ export const routes: Routes = [
    component: ItemmanagementComponent,
    canActivate: [adminGuard]
  },
-//  { 
-//    path: 'admin/notifications', 
-//    component: AdminNotificationsComponent,
-//    canActivate: [adminGuard]
-//  },
-//  { 
-//    path: 'admin/notifications/settings', 
-//    component: AdminNotificationSettingsComponent,
-//    canActivate: [adminGuard]
-//  },
-//  { 
-//    path: 'admin/profile', 
-//    component: AdminProfileComponent,
-//    canActivate: [adminGuard]
-//  },
-//  { 
-//    path: 'admin/settings', 
-//    component: AdminSettingsComponent,
-//    canActivate: [adminGuard]
-//  },
-//  { 
-//    path: 'admin/reset-password', 
-//    component: AdminResetPasswordComponent,
-//    canActivate: [adminGuard]
-//  },
- 
- // Default redirect to home
+
  { path: '**', redirectTo: 'home' }
 ];
