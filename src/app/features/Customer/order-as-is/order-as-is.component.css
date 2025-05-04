@@ -334,3 +334,12 @@
   display: inline-block;
   margin-right: 8px;
 }
+
+.success-snackbar {
+  background-color: #4CAF50 !important;
+  color: white !important;
+}
+
+.success-snackbar .mat-simple-snackbar-action {
+  color: white !important;
+}
