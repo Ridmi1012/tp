@@ -2,6 +2,9 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { DesignService } from './design.service';
+import { HttpHeaders } from '@angular/common/http';
+import { catchError, tap } from 'rxjs/operators';
+import { AuthService } from './auth.service';
 
 
 export interface OrderData {
@@ -56,12 +59,47 @@ export class OrderService {
 
   constructor(
     private http: HttpClient,
-    private designService: DesignService
+    private designService: DesignService,
+    private authService: AuthService
   ) {}
 
   // Create a new order
   createOrder(orderData: OrderData): Observable<Order> {
-    return this.http.post<Order>(this.apiUrl, orderData);
+    // Debug: Check authentication status and token
+    const token = this.authService.getToken();
+    const userDetails = this.authService.getUserDetails();
+    const userType = this.authService.getUserType();
+    
+    console.log('Debug: Creating order with:');
+    console.log('- Token:', token ? 'Present' : 'Missing');
+    console.log('- User Type:', userType);
+    console.log('- User Details:', userDetails);
+    console.log('- Order Data:', orderData);
+    
+    // Ensure we have the correct headers
+    const headers = new HttpHeaders()
+      .set('Content-Type', 'application/json')
+      .set('Authorization', `Bearer ${token}`);
+    
+    console.log('Debug: Headers being sent:', headers.keys());
+    console.log('Debug: Authorization header:', headers.get('Authorization'));
+    
+    return this.http.post<Order>(this.apiUrl, orderData, { headers }).pipe(
+      tap(response => {
+        console.log('Order created successfully:', response);
+      }),
+      catchError(error => {
+        console.error('Error creating order:', error);
+        console.error('Error details:', {
+          status: error.status,
+          statusText: error.statusText,
+          url: error.url,
+          message: error.message,
+          error: error.error
+        });
+        throw error;
+      })
+    );
   }
 
   // Get all orders for a customer

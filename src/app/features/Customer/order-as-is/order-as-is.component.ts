@@ -9,6 +9,7 @@ import { AuthService } from '../../../services/auth.service';
 import { take } from 'rxjs/operators';
 import { Design } from '../../../services/design.service';
 import { CustomerService } from '../../../services/customer.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-order-as-is',
@@ -34,7 +35,8 @@ export class OrderAsIsComponent implements OnInit {
     private authService: AuthService,
     private customerService: CustomerService,
     private router: Router,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private snackBar: MatSnackBar // Add this
   ) {
     // Set minimum event date to today
     const today = new Date();
@@ -182,6 +184,12 @@ export class OrderAsIsComponent implements OnInit {
   }
 
   onSubmit() {
+    if (!this.currentUser) {
+      console.error('User not authenticated');
+      this.router.navigate(['/login']);
+      return;
+    }
+
     if (this.orderForm.valid && this.design && this.currentUser && this.orderStatus === 'canPlace') {
       this.loading = true;
       this.submitError = null;
@@ -189,7 +197,7 @@ export class OrderAsIsComponent implements OnInit {
       const formValue = this.orderForm.value;
       const orderData: OrderData = {
         designId: this.design.designID.toString(),
-        orderType: 'as-is' as const,
+        orderType: 'as-is',
         customDetails: {
           customName: formValue.customName,
           customAge: formValue.customAge,
@@ -200,21 +208,36 @@ export class OrderAsIsComponent implements OnInit {
         },
         customerInfo: formValue.customerInfo,
         status: 'pending',
-        customerId: this.currentUser.id
+        customerId: this.currentUser.username
       };
+
+      console.log('Submitting order data:', orderData);
 
       this.orderService.createOrder(orderData).subscribe({
         next: (response) => {
+          console.log('Order created successfully:', response);
           this.loading = false;
-          this.router.navigate(['/ongoing']);
+          
+          // Show success message
+          this.snackBar.open('Your order has been sent! They\'ll review and confirm shortly.', 'Close', {
+            duration: 5000,
+            horizontalPosition: 'center',
+            verticalPosition: 'top',
+            panelClass: ['success-snackbar']
+          });
+          
+          // Navigate to ongoing orders after a short delay
+          setTimeout(() => {
+            this.router.navigate(['/ongoing']);
+          }, 1000);
         },
         error: (error) => {
+          console.error('Error creating order:', error);
           this.loading = false;
           this.submitError = error.error?.message || 'Failed to submit order. Please try again.';
         }
       });
     } else {
-      // Mark all fields as touched to show validation errors
       this.markFormGroupTouched(this.orderForm);
     }
   }
