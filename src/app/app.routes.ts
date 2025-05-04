@@ -15,7 +15,7 @@ import { DesigndetailsComponent } from './features/Customer/designdetails/design
 import { OngoingComponent } from './features/Customer/ongoing/ongoing.component';
 
 import { ReviewsComponent } from './features/Customer/reviews/reviews.component';
-
+import { OrderAsIsComponent } from './features/Customer/order-as-is/order-as-is.component';
 import { CustomereditprofileComponent } from './auth/customereditprofile/customereditprofile.component';
 import { ResetpasswordComponent } from './auth/resetpassword/resetpassword.component';
 
@@ -58,6 +58,11 @@ export const routes: Routes = [
    component: CustomereditprofileComponent,
    canActivate: [authGuard]
  },
+ { 
+  path: 'order-as-is/:designId', 
+  component: OrderAsIsComponent,
+  canActivate: [authGuard]
+},
  { 
    path: 'change-password', 
    component: ResetpasswordComponent,

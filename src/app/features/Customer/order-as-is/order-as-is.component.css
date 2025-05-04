@@ -1,0 +1,336 @@
+/* order-as-is.component.css */
+.order-as-is-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+  
+  .header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  
+  .header h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    margin-bottom: 0.5rem;
+  }
+  
+  .description {
+    color: #666;
+    font-size: 1.1rem;
+  }
+  
+  .content-wrapper {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 2rem;
+    align-items: start;
+  }
+  
+  @media (max-width: 1024px) {
+    .content-wrapper {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  /* Design Preview Styles */
+  .design-preview {
+    position: sticky;
+    top: 2rem;
+  }
+  
+  .preview-card {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+  }
+  
+  .design-image {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+  }
+  
+  .additional-images {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    justify-content: center;
+  }
+  
+  .thumbnail {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+  }
+  
+  .thumbnail:hover {
+    transform: scale(1.05);
+  }
+  
+  .design-info {
+    padding: 1.5rem;
+  }
+  
+  .design-info h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+  
+  .price {
+    font-size: 1.2rem;
+    color: #2563eb;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+  }
+  
+  .category {
+    color: #666;
+    margin-bottom: 0.5rem;
+  }
+  
+  .description {
+    color: #444;
+    line-height: 1.5;
+    margin-top: 0.75rem;
+  }
+  
+  /* Form Styles */
+  .order-form-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+  }
+  
+  .order-form {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  
+  .form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .form-section h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e5e7eb;
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+  
+  @media (max-width: 640px) {
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  label {
+    font-weight: 500;
+    color: #374151;
+    font-size: 0.95rem;
+  }
+  
+  .form-control {
+    padding: 0.75rem;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+  
+  .form-control:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+  
+  .form-control.ng-invalid.ng-touched {
+    border-color: #ef4444;
+  }
+  
+  textarea.form-control {
+    resize: vertical;
+    min-height: 100px;
+  }
+  
+  .error-message {
+    color: #ef4444;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+  
+  .help-text {
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+  }
+  
+  /* Button Styles */
+  .form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 2rem;
+  }
+  
+  .btn-primary, .btn-secondary {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 1rem;
+    transition: all 0.15s ease-in-out;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .btn-primary {
+    background-color: #2563eb;
+    color: white;
+  }
+  
+  .btn-primary:hover:not(:disabled) {
+    background-color: #1d4ed8;
+  }
+  
+  .btn-primary:disabled {
+    background-color: #93c5fd;
+    cursor: not-allowed;
+  }
+  
+  .btn-secondary {
+    background-color: #f3f4f6;
+    color: #374151;
+  }
+  
+  .btn-secondary:hover:not(:disabled) {
+    background-color: #e5e7eb;
+  }
+  
+  .btn-secondary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  
+  /* Error Banner */
+  .error-banner {
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+  }
+  
+  .error-content {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #991b1b;
+  }
+  
+  .error-icon {
+    font-size: 1.2rem;
+  }
+  
+  /* Loading Spinner */
+  .spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #ffffff;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+
+  /* Add these styles to your existing order-as-is.component.css file */
+
+.success-message {
+  background-color: #e8f5e9;
+  border: 1px solid #4caf50;
+  color: #2e7d32;
+  padding: 12px;
+  border-radius: 4px;
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.success-icon {
+  font-size: 18px;
+}
+
+.warning-message {
+  background-color: #fff3e0;
+  border: 1px solid #ff9800;
+  color: #e65100;
+  padding: 12px;
+  border-radius: 4px;
+  margin-top: 10px;
+}
+
+.warning-message > div {
+  margin-left: 26px;
+}
+
+.warning-message p {
+  margin: 8px 0;
+}
+
+.warning-message ul {
+  list-style: none;
+  padding-left: 0;
+  margin: 8px 0;
+}
+
+.warning-message li {
+  margin: 4px 0;
+}
+
+.warning-message a {
+  color: #e65100;
+  text-decoration: underline;
+}
+
+.warning-message a:hover {
+  color: #bf360c;
+}
+
+.error-message .warning-icon,
+.warning-message .warning-icon {
+  font-size: 18px;
+  display: inline-block;
+  margin-right: 8px;
+}
