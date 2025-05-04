@@ -3,6 +3,15 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AuthService } from './auth.service';
 
+export interface Customer {
+  customerId: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  contact: string;
+  address?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -24,16 +33,18 @@ export class CustomerService {
     });
   }
 
-  getCurrentCustomerDetails(): Observable<any> {
+  getCurrentCustomerDetails(): Observable<Customer> {
     const userDetails = this.authService.getUserDetails();
-    if (userDetails && userDetails.id) {
-      return this.getCustomerById(userDetails.id);
+    if (!userDetails || !userDetails.customerId) {
+      throw new Error('No customer ID found in user details');
     }
-    throw new Error('User not logged in or user ID not available');
+    return this.getCustomerById(userDetails.customerId.toString());
   }
 
-  getCustomerById(id: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/${id}`, { headers: this.getHeaders() });
+  // Get customer details by ID
+  getCustomerById(customerId: string): Observable<Customer> {
+    const headers = this.authService.getAuthHeaders();
+    return this.http.get<Customer>(`${this.apiUrl}/${customerId}`, { headers });
   }
 
   updateCustomer(customer: any): Observable<any> {
