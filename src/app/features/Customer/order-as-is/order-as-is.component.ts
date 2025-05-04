@@ -28,6 +28,10 @@ export class OrderAsIsComponent implements OnInit {
   orderStatus: 'cannotPlace' | 'contactOwner' | 'canPlace' = 'canPlace';
   hoursDifference: number = 0;
 
+  // Add these properties
+  showSuccessMessage = false;
+  successMessage = '';
+
   constructor(
     private fb: FormBuilder,
     private orderService: OrderService,
@@ -219,17 +223,13 @@ export class OrderAsIsComponent implements OnInit {
           this.loading = false;
           
           // Show success message
-          this.snackBar.open('Your order has been sent! They\'ll review and confirm shortly.', 'Close', {
-            duration: 5000,
-            horizontalPosition: 'center',
-            verticalPosition: 'top',
-            panelClass: ['success-snackbar']
-          });
+          this.showSuccessMessage = true;
+          this.successMessage = 'Your order has been sent! They\'ll review and confirm shortly.';
           
           // Navigate to ongoing orders after a short delay
           setTimeout(() => {
             this.router.navigate(['/ongoing']);
-          }, 1000);
+          }, 2000); // 2 seconds delay to show the message
         },
         error: (error) => {
           console.error('Error creating order:', error);

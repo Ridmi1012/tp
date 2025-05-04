@@ -1,3 +1,11 @@
+<div class="success-modal" *ngIf="showSuccessMessage">
+  <div class="success-content">
+    <div class="success-icon">✓</div>
+    <h2>Order Submitted Successfully!</h2>
+    <p>{{ successMessage }}</p>
+    <p>Redirecting to your orders...</p>
+  </div>
+</div>
 <!-- order-as-is.component.html -->
 <div class="order-as-is-container">
   <div class="header">
