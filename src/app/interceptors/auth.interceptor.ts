@@ -47,13 +47,33 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
       catchError((error: HttpErrorResponse) => {
         console.error('Request error:', error);
         
-        if (error.status === 401 || error.status === 403) {
+        if (error.status === 403) {
+          console.log('Access forbidden error for URL:', req.url);
+          
+          // If trying to access admin routes but not admin
+          if (req.url.includes('/api/admin/') || req.url.includes('/api/orders')) {
+            if (!authService.isAdmin()) {
+              console.log('User attempting to access admin resources without admin role');
+              router.navigate(['/unauthorized']);
+            } else {
+              console.log('Admin token may be invalid - logging out');
+              authService.logout();
+              router.navigate(['/login']);
+            }
+          } else {
+            // Handle other 403 errors
+            console.log('Authentication error - logging out');
+            authService.logout();
+            router.navigate(['/login']);
+          }
+        } else if (error.status === 401) {
           console.log('Authentication error - logging out');
           authService.logout();
           router.navigate(['/login'], { 
             queryParams: { returnUrl: router.url }
           });
         }
+        
         return throwError(() => error);
       })
     );

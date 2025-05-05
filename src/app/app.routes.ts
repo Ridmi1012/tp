@@ -27,6 +27,8 @@ import { ManageportfolioComponent } from './features/admin/manageportfolio/manag
 
 import { AdmindesingsportfolioComponent } from './features/admin/admindesingsportfolio/admindesingsportfolio.component';
 import { ReviewFormComponent } from './features/Customer/reviewform/reviewform.component';
+import { AdminOrdersComponent } from './features/admin/admin-orders/admin-orders.component';
+import { AdminOrderDetailsComponent } from './features/admin/admin-order-details/admin-order-details.component';
 
 export const routes: Routes = [
  // Public Routes
@@ -85,6 +87,16 @@ export const routes: Routes = [
    component: ManageportfolioComponent,
    canActivate: [adminGuard]
  },
+ {
+  path: 'admin/orders',  
+  component: AdminOrdersComponent,
+  canActivate: [adminGuard]
+},
+{
+  path: 'admin/orderdetails/:id',  
+  component: AdminOrderDetailsComponent,
+  canActivate: [adminGuard]
+},
  {
    path: 'admin/categories',
    component: CategorymanagementComponent,

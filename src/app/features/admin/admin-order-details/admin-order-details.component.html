@@ -1,0 +1,266 @@
+<div class="order-detail-container">
+    <div class="top-actions">
+      <button (click)="goBack()" class="back-btn">
+        <span class="material-icons">arrow_back</span> Back to Orders
+      </button>
+      <button (click)="printOrderDetails()" class="print-btn">
+        <span class="material-icons">print</span> Print
+      </button>
+    </div>
+  
+    <div class="loading-spinner" *ngIf="loading">
+      <div class="spinner"></div>
+      <p>Loading order details...</p>
+    </div>
+  
+    <div class="error-message" *ngIf="error">
+      <p>{{ error }}</p>
+      <button (click)="retryLoad()" class="retry-btn">Try Again</button>
+    </div>
+  
+    <div class="order-content" *ngIf="!loading && !error && order">
+      <div class="order-header">
+        <div class="order-title">
+          <h1>Order #{{ order.orderNumber }}</h1>
+          <div class="status-badge" [ngClass]="order.status">
+            {{ getStatusLabel(order.status) }}
+          </div>
+        </div>
+        <div class="summary-item" *ngIf="order.customDetails?.eventTime">
+          <span class="label">Event Time</span>
+          <span class="value">{{ formatTime(order.customDetails.eventTime) }}</span>
+        </div>
+      </div>
+  
+      <div class="order-grid">
+        <!-- Order Summary -->
+        <div class="order-section order-summary">
+          <h2>Order Summary</h2>
+          <div class="summary-details">
+            <div class="summary-item">
+              <span class="label">Order Type</span>
+              <span class="value">{{ getOrderTypeDisplay(order.orderType) }}</span>
+            </div>
+            <div class="summary-item" *ngIf="order.customDetails?.customName">
+              <span class="label">For</span>
+              <span class="value">{{ order.customDetails.customName }}</span>
+            </div>
+            <div class="summary-item" *ngIf="order.customDetails?.customAge">
+              <span class="label">Age/Year</span>
+              <span class="value">{{ order.customDetails.customAge }}</span>
+            </div>
+            <div class="summary-item" *ngIf="order.customDetails?.eventDate">
+              <span class="label">Event Date</span>
+              <span class="value">{{ order.customDetails.eventDate | date:'dd MMM yyyy' }}</span>
+            </div>
+            <div class="summary-item" *ngIf="order.customDetails?.eventTime">
+              <span class="label">Event Time</span>
+              <span class="value">{{ formatTime(order.customDetails.eventTime) }}</span>
+            </div>
+            <div class="summary-item" *ngIf="order.customDetails?.venue">
+              <span class="label">Venue</span>
+              <span class="value">{{ order.customDetails.venue }}</span>
+            </div>
+            <div class="summary-item">
+              <span class="label">Payment Status</span>
+              <span class="value" [ngClass]="order.paymentStatus">
+                {{ getPaymentStatusLabel(order.paymentStatus) }}
+              </span>
+            </div>
+          </div>
+        </div>
+  
+        <!-- Customer Information -->
+        <div class="order-section customer-info">
+          <h2>Customer Information</h2>
+          <div class="customer-details">
+            <div class="customer-item">
+              <span class="label">Name</span>
+              <span class="value">{{ order.customerInfo.firstName || 'N/A' }} {{ order.customerInfo.lastName || '' }}</span>
+            </div>
+            <div class="customer-item">
+              <span class="label">Email</span>
+              <span class="value">
+                <a *ngIf="order.customerInfo?.email" [href]="'mailto:' + order.customerInfo.email">{{ order.customerInfo.email }}</a>
+                <span *ngIf="!order.customerInfo?.email">N/A</span>
+              </span>
+            </div>
+            <div class="customer-item">
+              <span class="label">Contact</span>
+              <span class="value">{{ order.customerInfo.contact || 'N/A' }}</span>
+            </div>
+            <div class="customer-item" *ngIf="order.customerInfo?.relationshipToPerson">
+              <span class="label">Relationship</span>
+              <span class="value">{{ order.customerInfo.relationshipToPerson }}</span>
+            </div>
+          </div>
+  
+          <div class="contact-actions" *ngIf="order.customerInfo">
+            <button *ngIf="order.customerInfo?.contact" (click)="callCustomer()" class="contact-btn call">
+              <span class="material-icons">call</span> Call
+            </button>
+            <button *ngIf="order.customerInfo?.email" (click)="emailCustomer()" class="contact-btn email">
+              <span class="material-icons">email</span> Email
+            </button>
+            <button *ngIf="order.customerInfo?.contact" (click)="whatsappCustomer()" class="contact-btn whatsapp">
+              <span class="material-icons">chat</span> WhatsApp
+            </button>
+          </div>
+        </div>
+  
+        <!-- Design Preview -->
+        <div class="order-section design-preview" *ngIf="design">
+          <h2>Design Information</h2>
+          <div class="design-card">
+            <img *ngIf="design.imageUrl" [src]="design.imageUrl" [alt]="design.name" class="design-image">
+            <div class="design-info">
+              <h3>{{ design.name }}</h3>
+              <p class="price">Base Price: Rs. {{ design.basePrice }}</p>
+              <p class="category" *ngIf="design.category">Category: {{ design.category.name }}</p>
+              <p class="description">{{ design.description }}</p>
+            </div>
+          </div>
+          <div class="additional-images" *ngIf="design.additionalImages && design.additionalImages.length > 0">
+            <h4>Additional Images</h4>
+            <div class="image-grid">
+              <img *ngFor="let image of design.additionalImages" 
+                   [src]="image" 
+                   [alt]="design.name + ' additional image'"
+                   class="thumbnail">
+            </div>
+          </div>
+        </div>
+  
+        <!-- Pricing Information -->
+        <div class="order-section pricing-info">
+          <h2>Pricing Information</h2>
+          <form [formGroup]="additionalCostsForm" class="costs-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="basePrice">Base Price</label>
+                <div class="input-group">
+                  <span class="currency">Rs.</span>
+                  <input 
+                    type="text" 
+                    id="basePrice" 
+                    [value]="design?.basePrice || 0"
+                    disabled
+                    class="form-control"
+                  >
+                </div>
+              </div>
+            </div>
+  
+            <div class="form-row">
+              <div class="form-group">
+                <label for="transportationCost">Transportation Cost</label>
+                <div class="input-group">
+                  <span class="currency">Rs.</span>
+                  <input 
+                    type="number" 
+                    id="transportationCost" 
+                    formControlName="transportationCost" 
+                    class="form-control"
+                    [disabled]="order.status === 'cancelled' || order.status === 'completed'"
+                  >
+                </div>
+              </div>
+            </div>
+  
+            <div class="form-row">
+              <div class="form-group">
+                <label for="additionalRentalCost">Additional Rental Cost</label>
+                <div class="input-group">
+                  <span class="currency">Rs.</span>
+                  <input 
+                    type="number" 
+                    id="additionalRentalCost" 
+                    formControlName="additionalRentalCost" 
+                    class="form-control"
+                    [disabled]="order.status === 'cancelled' || order.status === 'completed'"
+                  >
+                </div>
+              </div>
+            </div>
+  
+            <div class="form-row total-row">
+              <div class="form-group">
+                <label for="totalPrice">Total Price</label>
+                <div class="input-group">
+                  <span class="currency">Rs.</span>
+                  <input 
+                    type="text" 
+                    id="totalPrice" 
+                    [value]="calculateTotalPrice()"
+                    disabled
+                    class="form-control total-price"
+                  >
+                </div>
+              </div>
+            </div>
+  
+            <button 
+              type="button" 
+              (click)="saveAdditionalCosts()" 
+              class="save-costs-btn"
+              [disabled]="!additionalCostsForm.valid || order.status === 'cancelled' || order.status === 'completed'"
+            >
+              Update Costs
+            </button>
+          </form>
+        </div>
+      </div>
+  
+      <!-- Order Actions -->
+      <div class="order-actions">
+        <div class="action-group" *ngIf="order.status === 'pending'">
+          <button (click)="confirmOrder()" class="action-btn confirm">
+            <span class="material-icons">check_circle</span> Confirm Order
+          </button>
+          <button (click)="cancelOrder()" class="action-btn cancel">
+            <span class="material-icons">cancel</span> Cancel Order
+          </button>
+        </div>
+  
+        <div class="action-group" *ngIf="order.status === 'confirmed'">
+          <button (click)="updateOrderStatus('in-progress')" class="action-btn progress">
+            <span class="material-icons">build</span> Mark as In Progress
+          </button>
+          <button (click)="cancelOrder()" class="action-btn cancel">
+            <span class="material-icons">cancel</span> Cancel Order
+          </button>
+        </div>
+  
+        <div class="action-group" *ngIf="order.status === 'in-progress'">
+          <button (click)="updateOrderStatus('ready-for-delivery')" class="action-btn ready">
+            <span class="material-icons">local_shipping</span> Mark as Ready for Delivery
+          </button>
+          <button (click)="cancelOrder()" class="action-btn cancel">
+            <span class="material-icons">cancel</span> Cancel Order
+          </button>
+        </div>
+  
+        <div class="action-group" *ngIf="order.status === 'ready-for-delivery'">
+          <button (click)="updateOrderStatus('completed')" class="action-btn complete">
+            <span class="material-icons">done_all</span> Mark as Completed
+          </button>
+          <button (click)="cancelOrder()" class="action-btn cancel">
+            <span class="material-icons">cancel</span> Cancel Order
+          </button>
+        </div>
+  
+        <div class="action-message" *ngIf="order.status === 'completed'">
+          <span class="material-icons success-icon">check_circle</span>
+          <p>This order has been marked as completed.</p>
+        </div>
+  
+        <div class="action-message" *ngIf="order.status === 'cancelled'">
+          <span class="material-icons cancel-icon">error</span>
+          <p>This order has been cancelled.</p>
+          <p *ngIf="order.cancellationReason" class="cancellation-reason">
+            Reason: {{ order.cancellationReason }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>

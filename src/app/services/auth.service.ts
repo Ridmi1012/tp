@@ -118,6 +118,18 @@ export class AuthService {
     return localStorage.getItem('authToken') || '';
   }
 
+  debugToken(): void {
+    const token = this.getToken();
+    if (token) {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      console.log('Token payload:', payload);
+      // Check specifically for the userType or roles claim
+      console.log('User type:', payload.userType);
+    } else {
+      console.log('No token found');
+    }
+  }
+
   logout(): void {
     localStorage.removeItem('authToken');
     localStorage.removeItem('userDetails');
@@ -145,7 +157,18 @@ export class AuthService {
   }
 
   isAdmin(): boolean {
-    return this.getUserType() === 'ADMIN';
+    const token = this.getToken();
+    if (!token) return false;
+    
+    try {
+      // Decode token (split by dots, take the middle part, decode from base64)
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      // Check if userType is 'ADMIN' (case-sensitive as per your JWT filter)
+      return payload.userType === 'ADMIN';
+    } catch (e) {
+      console.error('Error parsing token:', e);
+      return false;
+    }
   }
 
   isCustomer(): boolean {
