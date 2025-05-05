@@ -1,0 +1,298 @@
+/* Ongoing Orders Component Styling with Pink Theme */
+.ongoing-orders-container {
+    background: linear-gradient(135deg, #fdeef1 0%, #ffc4d1 100%);
+    padding: 60px 20px;
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    margin: 0 auto;
+    border-radius: 12px;
+    box-shadow: 0 5px 20px rgba(224, 95, 103, 0.1);
+    min-height: 100vh;
+  }
+  
+  /* Page Header */
+  .ongoing-orders-container h1 {
+    text-align: center;
+    font-size: 2.8rem;
+    color: #333;
+    font-weight: 700;
+    margin-bottom: 40px;
+  }
+  
+  /* Loading Spinner */
+  .loading-spinner {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+  }
+  
+  /* Error Message */
+  .error-message {
+    background-color: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin: 40px auto;
+    text-align: center;
+    max-width: 70%;
+    color: #d74b55;
+    font-size: 1.1rem;
+    border: 1px dashed #ffc4d1;
+    box-shadow: 0 5px 15px rgba(224, 95, 103, 0.1);
+  }
+  
+  /* No Orders State */
+  .no-orders {
+    background-color: white;
+    border-radius: 12px;
+    padding: 40px 30px;
+    margin: 40px auto;
+    text-align: center;
+    max-width: 600px;
+    box-shadow: 0 10px 30px rgba(224, 95, 103, 0.15);
+    border-top: 5px solid #e05f67;
+  }
+  
+  .no-orders mat-icon {
+    font-size: 60px;
+    height: 60px;
+    width: 60px;
+    color: #e05f67;
+    margin-bottom: 20px;
+  }
+  
+  .no-orders h3 {
+    color: #e05f67;
+    font-size: 1.8rem;
+    margin-bottom: 15px;
+  }
+  
+  .no-orders p {
+    color: #495057;
+    font-size: 1.1rem;
+    margin-bottom: 25px;
+  }
+  
+  .no-orders button {
+    padding: 12px 30px;
+    border-radius: 50px;
+    background-color: #e05f67;
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-weight: 600;
+    font-size: 1.1rem;
+    box-shadow: 0 5px 15px rgba(224, 95, 103, 0.2);
+  }
+  
+  .no-orders button:hover {
+    background-color: #d74b55;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(224, 95, 103, 0.3);
+  }
+  
+  /* Orders Grid */
+  .orders-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 30px;
+    margin-top: 40px;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  
+  /* Order Card */
+  .order-card {
+    width: 100%;
+    background-color: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(224, 95, 103, 0.15);
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    border-top: 5px solid #e05f67;
+  }
+  
+  .order-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(224, 95, 103, 0.2);
+  }
+  
+  /* Card Header */
+  .order-card mat-card-header {
+    padding: 20px 20px 0 20px;
+  }
+  
+  .order-card mat-card-title {
+    font-size: 1.4rem;
+    color: #e05f67;
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+  
+  .order-card mat-card-subtitle {
+    color: #495057;
+    font-size: 1rem;
+    font-weight: 500;
+  }
+  
+  /* Card Content */
+  .order-card mat-card-content {
+    padding: 15px 20px;
+    flex-grow: 1;
+  }
+  
+  .order-summary p {
+    margin: 10px 0;
+    font-size: 0.95rem;
+    color: #495057;
+  }
+  
+  /* Status Section */
+  .status-section {
+    margin: 20px 0;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  
+  mat-chip {
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 50px;
+  }
+  
+  .cancellation-reason {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    color: #d74b55;
+    font-size: 0.9rem;
+    font-style: italic;
+  }
+  
+  .cancellation-reason mat-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+  }
+  
+  /* Progress Section */
+  .progress-section {
+    margin: 20px 0;
+  }
+  
+  .progress-section label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+    color: #495057;
+    font-weight: 600;
+  }
+  
+  mat-progress-bar {
+    height: 8px;
+    border-radius: 4px;
+  }
+  
+  /* Payment Message */
+  .payment-message {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+    padding: 12px;
+    background-color: #fdeef1;
+    border-radius: 8px;
+    color: #e05f67;
+    font-size: 0.9rem;
+  }
+  
+  .payment-message mat-icon {
+    font-size: 20px;
+    height: 20px;
+    width: 20px;
+  }
+  
+  /* Card Actions */
+  .order-card mat-card-actions {
+    background-color: #fdeef1;
+    border-top: 1px solid rgba(224, 95, 103, 0.2);
+    padding: 12px 20px;
+  }
+  
+  .order-card mat-card-actions button {
+    color: #e05f67;
+    font-weight: 600;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+  }
+  
+  .order-card mat-card-actions button:hover {
+    background-color: #e05f67;
+    color: white;
+    transform: translateY(-3px);
+    box-shadow: 0 4px 15px rgba(224, 95, 103, 0.3);
+    border-radius: 50px;
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 992px) {
+    .ongoing-orders-container h1 {
+      font-size: 2.4rem;
+    }
+    
+    .orders-grid {
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .ongoing-orders-container h1 {
+      font-size: 2rem;
+    }
+    
+    .orders-grid {
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+    
+    .ongoing-orders-container {
+      padding: 40px 15px;
+    }
+    
+    .no-orders {
+      padding: 30px 20px;
+    }
+    
+    .no-orders h3 {
+      font-size: 1.6rem;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .ongoing-orders-container h1 {
+      font-size: 1.8rem;
+    }
+    
+    .orders-grid {
+      grid-template-columns: 1fr;
+      max-width: 100%;
+    }
+    
+    .order-card {
+      max-width: 100%;
+    }
+    
+    .no-orders {
+      max-width: 90%;
+    }
+    
+    .error-message {
+      max-width: 90%;
+    }
+  }
