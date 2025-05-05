@@ -35,15 +35,16 @@
       <div class="info-grid">
         <div class="info-item">
           <label>Order Type</label>
-          <p>{{ order.orderType }}</p>
+          <p>{{ order.orderType === 'as-is' ? 'Standard Design' : (order.orderType === 'custom-design' ? 'Custom Design' : 'Custom Request') }}</p>
         </div>
         <div class="info-item">
-          <label>Design ID</label>
-          <p>{{ order.designId }}</p>
+          <label>Created On</label>
+          <p>{{ formatDate(order.createdAt) }}</p>
         </div>
         <div class="info-item">
           <label>Base Price</label>
-          <p>Rs. {{ order.basePrice }}</p>
+          <p *ngIf="order.basePrice">Rs. {{ order.basePrice | number:'1.2-2' }}</p>
+          <p *ngIf="!order.basePrice" class="loading-text">Loading price...</p>
         </div>
         <div class="info-item" *ngIf="order.transportationCost">
           <label>Transportation Cost</label>
@@ -76,7 +77,7 @@
         </div>
         <div class="info-item">
           <label>Event Category</label>
-          <p>{{ order.customDetails.eventCategory }}</p>
+          <p>{{ categoryName || 'Loading...' }}</p>
         </div>
         <div class="info-item">
           <label>Date</label>
@@ -84,7 +85,7 @@
         </div>
         <div class="info-item">
           <label>Time</label>
-          <p>{{ order.customDetails.eventTime }}</p>
+          <p>{{ formatTime(order.customDetails.eventTime) }}</p>
         </div>
         <div class="info-item full-width">
           <label>Venue</label>
@@ -113,7 +114,7 @@
         </div>
         <div class="info-item">
           <label>Relationship</label>
-          <p>{{ order.customerInfo.relationshipToPerson }}</p>
+          <p>{{ formatRelationship(order.customerInfo.relationshipToPerson) }}</p>
         </div>
       </div>
     </div>

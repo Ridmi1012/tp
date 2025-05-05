@@ -12,11 +12,12 @@ import { OrderService, Order } from '../../../services/order.service';
 import { AuthService } from '../../../services/auth.service';
 import { OrderDetailsDialogComponent } from '../order-details-dialog/order-details-dialog.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { DatePipe } from '@angular/common';
 
 
 @Component({
   selector: 'app-ongoing',
-  imports: [ CommonModule,
+  imports: [  CommonModule,
     RouterModule,
     MatCardModule,
     MatButtonModule,
@@ -24,7 +25,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatDialogModule,
     MatChipsModule,
     MatIconModule,
-    MatProgressSpinnerModule],
+    MatProgressSpinnerModule,
+    DatePipe],
   templateUrl: './ongoing.component.html',
   styleUrl: './ongoing.component.css'
 })
@@ -110,7 +112,7 @@ export class OngoingComponent implements OnInit {
 
   viewOrderDetails(order: Order) {
     this.dialog.open(OrderDetailsDialogComponent, {
-      width: '800px',
+      width: '1000px',
       data: order
     });
   }
@@ -128,6 +130,19 @@ export class OngoingComponent implements OnInit {
       }
     }
     return '';
+  }
+  
+  // New method to format time in 12-hour format with AM/PM
+  formatTime(time: string | undefined): string {
+    if (!time) return '';
+    
+    // Convert 24-hour time format to 12-hour format with AM/PM
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12; // Convert 0 to 12 for 12 AM
+    
+    return `${hour12}:${minutes} ${ampm}`;
   }
   
 }

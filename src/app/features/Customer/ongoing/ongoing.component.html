@@ -31,7 +31,7 @@
         <div class="order-summary">
           <p><strong>Event:</strong> {{ order.customDetails.customName }}'s {{ order.customDetails.eventCategory }}</p>
           <p><strong>Venue:</strong> {{ order.customDetails.venue }}</p>
-          <p><strong>Time:</strong> {{ order.customDetails.eventTime }}</p>
+          <p><strong>Time:</strong> {{ formatTime(order.customDetails.eventTime) }}</p>
           
           <div class="status-section">
             <mat-chip [color]="getStatusColor(order.status)" selected>
