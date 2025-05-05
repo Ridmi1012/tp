@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, throwError  } from 'rxjs';
+import { Observable, throwError, of  } from 'rxjs';
 import { DesignService } from './design.service';
 import { HttpHeaders } from '@angular/common/http';
 import { catchError, tap } from 'rxjs/operators';
@@ -61,6 +61,14 @@ export class OrderService {
     private designService: DesignService,
     private authService: AuthService
   ) {}
+
+  // Helper to create headers with auth token
+  private getHeaders(): HttpHeaders {
+    const token = this.authService.getToken();
+    return new HttpHeaders()
+      .set('Content-Type', 'application/json')
+      .set('Authorization', `Bearer ${token}`);
+  }
 
   // Create a new order
   createOrder(orderData: OrderData): Observable<Order> {
@@ -124,15 +132,40 @@ export class OrderService {
     );
   }
 
+  private getAuthHeaders(): HttpHeaders {
+    const token = this.authService.getToken();
+    return new HttpHeaders().set('Authorization', `Bearer ${token}`);
+  }
+
+  private handleError<T>(operation = 'operation', result?: T) {
+    return (error: any): Observable<T> => {
+      console.error(`${operation} failed:`, error);
+      
+      // Let the app keep running by returning an empty result
+      return of(result as T);
+    };
+  }
   // Get all orders (admin)
   getAllOrders(): Observable<Order[]> {
-    return this.http.get<Order[]>(this.apiUrl);
+    const headers = this.getAuthHeaders();
+    // Remove the duplicate "/orders" path segment
+    return this.http.get<Order[]>(`${this.apiUrl}`, { headers })
+      .pipe(
+        catchError(this.handleError('getAllOrders', []))
+      );
   }
 
   // Get order by ID
   getOrderById(orderId: string): Observable<Order> {
-    return this.http.get<Order>(`${this.apiUrl}/${orderId}`);
+    const headers = this.getAuthHeaders();
+    return this.http.get<Order>(`${this.apiUrl}/${orderId}`, { headers }).pipe(
+      catchError(error => {
+        console.error('Error fetching order details:', error);
+        return throwError(() => new Error('Failed to fetch order details: ' + this.getErrorMessage(error)));
+      })
+    );
   }
+  
 
   // Update order (admin - confirm/cancel)
   updateOrder(orderId: string, updateData: Partial<Order>): Observable<Order> {
@@ -162,12 +195,34 @@ export class OrderService {
     transportationCost: number;
     additionalRentalCost: number;
   }): Observable<Order> {
-    return this.http.post<Order>(`${this.apiUrl}/${orderId}/confirm`, additionalCosts);
+    const headers = this.getHeaders();
+    return this.http.post<Order>(`${this.apiUrl}/${orderId}/confirm`, additionalCosts, { headers }).pipe(
+      catchError(error => {
+        console.error('Error confirming order:', error);
+        return throwError(() => new Error('Failed to confirm order: ' + this.getErrorMessage(error)));
+      })
+    );
   }
 
-  // Cancel order (admin or customer)
   cancelOrder(orderId: string, reason: string): Observable<Order> {
-    return this.http.post<Order>(`${this.apiUrl}/${orderId}/cancel`, { reason });
+    const headers = this.getHeaders();
+    return this.http.post<Order>(`${this.apiUrl}/${orderId}/cancel`, { reason }, { headers }).pipe(
+      catchError(error => {
+        console.error('Error cancelling order:', error);
+        return throwError(() => new Error('Failed to cancel order: ' + this.getErrorMessage(error)));
+      })
+    );
+  }
+
+  // Get new orders (pending - for admin)
+  getNewOrders(): Observable<Order[]> {
+    const headers = this.getHeaders();
+    return this.http.get<Order[]>(`${this.apiUrl}/new`, { headers }).pipe(
+      catchError(error => {
+        console.error('Error getting new orders:', error);
+        return throwError(() => new Error('Failed to fetch new orders: ' + this.getErrorMessage(error)));
+      })
+    );
   }
 
   // Update event details (customer - venue change)
@@ -191,21 +246,28 @@ export class OrderService {
     return this.http.post(`${this.apiUrl}/${orderId}/payment-slip`, formData);
   }
 
-  // Get design by ID (for order as is)
-  getDesignById(designId: string): Observable<any> {
-    // Convert string ID to number since design service expects number
-    const id = parseInt(designId, 10);
-    return this.designService.getDesignById(id);
-  }
-
-  // Get new orders (pending - for admin)
-  getNewOrders(): Observable<Order[]> {
-    return this.http.get<Order[]>(`${this.apiUrl}/new`);
-  }
+// Get design by ID
+getDesignById(designId: string | number): Observable<any> {
+  const headers = this.getHeaders();
+  return this.http.get<any>(`http://localhost:8083/api/designs/${designId}`, { headers }).pipe(
+    catchError(error => {
+      console.error('Error getting design details:', error);
+      return throwError(() => new Error('Failed to fetch design details: ' + this.getErrorMessage(error)));
+    })
+  );
+}
 
   // Get ongoing orders (confirmed but not completed)
   getOngoingOrders(): Observable<Order[]> {
     return this.http.get<Order[]>(`${this.apiUrl}/ongoing`);
+  }
+
+   // Helper to get readable error message
+   private getErrorMessage(error: any): string {
+    if (error.status === 403) {
+      return 'You do not have permission to access this resource. Please log in again.';
+    }
+    return error.error?.message || error.statusText || 'Unknown error';
   }
 
   // PayHere integration methods
