@@ -20,6 +20,7 @@ body {
   align-items: center;
   position: relative;
   overflow: hidden;
+  margin-top: 60px;
 }
 
 /* Decorative elements */
