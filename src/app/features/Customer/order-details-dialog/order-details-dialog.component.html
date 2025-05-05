@@ -1,0 +1,128 @@
+<h2 mat-dialog-title>Order Details - #{{ order.orderNumber }}</h2>
+
+<mat-dialog-content>
+  <div class="order-details">
+    <!-- Progress Timeline -->
+    <div class="progress-timeline">
+      <h3>Order Progress</h3>
+      <div class="timeline">
+        <div *ngFor="let step of getStatusSteps(); let i = index" 
+             class="timeline-step" 
+             [class.completed]="step.completed"
+             [class.active]="step.active"
+             [class.cancelled]="step.isCancelled">
+          <div class="step-icon">
+            <mat-icon>{{ step.icon }}</mat-icon>
+          </div>
+          <div class="step-content">
+            <h4>{{ step.label }}</h4>
+            <p *ngIf="step.date" class="step-date">{{ formatDate(step.date) }}</p>
+            <p *ngIf="step.cancellationReason" class="cancellation-reason">
+              Reason: {{ step.cancellationReason }}
+            </p>
+            <p *ngIf="step.message" class="step-message">{{ step.message }}</p>
+          </div>
+          <div *ngIf="i < getStatusSteps().length - 1" class="step-connector"></div>
+        </div>
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Order Information -->
+    <div class="order-info">
+      <h3>Order Information</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Order Type</label>
+          <p>{{ order.orderType }}</p>
+        </div>
+        <div class="info-item">
+          <label>Design ID</label>
+          <p>{{ order.designId }}</p>
+        </div>
+        <div class="info-item">
+          <label>Base Price</label>
+          <p>Rs. {{ order.basePrice }}</p>
+        </div>
+        <div class="info-item" *ngIf="order.transportationCost">
+          <label>Transportation Cost</label>
+          <p>Rs. {{ order.transportationCost }}</p>
+        </div>
+        <div class="info-item" *ngIf="order.additionalRentalCost">
+          <label>Additional Rental Cost</label>
+          <p>Rs. {{ order.additionalRentalCost }}</p>
+        </div>
+        <div class="info-item" *ngIf="order.totalPrice">
+          <label>Total Price</label>
+          <p><strong>Rs. {{ order.totalPrice }}</strong></p>
+        </div>
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Event Details -->
+    <div class="event-details">
+      <h3>Event Details</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Name</label>
+          <p>{{ order.customDetails.customName }}</p>
+        </div>
+        <div class="info-item">
+          <label>Age/Year</label>
+          <p>{{ order.customDetails.customAge }}</p>
+        </div>
+        <div class="info-item">
+          <label>Event Category</label>
+          <p>{{ order.customDetails.eventCategory }}</p>
+        </div>
+        <div class="info-item">
+          <label>Date</label>
+          <p>{{ order.customDetails.eventDate | date:'fullDate' }}</p>
+        </div>
+        <div class="info-item">
+          <label>Time</label>
+          <p>{{ order.customDetails.eventTime }}</p>
+        </div>
+        <div class="info-item full-width">
+          <label>Venue</label>
+          <p>{{ order.customDetails.venue }}</p>
+        </div>
+      </div>
+    </div>
+
+    <mat-divider></mat-divider>
+
+    <!-- Customer Information -->
+    <div class="customer-info">
+      <h3>Customer Information</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Name</label>
+          <p>{{ order.customerInfo.firstName }} {{ order.customerInfo.lastName }}</p>
+        </div>
+        <div class="info-item">
+          <label>Email</label>
+          <p>{{ order.customerInfo.email }}</p>
+        </div>
+        <div class="info-item">
+          <label>Contact</label>
+          <p>{{ order.customerInfo.contact }}</p>
+        </div>
+        <div class="info-item">
+          <label>Relationship</label>
+          <p>{{ order.customerInfo.relationshipToPerson }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="dialogRef.close()">Close</button>
+  <button mat-raised-button color="primary" *ngIf="order.status === 'confirmed'">
+    Make Payment
+  </button>
+</mat-dialog-actions>

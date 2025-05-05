@@ -1,0 +1,69 @@
+<div class="ongoing-orders-container">
+  <h1>My Ongoing Orders</h1>
+  
+  <div *ngIf="loading" class="loading-spinner">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <div *ngIf="!loading && ongoingOrders.length === 0" class="no-orders">
+    <mat-icon>shopping_cart</mat-icon>
+    <h3>No ongoing orders</h3>
+    <p>You don't have any ongoing orders at the moment.</p>
+    <button mat-raised-button color="primary" routerLink="/portfolio">
+      Browse Designs
+    </button>
+  </div>
+
+  <div class="orders-grid" *ngIf="!loading && ongoingOrders.length > 0">
+    <mat-card *ngFor="let order of ongoingOrders" class="order-card">
+      <mat-card-header>
+        <mat-card-title>Order #{{ order.orderNumber }}</mat-card-title>
+        <mat-card-subtitle>
+          {{ order.customDetails.eventCategory }} - {{ order.customDetails.eventDate | date:'mediumDate' }}
+        </mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="order-summary">
+          <p><strong>Event:</strong> {{ order.customDetails.customName }}'s {{ order.customDetails.eventCategory }}</p>
+          <p><strong>Venue:</strong> {{ order.customDetails.venue }}</p>
+          <p><strong>Time:</strong> {{ order.customDetails.eventTime }}</p>
+          
+          <div class="status-section">
+            <mat-chip [color]="getStatusColor(order.status)" selected>
+              {{ getStatusLabel(order.status) }}
+            </mat-chip>
+            
+            <div *ngIf="order.status === 'cancelled'" class="cancellation-reason">
+              <mat-icon>info</mat-icon>
+              <span>Reason: {{ order.cancellationReason }}</span>
+            </div>
+          </div>
+
+          <div class="progress-section">
+            <label>Order Progress</label>
+            <mat-progress-bar 
+              [value]="getProgressValue(order.status)" 
+              [color]="getStatusColor(order.status)">
+            </mat-progress-bar>
+          </div>
+
+          <div *ngIf="order.status === 'confirmed'" class="payment-message">
+            <mat-icon>payment</mat-icon>
+            <span>{{ getPaymentMessage(order) }}</span>
+          </div>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions align="end">
+        <button mat-button color="primary" (click)="viewOrderDetails(order)">
+          VIEW DETAILS
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+</div>

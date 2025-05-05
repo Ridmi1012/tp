@@ -1,11 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, throwError  } from 'rxjs';
 import { DesignService } from './design.service';
 import { HttpHeaders } from '@angular/common/http';
 import { catchError, tap } from 'rxjs/operators';
 import { AuthService } from './auth.service';
-
 
 export interface OrderData {
   designId: string;
@@ -104,7 +103,25 @@ export class OrderService {
 
   // Get all orders for a customer
   getCustomerOrders(customerId: string): Observable<Order[]> {
-    return this.http.get<Order[]>(`${this.apiUrl}/customer/${customerId}`);
+    // Get token for authorization header
+    const token = this.authService.getToken();
+    
+    // Log debugging info
+    console.log('Getting orders for customer:', customerId);
+    console.log('Token present:', !!token);
+    
+    // Create headers with token
+    const headers = new HttpHeaders()
+      .set('Authorization', `Bearer ${token}`);
+    
+    // Make sure to use the correct endpoint that's permitted in your security config
+    return this.http.get<Order[]>(`${this.apiUrl}/customer/${customerId}`, { headers }).pipe(
+      tap(orders => console.log(`Retrieved ${orders.length} orders for customer ${customerId}`)),
+      catchError(error => {
+        console.error('Error fetching customer orders:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   // Get all orders (admin)
@@ -120,6 +137,24 @@ export class OrderService {
   // Update order (admin - confirm/cancel)
   updateOrder(orderId: string, updateData: Partial<Order>): Observable<Order> {
     return this.http.patch<Order>(`${this.apiUrl}/${orderId}`, updateData);
+  }
+
+  getCustomerOngoingOrders(customerId: string): Observable<Order[]> {
+    // Get token for authorization header
+    const token = this.authService.getToken();
+    
+    // Create headers with token
+    const headers = new HttpHeaders()
+      .set('Authorization', `Bearer ${token}`);
+    
+    // Use the ongoing endpoint with customer ID
+    return this.http.get<Order[]>(`${this.apiUrl}/customer/${customerId}/ongoing`, { headers }).pipe(
+      tap(orders => console.log(`Retrieved ${orders.length} ongoing orders for customer ${customerId}`)),
+      catchError(error => {
+        console.error('Error fetching ongoing orders:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   // Confirm order (admin)
