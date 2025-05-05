@@ -2,7 +2,6 @@
   <header class="admin-header">
     <h1>Order Management</h1>
     <div class="actions">
-      <!-- Notification bell with badge -->
       <div class="notification-container">
         <button [matMenuTriggerFor]="notificationMenu" class="notification-btn">
           <mat-icon [matBadge]="unreadNotificationsCount" 
@@ -48,7 +47,7 @@
       </div>
       
       <button (click)="loadOrders()" class="refresh-btn">
-        <span class="material-icons">refresh</span> Refresh
+        <span class="material-icons"></span> Refresh
       </button>
     </div>
   </header>
@@ -65,39 +64,35 @@
 
   <div class="orders-content" *ngIf="!loading && !error">
     <mat-tab-group animationDuration="300ms">
-      <!-- New Orders Tab -->
-      <mat-tab label="New Orders ({{ newOrders.length }})" id="new-orders-tab">
-        <div class="orders-list">
+       <!-- New Orders Tab -->
+       <mat-tab label="New Orders ({{ newOrders.length }})" id="new-orders-tab">
+        <div class="orders-grid">
           <div class="empty-state" *ngIf="newOrders.length === 0">
             <div class="empty-icon">📪</div>
             <p>No new orders at the moment</p>
           </div>
-
+  
           <div class="order-card" *ngFor="let order of newOrders">
             <div class="order-header">
               <h3>Order #{{ order.orderNumber }}</h3>
-              <p class="order-event">
-                Event: {{ order.customDetails.eventDate | date:'dd MMM yyyy' }} at {{ formatTime(order.customDetails.eventTime) }}
-              </p>
+              <div class="request-time">{{ order.createdAt | date:'short' }}</div>
             </div>
             
             <div class="order-details">
-              <div class="order-info">
-                <p class="order-type">{{ getOrderTypeDisplay(order.orderType) }}</p>
-                <p class="order-name">For: {{ order.customDetails.customName }}</p>
-                <p class="order-event">
-                  Event: {{ order.customDetails.eventDate | date:'dd MMM yyyy' }} at {{ formatTime(order.customDetails.eventTime) }}
-                </p>
-                <p class="customer-info">
-                  Customer: {{ order.customerInfo.firstName }} {{ order.customerInfo.lastName }}
-                </p>
-              </div>
-              
-              <div class="order-actions">
-                <a [routerLink]="['/admin/orderdetails', order._id]" class="view-details-btn">
-                  View Details
-                </a>
-              </div>
+              <p class="order-type">{{ getOrderTypeDisplay(order.orderType) }}</p>
+              <p class="order-name">{{ order.customDetails.customName }}</p>
+              <p class="order-event">
+                <span class="label">Event:</span> {{ order.customDetails.eventDate | date:'dd MMM' }}
+              </p>
+              <p class="order-time">
+                <span class="label">Time:</span> {{ formatTime(order.customDetails.eventTime) }}
+              </p>
+            </div>
+            
+            <div class="order-actions">
+              <a [routerLink]="['/admin/orderdetails', order._id]" class="view-details-btn">
+                View Details
+              </a>
             </div>
           </div>
         </div>

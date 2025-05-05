@@ -1,28 +1,44 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router , RouterModule} from '@angular/router';
 import { OrderService, Order } from '../../../services/order.service';
 import { CommonModule } from '@angular/common';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { AdminConfirmDialogComponent } from '../admin-confirm-dialog/admin-confirm-dialog.component';
 import { AuthService } from '../../../services/auth.service';
+import { TemplateRef, ViewChild } from '@angular/core';
 
 
 @Component({
   selector: 'app-admin-order-details',
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, MatDialogModule, MatButtonModule],
+  imports: [CommonModule, RouterModule, ReactiveFormsModule, MatDialogModule, MatButtonModule, FormsModule],
   templateUrl: './admin-order-details.component.html',
   styleUrl: './admin-order-details.component.css'
 })
 export class AdminOrderDetailsComponent implements OnInit{
+   // View template references for dialogs
+  @ViewChild('pricingDialogTemplate') pricingDialogTemplate!: TemplateRef<any>;
+  @ViewChild('fullImageTemplate') fullImageTemplate!: TemplateRef<any>;
+  @ViewChild('cancelDialogTemplate') cancelDialogTemplate!: TemplateRef<any>;
+  
+  // Properties
   order: Order | null = null;
   design: any = null;
   loading = true;
   error: string | null = null;
   additionalCostsForm: FormGroup;
+  currentFullImage: string = '';
+  cancellationReason: string = '';
+  confirmFromPricing: boolean = false;
+  
+  // Dialog references
+  pricingDialogRef: MatDialogRef<any> | null = null;
+  fullImageDialogRef: MatDialogRef<any> | null = null;
+  cancelDialogRef: MatDialogRef<any> | null = null;
+  
   statusOptions = [
     { value: 'pending', label: 'Pending' },
     { value: 'confirmed', label: 'Confirmed' },
@@ -102,16 +118,42 @@ export class AdminOrderDetailsComponent implements OnInit{
           this.orderService.getDesignById(order.designId).subscribe({
             next: (design) => {
               this.design = design;
-              this.loading = false; // Set loading to false after design is loaded
+              this.loading = false;
+              
+              // Update form with existing values
+              if (order.transportationCost !== undefined) {
+                this.additionalCostsForm.patchValue({
+                  transportationCost: order.transportationCost
+                });
+              }
+              
+              if (order.additionalRentalCost !== undefined) {
+                this.additionalCostsForm.patchValue({
+                  additionalRentalCost: order.additionalRentalCost
+                });
+              }
             },
             error: (err) => {
               console.error('Error loading design:', err);
               this.design = null;
-              this.loading = false; // Important: Set loading to false even if design fails to load
+              this.loading = false;
             }
           });
         } else {
-          this.loading = false; // IMPORTANT: Set loading to false if there's no designId
+          this.loading = false;
+          
+          // Update form with existing values even if there's no design
+          if (order.transportationCost !== undefined) {
+            this.additionalCostsForm.patchValue({
+              transportationCost: order.transportationCost
+            });
+          }
+          
+          if (order.additionalRentalCost !== undefined) {
+            this.additionalCostsForm.patchValue({
+              additionalRentalCost: order.additionalRentalCost
+            });
+          }
         }
       },
       error: (err) => {
@@ -124,7 +166,6 @@ export class AdminOrderDetailsComponent implements OnInit{
           this.snackBar.open('Authorization failed. Please log in again.', 'Login', {
             duration: 5000
           }).onAction().subscribe(() => {
-            // Store current URL in query params for redirect after login
             this.router.navigate(['/login'], { 
               queryParams: { returnUrl: this.router.url } 
             });
@@ -144,76 +185,125 @@ export class AdminOrderDetailsComponent implements OnInit{
     });
   }
 
-  confirmOrder(): void {
+  // Dialog management methods
+  openPricingDialog(confirmAfter: boolean = false): void {
+    this.confirmFromPricing = confirmAfter;
+    this.pricingDialogRef = this.dialog.open(this.pricingDialogTemplate, {
+      width: '500px',
+      disableClose: true
+    });
+  }
+
+  closePricingDialog(): void {
+    if (this.pricingDialogRef) {
+      this.pricingDialogRef.close();
+      this.pricingDialogRef = null;
+    }
+    this.confirmFromPricing = false;
+  }
+
+  savePricingAndClose(): void {
     if (!this.order || !this.additionalCostsForm.valid) {
       this.snackBar.open('Please ensure all cost values are valid.', 'Close', { duration: 3000 });
       return;
     }
-
-    const dialogRef = this.dialog.open(AdminConfirmDialogComponent, {
-      width: '400px',
-      data: {
-        title: 'Confirm Order',
-        message: 'Are you sure you want to confirm this order? This will notify the customer and update the order status.',
-        showInput: false
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        const formValues = this.additionalCostsForm.value;
-        this.orderService.confirmOrder(this.order!._id, {
-          transportationCost: formValues.transportationCost,
-          additionalRentalCost: formValues.additionalRentalCost
-        }).subscribe({
-          next: (updatedOrder) => {
-            this.order = updatedOrder;
-            this.snackBar.open('Order confirmed successfully!', 'Close', {
-              duration: 3000
-            });
-          },
-          error: (err) => {
-            console.error('Error confirming order:', err);
-            this.snackBar.open(err.message || 'Failed to confirm order. Please try again.', 'Close', {
-              duration: 3000
-            });
-          }
+    
+    const formValues = this.additionalCostsForm.value;
+    this.orderService.updateOrder(this.order._id, {
+      transportationCost: formValues.transportationCost,
+      additionalRentalCost: formValues.additionalRentalCost
+    }).subscribe({
+      next: (updatedOrder) => {
+        this.order = updatedOrder;
+        this.snackBar.open('Additional costs updated successfully!', 'Close', {
+          duration: 3000
+        });
+        this.closePricingDialog();
+      },
+      error: (err) => {
+        console.error('Error updating additional costs:', err);
+        this.snackBar.open(err.message || 'Failed to update additional costs. Please try again.', 'Close', {
+          duration: 3000
         });
       }
     });
   }
 
+  openFullImage(imageUrl: string): void {
+    this.currentFullImage = imageUrl;
+    this.fullImageDialogRef = this.dialog.open(this.fullImageTemplate, {
+      width: '90%',
+      maxWidth: '1000px'
+    });
+  }
+
+  closeFullImage(): void {
+    if (this.fullImageDialogRef) {
+      this.fullImageDialogRef.close();
+      this.fullImageDialogRef = null;
+    }
+  }
+
   cancelOrder(): void {
-    if (!this.order) {
+    this.cancellationReason = '';
+    this.cancelDialogRef = this.dialog.open(this.cancelDialogTemplate, {
+      width: '500px',
+      disableClose: true
+    });
+  }
+
+  closeCancelDialog(): void {
+    if (this.cancelDialogRef) {
+      this.cancelDialogRef.close();
+      this.cancelDialogRef = null;
+    }
+  }
+
+  confirmCancellation(): void {
+    if (!this.order || !this.cancellationReason.trim()) {
+      this.snackBar.open('Please provide a reason for cancellation.', 'Close', { duration: 3000 });
       return;
     }
 
-    const dialogRef = this.dialog.open(AdminConfirmDialogComponent, {
-      width: '400px',
-      data: {
-        title: 'Cancel Order',
-        message: 'Are you sure you want to cancel this order? Please provide a reason:',
-        showInput: true,
-        inputLabel: 'Cancellation reason',
-        inputValue: ''
+    this.orderService.cancelOrder(this.order._id, this.cancellationReason).subscribe({
+      next: (updatedOrder) => {
+        this.order = updatedOrder;
+        this.snackBar.open('Order cancelled successfully!', 'Close', {
+          duration: 3000
+        });
+        this.closeCancelDialog();
+      },
+      error: (err) => {
+        console.error('Error cancelling order:', err);
+        this.snackBar.open(err.message || 'Failed to cancel order. Please try again.', 'Close', {
+          duration: 3000
+        });
       }
     });
+  }
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result && result.inputValue) {
-        this.orderService.cancelOrder(this.order!._id, result.inputValue).subscribe({
-          next: (updatedOrder) => {
-            this.order = updatedOrder;
-            this.snackBar.open('Order cancelled successfully!', 'Close', {
-              duration: 3000
-            });
-          },
-          error: (err) => {
-            console.error('Error cancelling order:', err);
-            this.snackBar.open(err.message || 'Failed to cancel order. Please try again.', 'Close', {
-              duration: 3000
-            });
-          }
+  confirmOrderAfterPricing(): void {
+    if (!this.order || !this.additionalCostsForm.valid) {
+      this.snackBar.open('Please ensure all cost values are valid.', 'Close', { duration: 3000 });
+      return;
+    }
+
+    const formValues = this.additionalCostsForm.value;
+    this.orderService.confirmOrder(this.order._id, {
+      transportationCost: formValues.transportationCost,
+      additionalRentalCost: formValues.additionalRentalCost
+    }).subscribe({
+      next: (updatedOrder) => {
+        this.order = updatedOrder;
+        this.snackBar.open('Order confirmed successfully!', 'Close', {
+          duration: 3000
+        });
+        this.closePricingDialog();
+      },
+      error: (err) => {
+        console.error('Error confirming order:', err);
+        this.snackBar.open(err.message || 'Failed to confirm order. Please try again.', 'Close', {
+          duration: 3000
         });
       }
     });
@@ -265,32 +355,6 @@ export class AdminOrderDetailsComponent implements OnInit{
     return basePrice + transportationCost + additionalRentalCost;
   }
 
-  saveAdditionalCosts(): void {
-    if (!this.order || !this.additionalCostsForm.valid) {
-      this.snackBar.open('Please ensure all cost values are valid.', 'Close', { duration: 3000 });
-      return;
-    }
-    
-    const formValues = this.additionalCostsForm.value;
-    this.orderService.updateOrder(this.order._id, {
-      transportationCost: formValues.transportationCost,
-      additionalRentalCost: formValues.additionalRentalCost
-    }).subscribe({
-      next: (updatedOrder) => {
-        this.order = updatedOrder;
-        this.snackBar.open('Additional costs updated successfully!', 'Close', {
-          duration: 3000
-        });
-      },
-      error: (err) => {
-        console.error('Error updating additional costs:', err);
-        this.snackBar.open(err.message || 'Failed to update additional costs. Please try again.', 'Close', {
-          duration: 3000
-        });
-      }
-    });
-  }
-
   getPaymentStatusLabel(status: string): string {
     switch (status) {
       case 'pending':
@@ -316,44 +380,11 @@ export class AdminOrderDetailsComponent implements OnInit{
     return `${hour12}:${minutes} ${ampm}`;
   }
 
-  callCustomer(): void {
-    if (this.order && this.order.customerInfo?.contact) {
-      const phoneNumber = this.order.customerInfo.contact;
-      window.location.href = `tel:${phoneNumber}`;
-    }
-  }
-
-  emailCustomer(): void {
-    if (this.order && this.order.customerInfo?.email) {
-      const email = this.order.customerInfo.email;
-      window.location.href = `mailto:${email}`;
-    }
-  }
-
-  whatsappCustomer(): void {
-    if (this.order && this.order.customerInfo?.contact) {
-      // Assuming Sri Lankan phone number format
-      let phoneNumber = this.order.customerInfo.contact;
-      
-      // Ensure it has the country code for Sri Lanka (+94)
-      if (phoneNumber.startsWith('0')) {
-        phoneNumber = '+94' + phoneNumber.substring(1);
-      } else if (!phoneNumber.startsWith('+')) {
-        phoneNumber = '+94' + phoneNumber;
-      }
-      
-      const whatsappUrl = `https://wa.me/${phoneNumber.replace(/\s+/g, '')}`;
-      window.open(whatsappUrl, '_blank');
-    }
-  }
 
   goBack(): void {
     this.router.navigate(['/admin/orders']);
   }
 
-  printOrderDetails(): void {
-    window.print();
-  }
 
   // Helper method to get order status label
   getStatusLabel(status: string): string {
