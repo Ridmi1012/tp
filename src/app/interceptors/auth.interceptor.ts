@@ -50,8 +50,18 @@ export const authInterceptor: HttpInterceptorFn = (req: HttpRequest<unknown>, ne
         if (error.status === 403) {
           console.log('Access forbidden error for URL:', req.url);
           
-          // If trying to access admin routes but not admin
-          if (req.url.includes('/api/admin/') || req.url.includes('/api/orders')) {
+          // Handle orders endpoint separately
+          if (req.url.includes('/api/orders')) {
+            console.log('Order endpoint access forbidden');
+            if (authService.isAdmin()) {
+              console.log('Admin token may be expired - refreshing session');
+              // You may implement a token refresh mechanism here
+              // For now, just alert the user
+              alert('Your session may have expired. Please try again or log in again if the issue persists.');
+            } else {
+              router.navigate(['/unauthorized']);
+            }
+          } else if (req.url.includes('/api/admin/')) {
             if (!authService.isAdmin()) {
               console.log('User attempting to access admin resources without admin role');
               router.navigate(['/unauthorized']);
@@ -109,9 +119,17 @@ function isPublicEndpoint(req: HttpRequest<unknown>): boolean {
   
   // Auth endpoints are public
   if (req.url.includes('/api/auth/login') || 
-      req.url.includes('/api/customers/register')) {
+      req.url.includes('/api/customers/register') ||
+      req.url.includes('/api/auth/refresh')) {
+    return true;
+  }
+  
+  // Cloudinary requests don't need auth
+  if (req.url.includes('cloudinary.com')) {
     return true;
   }
   
   return false;
 }
+
+

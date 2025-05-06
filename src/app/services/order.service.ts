@@ -49,6 +49,11 @@ export interface PaymentData {
   transactionId?: string; // For PayHere
 }
 
+export interface OrderPricingUpdate {
+  transportationCost: number;
+  additionalRentalCost: number;
+}
+
 
 @Injectable({
   providedIn: 'root'
@@ -167,9 +172,15 @@ export class OrderService {
   }
   
 
-  // Update order (admin - confirm/cancel)
   updateOrder(orderId: string, updateData: Partial<Order>): Observable<Order> {
-    return this.http.patch<Order>(`${this.apiUrl}/${orderId}`, updateData);
+    const headers = this.getHeaders();
+    // Change from PATCH to POST
+    return this.http.post<Order>(`${this.apiUrl}/${orderId}/update`, updateData, { headers }).pipe(
+      catchError(error => {
+        console.error('Error updating order:', error);
+        return throwError(() => new Error('Failed to update order: ' + this.getErrorMessage(error)));
+      })
+    );
   }
 
   getCustomerOngoingOrders(customerId: string): Observable<Order[]> {
@@ -191,12 +202,19 @@ export class OrderService {
   }
 
   // Confirm order (admin)
+  // Confirm order (admin)
   confirmOrder(orderId: string, additionalCosts: {
     transportationCost: number;
     additionalRentalCost: number;
   }): Observable<Order> {
     const headers = this.getHeaders();
+    
+    console.log('Confirming order with ID:', orderId);
+    console.log('Additional costs:', additionalCosts);
+    console.log('Using headers:', headers);
+    
     return this.http.post<Order>(`${this.apiUrl}/${orderId}/confirm`, additionalCosts, { headers }).pipe(
+      tap(order => console.log('Order confirmed successfully:', order)),
       catchError(error => {
         console.error('Error confirming order:', error);
         return throwError(() => new Error('Failed to confirm order: ' + this.getErrorMessage(error)));
@@ -206,7 +224,9 @@ export class OrderService {
 
   cancelOrder(orderId: string, reason: string): Observable<Order> {
     const headers = this.getHeaders();
+    
     return this.http.post<Order>(`${this.apiUrl}/${orderId}/cancel`, { reason }, { headers }).pipe(
+      tap(order => console.log('Order cancelled successfully:', order)),
       catchError(error => {
         console.error('Error cancelling order:', error);
         return throwError(() => new Error('Failed to cancel order: ' + this.getErrorMessage(error)));
@@ -217,6 +237,7 @@ export class OrderService {
   // Get new orders (pending - for admin)
   getNewOrders(): Observable<Order[]> {
     const headers = this.getHeaders();
+    
     return this.http.get<Order[]>(`${this.apiUrl}/new`, { headers }).pipe(
       catchError(error => {
         console.error('Error getting new orders:', error);
@@ -231,19 +252,42 @@ export class OrderService {
     eventDate?: string;
     eventTime?: string;
   }): Observable<Order> {
-    return this.http.patch<Order>(`${this.apiUrl}/${orderId}/event-details`, eventDetails);
+    const headers = this.getHeaders();
+    
+    return this.http.patch<Order>(`${this.apiUrl}/${orderId}/event-details`, eventDetails, { headers }).pipe(
+      catchError(error => {
+        console.error('Error updating event details:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   // Process payment
   processPayment(paymentData: PaymentData): Observable<any> {
-    return this.http.post(`${this.apiUrl}/payment`, paymentData);
+    const headers = this.getHeaders();
+    
+    return this.http.post(`${this.apiUrl}/payment`, paymentData, { headers }).pipe(
+      catchError(error => {
+        console.error('Error processing payment:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   // Upload payment slip
   uploadPaymentSlip(orderId: string, file: File): Observable<any> {
+    const token = this.authService.getToken();
+    const headers = new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    
     const formData = new FormData();
     formData.append('paymentSlip', file);
-    return this.http.post(`${this.apiUrl}/${orderId}/payment-slip`, formData);
+    
+    return this.http.post(`${this.apiUrl}/${orderId}/payment-slip`, formData, { headers }).pipe(
+      catchError(error => {
+        console.error('Error uploading payment slip:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
 // Get design by ID
@@ -259,7 +303,14 @@ getDesignById(designId: string | number): Observable<any> {
 
   // Get ongoing orders (confirmed but not completed)
   getOngoingOrders(): Observable<Order[]> {
-    return this.http.get<Order[]>(`${this.apiUrl}/ongoing`);
+    const headers = this.getHeaders();
+    
+    return this.http.get<Order[]>(`${this.apiUrl}/ongoing`, { headers }).pipe(
+      catchError(error => {
+        console.error('Error getting ongoing orders:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
    // Helper to get readable error message
@@ -270,12 +321,27 @@ getDesignById(designId: string | number): Observable<any> {
     return error.error?.message || error.statusText || 'Unknown error';
   }
 
+
   // PayHere integration methods
   initiatePayHerePayment(orderId: string, amount: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}/payhere/initiate`, { orderId, amount });
+    const headers = this.getHeaders();
+    
+    return this.http.post(`${this.apiUrl}/payhere/initiate`, { orderId, amount }, { headers }).pipe(
+      catchError(error => {
+        console.error('Error initiating PayHere payment:', error);
+        return throwError(() => error);
+      })
+    );
   }
 
   verifyPayHerePayment(orderId: string, paymentId: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/payhere/verify`, { orderId, paymentId });
+    const headers = this.getHeaders();
+    
+    return this.http.post(`${this.apiUrl}/payhere/verify`, { orderId, paymentId }, { headers }).pipe(
+      catchError(error => {
+        console.error('Error verifying PayHere payment:', error);
+        return throwError(() => error);
+      })
+    );
   }
 }
