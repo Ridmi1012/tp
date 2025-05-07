@@ -1,0 +1,128 @@
+<div class="payment-verification-container">
+  <header class="section-header">
+    <h1>Payment Verification</h1>
+    <p class="subtitle">Verify customer payment slips for confirmed orders</p>
+  </header>
+  
+  <div *ngIf="loading" class="loading-spinner">
+    <mat-spinner></mat-spinner>
+  </div>
+  
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+  
+  <mat-tab-group>
+    <mat-tab label="Pending Verification">
+      <div class="tab-content">
+        <div *ngIf="!loading && pendingPayments.length === 0" class="no-payments">
+          <mat-icon>payments</mat-icon>
+          <h3>No pending payments</h3>
+          <p>There are no payment slips waiting for verification at the moment.</p>
+        </div>
+        
+        <div class="payments-grid" *ngIf="!loading && pendingPayments.length > 0">
+          <mat-card *ngFor="let payment of pendingPayments" class="payment-card">
+            <mat-card-header>
+              <mat-card-title>Order #{{ payment.orderNumber }}</mat-card-title>
+              <mat-card-subtitle>
+                {{ getPaymentTypeLabel(payment.paymentType) }} - {{ formatDate(payment.submittedDate) }}
+              </mat-card-subtitle>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <div class="payment-details">
+                <div class="customer-info">
+                  <p><strong>Customer:</strong> {{ payment.customerName }}</p>
+                  <p><strong>Event Date:</strong> {{ payment.eventDate | date:'mediumDate' }}</p>
+                  <p><strong>Amount:</strong> {{ formatCurrency(payment.amount) }}</p>
+                </div>
+                
+                <div class="payment-slip-preview">
+                  <img [src]="payment.slipUrl" alt="Payment Slip" class="thumbnail" 
+                       (click)="viewPaymentSlip(payment)">
+                  <div class="preview-overlay">
+                    <button mat-button color="primary" (click)="viewPaymentSlip(payment)">
+                      <mat-icon>fullscreen</mat-icon> View Full
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="payment-notes" *ngIf="payment.notes">
+                  <p><strong>Notes:</strong></p>
+                  <p class="notes-content">{{ payment.notes }}</p>
+                </div>
+              </div>
+            </mat-card-content>
+            
+            <mat-card-actions align="end">
+              <button mat-button color="primary" (click)="viewOrderDetails(payment.orderId.toString())">
+                VIEW ORDER
+              </button>
+              <button mat-raised-button color="warn" (click)="rejectPayment(payment)">
+                REJECT
+              </button>
+              <button mat-raised-button color="primary" (click)="verifyPayment(payment)">
+                VERIFY PAYMENT
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        </div>
+      </div>
+    </mat-tab>
+    
+    <mat-tab label="Recently Verified">
+      <div class="tab-content">
+        <div *ngIf="recentlyVerifiedPayments.length === 0" class="no-payments">
+          <mat-icon>check_circle</mat-icon>
+          <h3>No recently verified payments</h3>
+          <p>There are no recently verified payments in the last 7 days.</p>
+        </div>
+        
+        <div class="payments-grid" *ngIf="recentlyVerifiedPayments.length > 0">
+          <mat-card *ngFor="let payment of recentlyVerifiedPayments" class="payment-card verified">
+            <mat-card-header>
+              <mat-card-title>Order #{{ payment.orderNumber }}</mat-card-title>
+              <mat-card-subtitle>
+                {{ getPaymentTypeLabel(payment.paymentType) }} - Verified on {{ formatDate(payment.verifiedDate) }}
+              </mat-card-subtitle>
+              <div>
+                <mat-chip color="primary" selected>Verified</mat-chip>
+              </div>
+            </mat-card-header>
+            
+            <mat-card-content>
+              <div class="payment-details">
+                <div class="customer-info">
+                  <p><strong>Customer:</strong> {{ payment.customerName }}</p>
+                  <p><strong>Event Date:</strong> {{ payment.eventDate | date:'mediumDate' }}</p>
+                  <p><strong>Amount:</strong> {{ formatCurrency(payment.amount) }}</p>
+                </div>
+                
+                <div class="payment-slip-preview">
+                  <img [src]="payment.slipUrl" alt="Payment Slip" class="thumbnail" 
+                       (click)="viewPaymentSlip(payment)">
+                  <div class="preview-overlay">
+                    <button mat-button color="primary" (click)="viewPaymentSlip(payment)">
+                      <mat-icon>fullscreen</mat-icon> View Full
+                    </button>
+                  </div>
+                </div>
+                
+                <div class="verified-by" *ngIf="payment.verifiedBy">
+                  <p><strong>Verified by:</strong> {{ payment.verifiedBy }}</p>
+                </div>
+              </div>
+            </mat-card-content>
+            
+            <mat-card-actions align="end">
+              <button mat-button color="primary" (click)="viewOrderDetails(payment.orderId.toString())">
+                VIEW ORDER
+              </button>
+            </mat-card-actions>
+          </mat-card>
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

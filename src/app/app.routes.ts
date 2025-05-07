@@ -29,6 +29,11 @@ import { AdmindesingsportfolioComponent } from './features/admin/admindesingspor
 import { ReviewFormComponent } from './features/Customer/reviewform/reviewform.component';
 import { AdminOrdersComponent } from './features/admin/admin-orders/admin-orders.component';
 import { AdminOrderDetailsComponent } from './features/admin/admin-order-details/admin-order-details.component';
+import { AdminConfirmedOrdersComponent } from './features/admin/admin-confirmed-orders/admin-confirmed-orders.component';
+import { AdminConfirmDialogComponent } from './features/admin/admin-confirm-dialog/admin-confirm-dialog.component';
+import { AdminPaymentHistoryComponent } from './features/admin/admin-payment-history/admin-payment-history.component';
+import { AdminPaymentVerificationComponent } from './features/admin/admin-payment-verification/admin-payment-verification.component';
+import { AdminEventCalanderComponent } from './features/admin/admin-event-calander/admin-event-calander.component';
 
 export const routes: Routes = [
  // Public Routes
@@ -72,41 +77,78 @@ export const routes: Routes = [
  },
  // Admin Routes
  { 
-   path: 'admin-dashboard', 
-   component: AdmindashboardComponent,
-   canActivate: [adminGuard]
- },
- { 
-   path: 'admin-portfolio', 
-   component: AdmindesingsportfolioComponent,
-   canActivate: [adminGuard]
- },
-
- {
-   path: 'admin/design',
-   component: ManageportfolioComponent,
-   canActivate: [adminGuard]
- },
- {
-  path: 'admin/orders',  
-  component: AdminOrdersComponent,
+  path: 'admin-dashboard', 
+  component: AdmindashboardComponent,
+  canActivate: [adminGuard]
+},
+{ 
+  path: 'admin-portfolio', 
+  component: AdmindesingsportfolioComponent,
+  canActivate: [adminGuard]
+},
+{ 
+ path: 'admin/orders/confirmed', 
+ component: AdminConfirmedOrdersComponent,
+ canActivate: [adminGuard]
+},
+{
+  path: 'admin/design',
+  component: ManageportfolioComponent,
   canActivate: [adminGuard]
 },
 {
-  path: 'admin/orderdetails/:id',  
-  component: AdminOrderDetailsComponent,
+ path: 'admin/orders',  
+ component: AdminOrdersComponent,
+ canActivate: [adminGuard]
+},
+{
+ path: 'admin/orders/pending',  
+ component: AdminOrdersComponent,
+ canActivate: [adminGuard],
+ data: { filter: 'pending' }
+},
+{
+ path: 'admin/payment-verification',  
+ component: AdminPaymentVerificationComponent,
+ canActivate: [adminGuard]
+},
+{
+ path: 'admin/payment-history',  
+ component: AdminPaymentHistoryComponent,
+ canActivate: [adminGuard]
+},
+{
+ path: 'admin/orderdetails/:id',  
+ component: AdminOrderDetailsComponent,
+ canActivate: [adminGuard]
+},
+{
+  path: 'admin/categories',
+  component: CategorymanagementComponent,
   canActivate: [adminGuard]
 },
- {
-   path: 'admin/categories',
-   component: CategorymanagementComponent,
-   canActivate: [adminGuard]
- },
- {
-   path: 'admin/items',
-   component: ItemmanagementComponent,
-   canActivate: [adminGuard]
- },
+{
+  path: 'admin/events',  
+  component: AdminEventCalanderComponent,
+  canActivate: [adminGuard]
+},
+{ 
+ path: 'orders/ongoing', 
+ component: OngoingComponent,
+ canActivate: [authGuard], 
+ data: { title: 'My Ongoing Orders' } 
+},
+{ 
+ path: 'orders/confirmed', 
+ component: AdminConfirmedOrdersComponent, 
+ canActivate: [authGuard],
+ data: { title: 'My Active Orders' }
+},
+{
+  path: 'admin/items',
+  component: ItemmanagementComponent,
+  canActivate: [adminGuard]
+},
 
  { path: '**', redirectTo: 'home' }
 ];

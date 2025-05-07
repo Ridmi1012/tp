@@ -1,7 +1,7 @@
 import { Component , OnInit} from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors} from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { OrderData, OrderService } from '../../../services/order.service';
+import { CreateOrderData, OrderService } from '../../../services/order.service';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 import { CategoryService } from '../../../services/category.service';
@@ -199,7 +199,8 @@ export class OrderAsIsComponent implements OnInit {
       this.submitError = null;
 
       const formValue = this.orderForm.value;
-      const orderData: OrderData = {
+      // Now using the CreateOrderData interface instead of OrderData
+      const orderData: CreateOrderData = {
         designId: this.design.designID.toString(),
         orderType: 'as-is',
         customDetails: {
@@ -261,4 +262,3 @@ export class OrderAsIsComponent implements OnInit {
     return phoneNumber.replace(/(\d{3})(\d{3})(\d{4})/, '$1 $2 $3');
   }
 }
-

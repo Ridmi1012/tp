@@ -142,10 +142,23 @@ export class AuthService {
     this.router.navigate(['/login']);
   }
 
-  isLoggedIn(): boolean {
+  isTokenExpired(): boolean {
     const token = this.getToken();
-    // You could add token expiration validation here
-    return !!token; 
+    if (!token) return true;
+    
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      // JWT exp claim is in seconds since epoch
+      const expirationDate = new Date(payload.exp * 1000);
+      return expirationDate <= new Date();
+    } catch (e) {
+      console.error('Error checking token expiration:', e);
+      return true; // Consider expired on error
+    }
+  }
+
+  isLoggedIn(): boolean {
+    return !!this.getToken() && !this.isTokenExpired();
   }
 
   saveUserType(userType: string): void {
@@ -217,5 +230,73 @@ export class AuthService {
         return throwError(() => error);
       })
     );
+  }
+
+  logTokenDetails(): void {
+    const token = this.getToken();
+    if (!token) {
+      console.log('No token found');
+      return;
+    }
+    
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      console.log('Full token payload:', payload);
+      console.log('Token expiration:', new Date(payload.exp * 1000));
+      console.log('User type:', payload.userType);
+      console.log('Roles or authorities:', payload.roles || payload.authorities || 'None found');
+    } catch (e) {
+      console.error('Error parsing token:', e);
+    }
+  }
+
+
+  hasRole(roleName: string): boolean {
+    const token = this.getToken();
+    if (!token) {
+      console.error('No token found when checking for role:', roleName);
+      return false;
+    }
+    
+    try {
+      // Decode token
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      console.log('Token payload when checking role:', payload);
+      
+      // Check userType directly (your most common case)
+      if (payload.userType === roleName) {
+        return true;
+      }
+      
+      // Check roles array if it exists
+      if (Array.isArray(payload.roles) && payload.roles.includes(roleName)) {
+        return true;
+      }
+      
+      // Check authorities if they exist (common in Spring Security)
+      if (Array.isArray(payload.authorities)) {
+        return payload.authorities.some((auth: string) => auth === roleName || auth === `ROLE_${roleName}`);
+      }
+      
+      return false;
+    } catch (e) {
+      console.error('Error parsing token or checking roles:', e);
+      return false;
+    }
+  }
+
+  getPendingOrdersCount(): Observable<number> {
+    // Replace with your actual API endpoint
+    return this.http.get<number>(`${this.apiUrl}/orders/count/pending`);
+  }
+  
+  getConfirmedOrdersCount(): Observable<number> {
+    // Replace with your actual API endpoint
+    return this.http.get<number>(`${this.apiUrl}/orders/count/confirmed`);
+  }
+  
+  getPendingPaymentsCount(): Observable<number> {
+    // Replace with your actual API endpoint
+    return this.http.get<number>(`${this.apiUrl}/payments/count/pending`);
   }
 }

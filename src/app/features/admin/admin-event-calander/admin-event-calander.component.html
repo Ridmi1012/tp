@@ -1,0 +1,71 @@
+<div class="event-calendar-container">
+  <header class="section-header">
+    <h1>Event Calendar</h1>
+    <p class="subtitle">Manage upcoming events and deliveries</p>
+  </header>
+  
+  <div *ngIf="loading" class="loading-spinner">
+    <mat-spinner></mat-spinner>
+  </div>
+  
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+  
+  <div class="calendar-controls">
+    <button mat-button (click)="previousMonth()">
+      <mat-icon>chevron_left</mat-icon> Previous
+    </button>
+    <h2 class="current-month">{{ currentMonthYear }}</h2>
+    <button mat-button (click)="nextMonth()">
+      Next <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+  
+  <div class="calendar">
+    <div class="calendar-header">
+      <div class="weekday" *ngFor="let day of weekdays">{{ day }}</div>
+    </div>
+    
+    <div class="calendar-body">
+      <div *ngFor="let day of calendarDays" 
+           class="calendar-day" 
+           [ngClass]="{'outside-month': !day.isCurrentMonth, 'today': day.isToday}">
+        <div class="day-header">{{ day.date.getDate() }}</div>
+        
+        <div class="day-events">
+          <div *ngFor="let event of day.events" 
+               class="event-item" 
+               [ngClass]="event.status">
+            <div class="event-time">{{ formatTime(event.eventTime) }}</div>
+            <div class="event-title">{{ event.title }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="today-events" *ngIf="todayEvents.length > 0">
+    <h3>Today's Events</h3>
+    <div class="events-list">
+      <mat-card *ngFor="let event of todayEvents" class="event-card">
+        <mat-card-header>
+          <mat-card-title>{{ event.title }}</mat-card-title>
+          <mat-card-subtitle>{{ formatTime(event.eventTime) }} | {{ event.location }}</mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-content>
+          <p>{{ event.description }}</p>
+          <p *ngIf="event.status">Status: {{ getStatusLabel(event.status) }}</p>
+        </mat-card-content>
+        <mat-card-actions align="end">
+          <button mat-button color="primary" (click)="viewOrderDetails(event.orderId)">
+            VIEW ORDER
+          </button>
+          <button mat-raised-button color="primary" (click)="updateEventStatus(event.id, getNextStatus(event.status))">
+            {{ getNextStatusLabel(event.status) }}
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  </div>
+</div>
