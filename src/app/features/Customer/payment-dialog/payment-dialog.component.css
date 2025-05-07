@@ -1,0 +1,166 @@
+.payment-container {
+    padding: 16px;
+    max-width: 600px;
+  }
+  
+  .error-message {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 16px;
+    background-color: #ffebee;
+    border-radius: 4px;
+    color: #d32f2f;
+  }
+  
+  .error-message mat-icon {
+    margin-right: 8px;
+  }
+  
+  .success-message {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 16px;
+    background-color: #e8f5e9;
+    border-radius: 4px;
+    color: #388e3c;
+  }
+  
+  .success-message mat-icon {
+    margin-right: 8px;
+  }
+  
+  .loading-indicator {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 16px;
+    background-color: #e3f2fd;
+    border-radius: 4px;
+    color: #1976d2;
+  }
+  
+  .loading-indicator mat-icon {
+    margin-right: 8px;
+  }
+  
+  .spinner {
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  .order-summary {
+    margin-bottom: 24px;
+    padding: 16px;
+    background-color: #f5f5f5;
+    border-radius: 8px;
+  }
+  
+  .summary-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  
+  .summary-item.total {
+    margin-top: 16px;
+    font-weight: bold;
+    border-top: 1px solid #e0e0e0;
+    padding-top: 8px;
+  }
+  
+  .payment-notice {
+    display: flex;
+    align-items: flex-start;
+    padding: 10px;
+    margin-bottom: 16px;
+    background-color: #fff8e1;
+    border-radius: 4px;
+    color: #ff6f00;
+  }
+  
+  .payment-notice mat-icon {
+    margin-right: 8px;
+    margin-top: 2px;
+  }
+  
+  .payment-notice .notice-text {
+    margin: 0;
+  }
+  
+  .payment-options {
+    margin-bottom: 24px;
+  }
+  
+  .amount-options {
+    margin-bottom: 16px;
+  }
+  
+  .amount-options mat-radio-group {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .amount-options mat-radio-button {
+    margin-bottom: 8px;
+  }
+  
+  .full-width {
+    width: 100%;
+  }
+  
+  .file-upload {
+    margin-top: 16px;
+    padding: 16px;
+    border: 1px dashed #bdbdbd;
+    border-radius: 4px;
+    background-color: #fafafa;
+  }
+  
+  .upload-btn {
+    margin-bottom: 8px;
+  }
+  
+  .selected-file {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    background-color: #e8f5e9;
+    border-radius: 4px;
+    margin-top: 8px;
+  }
+  
+  .file-name {
+    margin-left: 8px;
+    flex-grow: 1;
+    word-break: break-all;
+  }
+  
+  .file-error {
+    display: flex;
+    align-items: center;
+    margin-top: 8px;
+    color: #d32f2f;
+  }
+  
+  .file-error mat-icon {
+    margin-right: 8px;
+    font-size: 18px;
+  }
+  
+  .file-instructions {
+    margin-top: 8px;
+    color: #757575;
+    font-size: 0.85rem;
+  }
+  
+  mat-dialog-actions {
+    padding-top: 16px;
+    border-top: 1px solid #e0e0e0;
+  }
+

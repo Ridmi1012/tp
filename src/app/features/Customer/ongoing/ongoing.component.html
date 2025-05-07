@@ -19,7 +19,9 @@
   </div>
 
   <div class="orders-grid" *ngIf="!loading && ongoingOrders.length > 0">
-    <mat-card *ngFor="let order of ongoingOrders" class="order-card">
+    <mat-card *ngFor="let order of ongoingOrders" class="order-card" [ngClass]="{'cancelled-card': order.status === 'cancelled'}">
+      <div *ngIf="order.status === 'cancelled'" class="cancelled-badge">CANCELLED</div>
+      
       <mat-card-header>
         <mat-card-title>Order #{{ order.orderNumber }}</mat-card-title>
         <mat-card-subtitle>
@@ -37,11 +39,11 @@
             <mat-chip [color]="getStatusColor(order.status)" selected>
               {{ getStatusLabel(order.status) }}
             </mat-chip>
-            
-            <div *ngIf="order.status === 'cancelled'" class="cancellation-reason">
-              <mat-icon>info</mat-icon>
-              <span>Reason: {{ order.cancellationReason }}</span>
-            </div>
+          </div>
+
+          <div *ngIf="order.status === 'cancelled'" class="cancellation-reason">
+            <mat-icon>info</mat-icon>
+            <span>Reason: {{ order.cancellationReason }}</span>
           </div>
 
           <div class="progress-section">

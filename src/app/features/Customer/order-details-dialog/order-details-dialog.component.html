@@ -121,9 +121,10 @@
   </div>
 </mat-dialog-content>
 
+<!-- Update in order-details-dialog.component.html -->
 <mat-dialog-actions align="end">
   <button mat-button (click)="dialogRef.close()">Close</button>
-  <button mat-raised-button color="primary" *ngIf="order.status === 'confirmed'">
+  <button mat-raised-button color="primary" *ngIf="order.status === 'confirmed'" (click)="openPaymentDialog()">
     Make Payment
   </button>
 </mat-dialog-actions>

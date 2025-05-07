@@ -9,6 +9,8 @@ import { Inject } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { CategoryService } from '../../../services/category.service';
 import { OrderService } from '../../../services/order.service';
+import { PaymentDialogComponent } from '../payment-dialog/payment-dialog.component';
+import { MatDialog } from '@angular/material/dialog';
 
 
 
@@ -31,7 +33,8 @@ export class OrderDetailsDialogComponent implements OnInit{
     public dialogRef: MatDialogRef<OrderDetailsDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public order: any,
     private categoryService: CategoryService,
-    private orderService: OrderService
+    private orderService: OrderService,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
@@ -111,7 +114,7 @@ export class OrderDetailsDialogComponent implements OnInit{
       },
       { 
         label: 'Payment Confirmed', 
-        completed: ['paid', 'in-progress', 'ready', 'delivered'].includes(this.order.status),
+        completed: ['paid', 'in-progress', 'ready', 'delivered'].includes(this.order.status) || this.order.paymentStatus === 'completed',
         icon: 'paid',
         date: this.order.paymentStatus === 'completed' ? this.order.updatedAt : null
       },
@@ -133,6 +136,25 @@ export class OrderDetailsDialogComponent implements OnInit{
     ];
   }
 
+
+  openPaymentDialog(): void {
+    this.dialog.open(PaymentDialogComponent, {
+      width: '600px',
+      data: this.order
+    }).afterClosed().subscribe(result => {
+      if (result) {
+        // Refresh order data if payment was successful
+        this.orderService.getOrderById(this.order._id).subscribe({
+          next: (updatedOrder) => {
+            this.order = updatedOrder;
+          },
+          error: (error) => {
+            console.error('Error refreshing order:', error);
+          }
+        });
+      }
+    });
+  }
   getPaymentMessage(): string {
     if (this.order.status === 'confirmed') {
       const eventDate = new Date(this.order.customDetails.eventDate);

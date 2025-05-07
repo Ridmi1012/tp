@@ -41,7 +41,27 @@
     </a>
     <a routerLink="/admin-portfolio" routerLinkActive="active-link" (click)="closeMenu()">Designs</a>
     <a routerLink="/admin/inventory" routerLinkActive="active-link" (click)="closeMenu()">Inventory</a>
-    <a routerLink="/admin/orders" routerLinkActive="active-link" (click)="closeMenu()">Orders</a>
+    
+    <!-- Updated Orders dropdown with new payment verification options -->
+    <div class="dropdown">
+      <span (click)="toggleOrdersDropdown()" class="orders-indicator">
+        Orders <span class="badge" *ngIf="pendingPayments > 0">{{pendingPayments}}</span>
+      </span>
+      <div class="dropdown-menu" [ngClass]="{ 'show': showOrdersDropdown }">
+        <a routerLink="/admin/orders" (click)="closeMenu()">All Orders</a>
+        <a routerLink="/admin/orders/pending" (click)="closeMenu()">
+          Pending Orders <span class="badge small" *ngIf="pendingOrders > 0">{{pendingOrders}}</span>
+        </a>
+        <a routerLink="/admin/orders/confirmed" (click)="closeMenu()">
+          Confirmed Orders <span class="badge small" *ngIf="confirmedOrders > 0">{{confirmedOrders}}</span>
+        </a>
+        <a routerLink="/admin/payment-verification" (click)="closeMenu()">
+          Payment Verification <span class="badge small" *ngIf="pendingPayments > 0">{{pendingPayments}}</span>
+        </a>
+        <a routerLink="/admin/payment-history" (click)="closeMenu()">Payment History</a>
+      </div>
+    </div>
+    
     <a routerLink="/admin/reports" routerLinkActive="active-link" (click)="closeMenu()">Reports</a>
     
     <!-- Notifications for admin -->
@@ -57,7 +77,6 @@
     
     <!-- Admin Profile Dropdown -->
     <div class="profile-dropdown">
-
       <div class="profile-icon" (click)="toggleProfileDropdown()">
         <img src="assets/images/profile-icon.png" alt="Admin Profile" class="profile-image" />
       </div>

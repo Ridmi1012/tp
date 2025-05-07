@@ -2,328 +2,219 @@ import { Injectable , Optional} from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of, Subject } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
-import { SwPush } from '@angular/service-worker';
-import { environment } from '../../environments/environment';
 import { BehaviorSubject } from 'rxjs';
 import { AuthService } from './auth.service';
-import { forwardRef, Inject } from '@angular/core';
+
+
+
+
+export interface Notification {
+  id: string;
+  title: string;
+  body: string;
+  type: string;
+  orderId?: string;
+  read: boolean;
+  timestamp: string;
+  data?: any;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class NotificationService {
   private apiUrl = 'http://localhost:8083/api/notifications';
-  private notificationSubject = new Subject<{ title: string, body: string, icon?: string, data?: any }>();
   
-  // Add a counter for unread notifications
-  private unreadNotificationsCount = new BehaviorSubject<number>(0);
-  public unreadCount = this.unreadNotificationsCount.asObservable();
+  // Notification observables
+  private notificationsSubject = new BehaviorSubject<Notification[]>([]);
+  private unreadCountSubject = new BehaviorSubject<number>(0);
+  private notificationUpdatesSubject = new Subject<Notification>();
   
-  // Store notifications in memory for display
-  private notificationsList: {title: string, body: string, read: boolean, timestamp: Date, data?: any}[] = [];
-  private notificationsListSubject = new BehaviorSubject<{title: string, body: string, read: boolean, timestamp: Date, data?: any}[]>([]);
-  public notifications$ = this.notificationsListSubject.asObservable();
-  
+  // Public observables
+  public notifications$ = this.notificationsSubject.asObservable();
+  public unreadCount = this.unreadCountSubject.asObservable();
+  public notificationUpdates = this.notificationUpdatesSubject.asObservable();
+
   constructor(
-    @Inject(forwardRef(() => AuthService)) private authService: AuthService,
     private http: HttpClient,
-    @Optional() private swPush: SwPush
+    private authService: AuthService
   ) {
-    // Check if SwPush is available
-    if (this.isPushNotificationSupported()) {
-      try {
-        // Subscribe to messages only if SwPush is available
-        this.swPush?.messages.subscribe(notification => {
-          this.processNotification(notification as any);
-        });
-        
-        // Handle notification clicks - also wrapped in try/catch
-        this.swPush?.notificationClicks.subscribe(event => {
-          console.log('Notification clicked:', event);
-          
-          // Handle navigation based on notification data
-          if (event.notification && event.notification.data && event.notification.data.orderId) {
-            // Mark notification as read
-            this.markNotificationAsRead(event.notification.data.orderId);
-            
-            // Navigate to order details page
-            window.location.href = `/admin/orders/${event.notification.data.orderId}`;
-          }
-        });
-      } catch (error) {
-        console.warn('Push notification subscriptions failed:', error);
-      }
-      
-      // Load initial notifications regardless of push support
+    // Load notifications initially if user is logged in
+    if (this.authService.isLoggedIn()) {
       this.loadNotifications();
-      
-      // Try to load initial notifications count
-      this.getUnreadNotificationsCount().subscribe({
-        next: count => {
-          this.unreadNotificationsCount.next(count);
-        },
-        error: err => {
-          console.warn('Failed to get notification count:', err);
-          // Just use local count instead
-          this.updateUnreadCount();
-        }
-      });
-    } else {
-      // Still initialize local notifications if push is not supported
-      this.loadNotifications();
-      this.updateUnreadCount();
     }
+    
+    // Subscribe to auth changes to load notifications when user logs in
+    this.authService.authChange.subscribe(isLoggedIn => {
+      if (isLoggedIn) {
+        this.loadNotifications();
+      } else {
+        // Clear notifications when user logs out
+        this.notificationsSubject.next([]);
+        this.unreadCountSubject.next(0);
+      }
+    });
+    
+    // Set up polling for notifications (every 30 seconds)
+    setInterval(() => {
+      if (this.authService.isLoggedIn()) {
+        this.loadNotifications();
+      }
+    }, 30000);
   }
 
-  // Helper method to get auth headers
-  private getAuthHeaders(): HttpHeaders {
+  private getHeaders(): HttpHeaders {
     const token = this.authService.getToken();
-    if (token) {
-      return new HttpHeaders().set('Authorization', `Bearer ${token}`);
+    if (!token) {
+      throw new Error('No authentication token found');
     }
-    return new HttpHeaders();
+    return new HttpHeaders()
+      .set('Content-Type', 'application/json')
+      .set('Authorization', `Bearer ${token}`);
   }
 
-  // Enhanced method to check if push is supported, with additional checks for mock
-  isPushNotificationSupported(): boolean {
+  loadNotifications(): void {
     try {
-      const browserSupport = 'serviceWorker' in navigator && 'PushManager' in window;
-      const swPushValid = this.swPush && typeof this.swPush.requestSubscription === 'function';
-      return browserSupport && swPushValid;
+      const headers = this.getHeaders();
+      this.http.get<any>(`${this.apiUrl}`, { headers })
+        .pipe(
+          tap(response => {
+            // Update notifications
+            this.notificationsSubject.next(response.notifications || []);
+            
+            // Update unread count
+            const unreadCount = (response.notifications || [])
+              .filter((notification: Notification) => !notification.read).length;
+            this.unreadCountSubject.next(unreadCount);
+          }),
+          catchError(error => {
+            console.error('Error loading notifications:', error);
+            return of({ notifications: [] });
+          })
+        )
+        .subscribe();
     } catch (error) {
-      console.warn('Error checking push notification support:', error);
-      return false;
+      console.error('Error getting headers:', error);
     }
   }
 
-  private loadNotifications() {
-    const savedNotifications = localStorage.getItem('adminNotifications');
-    if (savedNotifications) {
-      try {
-        this.notificationsList = JSON.parse(savedNotifications);
-        this.notificationsListSubject.next(this.notificationsList);
-        this.updateUnreadCount();
-      } catch (e) {
-        console.error('Error loading saved notifications', e);
-      }
+  markNotificationAsRead(notificationId: string): Observable<any> {
+    try {
+      const headers = this.getHeaders();
+      return this.http.post<any>(`${this.apiUrl}/${notificationId}/read`, {}, { headers })
+        .pipe(
+          tap(() => {
+            // Update local notification state
+            const notifications = this.notificationsSubject.getValue();
+            const updatedNotifications = notifications.map(notification => {
+              if (notification.id === notificationId) {
+                return { ...notification, read: true };
+              }
+              return notification;
+            });
+            
+            this.notificationsSubject.next(updatedNotifications);
+            
+            // Update unread count
+            const unreadCount = updatedNotifications.filter(notification => !notification.read).length;
+            this.unreadCountSubject.next(unreadCount);
+          }),
+          catchError(error => {
+            console.error('Error marking notification as read:', error);
+            return of({ success: false });
+          })
+        );
+    } catch (error) {
+      console.error('Error getting headers:', error);
+      return of({ success: false });
     }
   }
 
-  private saveNotifications() {
-    localStorage.setItem('adminNotifications', JSON.stringify(this.notificationsList));
+  markAllNotificationsAsRead(): Observable<any> {
+    try {
+      const headers = this.getHeaders();
+      return this.http.post<any>(`${this.apiUrl}/read-all`, {}, { headers })
+        .pipe(
+          tap(() => {
+            // Update all notifications as read
+            const notifications = this.notificationsSubject.getValue();
+            const updatedNotifications = notifications.map(notification => ({
+              ...notification,
+              read: true
+            }));
+            
+            this.notificationsSubject.next(updatedNotifications);
+            this.unreadCountSubject.next(0);
+          }),
+          catchError(error => {
+            console.error('Error marking all notifications as read:', error);
+            return of({ success: false });
+          })
+        );
+    } catch (error) {
+      console.error('Error getting headers:', error);
+      return of({ success: false });
+    }
   }
 
-  private processNotification(notification: { title: string, body: string, icon?: string, data?: any }) {
-    // Add to notifications list
-    const newNotification = {
-      title: notification.title,
-      body: notification.body,
+  // This method is used to trigger order notification in admin panel
+  triggerOrderNotification(order: any): void {
+    const notification: Notification = {
+      id: Date.now().toString(), // temporary ID
+      title: 'New Order',
+      body: `Order #${order.orderNumber} received`,
+      type: 'new-order',
+      orderId: order._id,
       read: false,
-      timestamp: new Date(),
-      data: notification.data
+      timestamp: new Date().toISOString(),
+      data: { type: 'new-order', orderId: order._id }
     };
     
-    this.notificationsList.unshift(newNotification);
-    // Keep only last 50 notifications
-    if (this.notificationsList.length > 50) {
-      this.notificationsList = this.notificationsList.slice(0, 50);
-    }
+    this.notificationUpdatesSubject.next(notification);
     
-    this.notificationsListSubject.next(this.notificationsList);
-    this.saveNotifications();
-    this.updateUnreadCount();
+    // Update notifications list and unread count
+    const notifications = this.notificationsSubject.getValue();
+    const updatedNotifications = [notification, ...notifications];
+    this.notificationsSubject.next(updatedNotifications);
     
-    // Forward to subscribers
-    this.notificationSubject.next(notification);
+    // Update unread count
+    const unreadCount = updatedNotifications.filter(n => !n.read).length;
+    this.unreadCountSubject.next(unreadCount);
   }
 
-  private updateUnreadCount() {
-    const count = this.notificationsList.filter(n => !n.read).length;
-    this.unreadNotificationsCount.next(count);
+  // Method to check if push notifications are supported by the browser
+  isPushNotificationSupported(): boolean {
+    return 'serviceWorker' in navigator && 'PushManager' in window;
   }
 
-  // Request permission and subscribe to push notifications
-  requestSubscription(): Observable<PushSubscription | null> {
+  // Request subscription for push notifications
+  requestSubscription(): Observable<any> {
     if (!this.isPushNotificationSupported()) {
-      console.warn('Push notifications are not supported in this browser');
-      return of(null);
+      return of({ success: false, message: 'Push notifications are not supported by your browser' });
     }
     
-    return new Observable(observer => {
-      this.swPush?.requestSubscription({
-        serverPublicKey: environment.vapidPublicKey
-      })
-      .then(subscription => {
-        // Send subscription to backend
-        this.sendSubscriptionToServer(subscription).subscribe({
-          next: () => {
-            observer.next(subscription);
-            observer.complete();
-          },
-          error: err => {
-            console.error('Error saving subscription:', err);
-            observer.error(err);
-          }
-        });
-      })
-      .catch(err => {
-        console.error('Could not subscribe to notifications', err);
-        observer.error(err);
-      });
-    });
+    // In a real implementation, this would register the service worker
+    // and request push notification permission
+    return of({ success: true, message: 'Push notification subscription simulated successfully' });
   }
 
-  // Send the push subscription object to backend
-  private sendSubscriptionToServer(subscription: PushSubscription): Observable<any> {
-    const headers = this.getAuthHeaders();
-    return this.http.post(`${this.apiUrl}/subscribe`, { subscription }, { headers })
-      .pipe(
-        tap(() => console.log('Subscription sent to server')),
-        catchError(error => {
-          console.error('Error sending subscription to server:', error);
-          throw error;
-        })
-      );
-  }
-
-  // Get notification updates as observable
-  get notificationUpdates(): Observable<{ title: string, body: string, icon?: string, data?: any }> {
-    return this.notificationSubject.asObservable();
-  }
-
-  // Unsubscribe from push notifications
-  unsubscribe(): Promise<void> {
-    if (!this.isPushNotificationSupported()) {
-      return Promise.resolve();
-    }
-    return this.swPush?.unsubscribe() || Promise.resolve();
-  }
-
-  // Check subscription status
-  getSubscription(): Promise<PushSubscription | null | undefined> {
-    if (!this.isPushNotificationSupported()) {
-      return Promise.resolve(null);
-    }
-    
+  // Send a notification to the customer (would typically be handled by backend)
+  sendCustomerNotification(customerId: string, title: string, message: string): Observable<any> {
     try {
-      // Convert Observable to Promise using firstValueFrom
-      return this.swPush?.subscription ? 
-        import('rxjs').then(rxjs => rxjs.firstValueFrom(this.swPush.subscription)) : 
-        Promise.resolve(null);
+      const headers = this.getHeaders();
+      return this.http.post<any>(`${this.apiUrl}/send`, {
+        customerId,
+        title,
+        body: message
+      }, { headers }).pipe(
+        catchError(error => {
+          console.error('Error sending notification:', error);
+          return of({ success: false });
+        })
+      );
     } catch (error) {
-      console.error('Error getting subscription:', error);
-      return Promise.resolve(null);
-    }
-  }
-    
-  // Get unread notifications count
-  getUnreadNotificationsCount(): Observable<number> {
-    const headers = this.getAuthHeaders();
-    return this.http.get<number>(`${this.apiUrl}/unread/count`, { headers })
-      .pipe(
-        catchError(error => {
-          console.error('Error fetching unread notification count:', error);
-          return of(0);
-        })
-      );
-  }
-
-  // Mark notification as read
-  markNotificationAsRead(orderId: string) {
-    // Update local list
-    this.notificationsList = this.notificationsList.map(n => {
-      if (n.data && n.data.orderId === orderId) {
-        return { ...n, read: true };
-      }
-      return n;
-    });
-    
-    this.notificationsListSubject.next(this.notificationsList);
-    this.saveNotifications();
-    this.updateUnreadCount();
-    
-    // Update on server
-    const headers = this.getAuthHeaders();
-    return this.http.post(`${this.apiUrl}/mark-read`, { orderId }, { headers })
-      .pipe(
-        catchError(error => {
-          console.error('Error marking notification as read:', error);
-          return of(null);
-        })
-      );
-  }
-
-  // Mark all notifications as read
-  markAllNotificationsAsRead() {
-    // Update local list
-    this.notificationsList = this.notificationsList.map(n => ({ ...n, read: true }));
-    this.notificationsListSubject.next(this.notificationsList);
-    this.saveNotifications();
-    this.updateUnreadCount();
-    
-    // Update on server
-    const headers = this.getAuthHeaders();
-    return this.http.post(`${this.apiUrl}/mark-all-read`, {}, { headers })
-      .pipe(
-        catchError(error => {
-          console.error('Error marking all notifications as read:', error);
-          return of(null);
-        })
-      );
-  }
-
-  // Show a local notification (fallback when push is not available)
-  showLocalNotification(title: string, body: string, icon?: string, data?: any): void {
-    if ('Notification' in window) {
-      Notification.requestPermission().then(permission => {
-        if (permission === 'granted') {
-          const notification = new Notification(title, {
-            body,
-            icon: icon || '/assets/icons/logo-72x72.png',
-            data
-          });
-          
-          // Also process this notification for our local storage
-          this.processNotification({ title, body, icon, data });
-          
-          notification.onclick = () => {
-            if (data && data.orderId) {
-              this.markNotificationAsRead(data.orderId);
-              window.location.href = `/admin/orders/${data.orderId}`;
-            }
-          };
-        }
-      });
-    }
-  }
-
-  // Send a test notification
-  sendTestNotification(): Observable<any> {
-    const headers = this.getAuthHeaders();
-    return this.http.post(`${this.apiUrl}/test`, {}, { headers })
-      .pipe(
-        tap(() => console.log('Test notification sent')),
-        catchError(error => {
-          console.error('Error sending test notification:', error);
-          throw error;
-        })
-      );
-  }
-
-  // This specific method would be called when a new order is created
-  triggerOrderNotification(order: any) {
-    // Check if we already have a notification for this order
-    const existingNotification = this.notificationsList.find(
-      n => n.data && n.data.orderId === order._id
-    );
-    
-    // Only create notification if it doesn't already exist
-    if (!existingNotification) {
-      const title = 'New Order Request';
-      const body = `Order #${order.orderNumber} received from ${order.customerInfo.firstName} ${order.customerInfo.lastName}`;
-      const data = { orderId: order._id, type: 'new-order' };
-      
-      this.showLocalNotification(title, body, '/assets/icons/order-icon.png', data);
+      console.error('Error getting headers:', error);
+      return of({ success: false });
     }
   }
 }

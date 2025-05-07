@@ -1,5 +1,4 @@
-
-import { Component, OnInit} from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { MatCardModule } from '@angular/material/card';
@@ -10,15 +9,14 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { OrderService, Order } from '../../../services/order.service';
 import { AuthService } from '../../../services/auth.service';
-import { OrderDetailsDialogComponent } from '../order-details-dialog/order-details-dialog.component';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { DatePipe } from '@angular/common';
-import { PaymentDialogComponent } from '../payment-dialog/payment-dialog.component';
-
+import { OrderDetailsDialogComponent } from '../../Customer/order-details-dialog/order-details-dialog.component';
+import { PaymentDialogComponent } from '../../Customer/payment-dialog/payment-dialog.component';
 
 @Component({
-  selector: 'app-ongoing',
-  imports: [   CommonModule,
+  selector: 'app-admin-confirmed-orders',
+  imports: [CommonModule,
     RouterModule,
     MatCardModule,
     MatButtonModule,
@@ -28,11 +26,11 @@ import { PaymentDialogComponent } from '../payment-dialog/payment-dialog.compone
     MatIconModule,
     MatProgressSpinnerModule,
     DatePipe],
-  templateUrl: './ongoing.component.html',
-  styleUrl: './ongoing.component.css'
+  templateUrl: './admin-confirmed-orders.component.html',
+  styleUrl: './admin-confirmed-orders.component.css'
 })
-export class OngoingComponent implements OnInit {
-  ongoingOrders: Order[] = [];
+export class AdminConfirmedOrdersComponent implements OnInit {
+  confirmedOrders: Order[] = [];
   loading = true;
   error: string | null = null;
 
@@ -43,21 +41,17 @@ export class OngoingComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.loadOngoingOrders();
+    this.loadConfirmedOrders();
   }
 
-  loadOngoingOrders() {
+  loadConfirmedOrders() {
     const currentUser = this.authService.getUserDetails();
-    const token = this.authService.getToken();
-    console.log('Current user:', currentUser);
-    console.log('Auth token present:', !!token);
-    
-    if (currentUser?.customerId) {  // Change username to customerId
-      this.orderService.getCustomerOrders(currentUser.customerId.toString()).subscribe({
+    if (currentUser?.username) {
+      this.orderService.getCustomerOrders(currentUser.username).subscribe({
         next: (orders) => {
-          // Include canceled orders but exclude completed orders
-          this.ongoingOrders = orders.filter(order => 
-            order.status !== 'completed'
+          // Filter only active orders (confirmed through ready status)
+          this.confirmedOrders = orders.filter(order => 
+            ['confirmed', 'partial-payment', 'paid', 'in-progress', 'ready'].includes(order.status)
           );
           this.loading = false;
         },
@@ -72,45 +66,33 @@ export class OngoingComponent implements OnInit {
 
   getStatusLabel(status: string): string {
     const statusLabels: { [key: string]: string } = {
-      'pending': 'Order Request Sent',
-      'viewed': 'Order Request Viewed',
       'confirmed': 'Order Accepted - Awaiting Payment',
       'partial-payment': 'Partial Payment Received',
       'paid': 'Payment Confirmed',
       'in-progress': 'In Progress',
-      'ready': 'Ready for Delivery',
-      'delivered': 'Delivered',
-      'cancelled': 'Cancelled'
+      'ready': 'Ready for Delivery'
     };
     return statusLabels[status] || status;
   }
 
   getStatusColor(status: string): string {
     const statusColors: { [key: string]: string } = {
-      'pending': 'accent',
-      'viewed': 'primary',
       'confirmed': 'primary',
       'partial-payment': 'warn',
       'paid': 'success',
       'in-progress': 'primary',
-      'ready': 'success',
-      'delivered': 'success',
-      'cancelled': 'warn'
+      'ready': 'success'
     };
     return statusColors[status] || 'basic';
   }
 
   getProgressValue(status: string): number {
     const progressValues: { [key: string]: number } = {
-      'pending': 10,
-      'viewed': 20,
       'confirmed': 40,
       'partial-payment': 60,
       'paid': 80,
       'in-progress': 85,
-      'ready': 95,
-      'delivered': 100,
-      'cancelled': 0
+      'ready': 95
     };
     return progressValues[status] || 0;
   }
@@ -122,22 +104,29 @@ export class OngoingComponent implements OnInit {
     });
   }
 
-
-
-  makePayment(order: Order) {
-    const dialogRef = this.dialog.open(PaymentDialogComponent, {
+  openPaymentDialog(order: Order) {
+    this.dialog.open(PaymentDialogComponent, {
       width: '600px',
       data: order
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
+    }).afterClosed().subscribe(result => {
       if (result) {
-        // Refresh orders if payment was made
-        this.loadOngoingOrders();
+        // Refresh the orders list if payment was made
+        this.loadConfirmedOrders();
       }
     });
   }
 
+  formatTime(time: string | undefined): string {
+    if (!time) return '';
+    
+    // Convert 24-hour time format to 12-hour format with AM/PM
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12; // Convert 0 to 12 for 12 AM
+    
+    return `${hour12}:${minutes} ${ampm}`;
+  }
 
   getPaymentMessage(order: Order): string {
     if (order.status === 'confirmed') {
@@ -150,29 +139,9 @@ export class OngoingComponent implements OnInit {
       } else {
         return 'Pay full amount or 50% of the base price to confirm your order.';
       }
-    } else if (order.status === 'partial-payment') {
-      return 'Your partial payment has been received. Please pay the remaining amount before your event.';
-    } else if (order.status === 'payment-verification') {
-      return 'Your payment slip is under verification. We will update you soon.';
     }
     return '';
   }
-  
-  // New method to format time in 12-hour format with AM/PM
-  formatTime(time: string | undefined): string {
-    if (!time) return '';
-    
-    // Convert 24-hour time format to 12-hour format with AM/PM
-    const [hours, minutes] = time.split(':');
-    const hour = parseInt(hours, 10);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const hour12 = hour % 12 || 12; // Convert 0 to 12 for 12 AM
-    
-    return `${hour12}:${minutes} ${ampm}`;
-  }
-  
-  canMakePayment(order: Order): boolean {
-    return order.status === 'confirmed' || order.status === 'partial-payment';
-  }
-
 }
+
+
