@@ -1,0 +1,342 @@
+/* Payment History Styles */
+.payment-history-container {
+  padding: 0;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* Loading & Error Messages */
+.loading-container,
+.error-message,
+.no-payments-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  margin: 20px 0;
+  text-align: center;
+}
+
+.spinner {
+  animation: spin 1.5s linear infinite;
+  margin-bottom: 10px;
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message {
+  color: #f44336;
+}
+
+.error-message p,
+.no-payments-message p {
+  margin-top: 10px;
+}
+
+/* Payment Summary Card */
+.payment-summary-card {
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.summary-header {
+  background-color: #3f51b5;
+  color: white;
+  padding: 15px;
+}
+
+.summary-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.summary-content {
+  padding: 15px;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.label {
+  font-weight: 500;
+  color: #555;
+}
+
+.value {
+  font-weight: 500;
+}
+
+.value.success {
+  color: #4caf50;
+}
+
+.value.warning {
+  color: #ff9800;
+}
+
+/* Payment Status Chip */
+.payment-status {
+  margin: 15px 0;
+  display: flex;
+  justify-content: center;
+}
+
+/* Progress Bar */
+.payment-progress {
+  margin: 20px 0;
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+  font-size: 14px;
+  color: #666;
+}
+
+.progress-bar-container {
+  height: 8px;
+  background-color: #e0e0e0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background-color: #ff9800;
+  transition: width 0.3s ease;
+}
+
+.progress-bar.complete {
+  background-color: #4caf50;
+}
+
+/* Deadline & Installment Info */
+.deadline-info,
+.installment-info {
+  display: flex;
+  background-color: rgba(255, 152, 0, 0.1);
+  padding: 12px;
+  border-radius: 4px;
+  margin-top: 15px;
+}
+
+.installment-info {
+  background-color: rgba(63, 81, 181, 0.1);
+}
+
+.deadline-info mat-icon,
+.installment-info mat-icon {
+  margin-right: 12px;
+  margin-top: 3px;
+  font-size: 22px;
+  width: 22px;
+  height: 22px;
+}
+
+.deadline-details p,
+.installment-details p {
+  margin: 0 0 5px 0;
+  font-size: 14px;
+}
+
+.deadline-details p:last-child,
+.installment-details p:last-child {
+  margin-bottom: 0;
+}
+
+/* Payment Table Styles */
+.payment-table-container {
+  margin-bottom: 20px;
+}
+
+.payment-table-container h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.payment-table {
+  width: 100%;
+  border-collapse: collapse;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.mat-mdc-row {
+  position: relative;
+}
+
+.mat-mdc-row.active-row {
+  background-color: rgba(63, 81, 181, 0.05);
+}
+
+.mat-mdc-header-cell {
+  font-weight: 500;
+  color: #555;
+}
+
+.mat-mdc-cell {
+  padding: 12px !important;
+}
+
+.amount-cell {
+  font-weight: 500;
+}
+
+.payment-method {
+  display: flex;
+  align-items: center;
+}
+
+.payment-method mat-icon {
+  margin-right: 8px;
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.active-payment-indicator {
+  color: #ff9800;
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  margin-left: 5px;
+  vertical-align: middle;
+}
+
+.payment-notes {
+  font-size: 13px;
+  color: #666;
+  margin-top: 5px;
+  max-width: 200px;
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+.rejection-reason {
+  display: flex;
+  align-items: center;
+  color: #f44336;
+  font-size: 13px;
+  margin-top: 5px;
+}
+
+.rejection-reason mat-icon {
+  font-size: 16px;
+  width: 16px;
+  height: 16px;
+  margin-right: 5px;
+}
+
+/* Payment Notes Section */
+.payment-notes {
+  margin-top: 20px;
+}
+
+.payment-instructions {
+  padding: 15px 0;
+}
+
+.payment-instructions h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.instruction-item {
+  display: flex;
+  align-items: flex-start;
+}
+
+.instruction-item mat-icon {
+  margin-right: 10px;
+  color: #3f51b5;
+  margin-top: 2px;
+}
+
+.instruction-content p {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+}
+
+.instruction-content p:last-child {
+  margin-bottom: 0;
+}
+
+/* Dialog Height Adjustment */
+::ng-deep .mat-mdc-dialog-content {
+  max-height: 70vh !important;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .mat-mdc-table {
+    border: 0;
+    box-shadow: none;
+  }
+
+  .mat-mdc-table .mat-mdc-header-row {
+    display: none;
+  }
+
+  .mat-mdc-table .mat-mdc-row {
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    margin-bottom: 8px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  }
+
+  .mat-mdc-table .mat-mdc-cell {
+    padding: 8px !important;
+    border-bottom: none;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .mat-mdc-table .mat-mdc-cell::before {
+    content: attr(data-column-name);
+    font-weight: 500;
+    color: #555;
+    margin-bottom: 4px;
+  }
+
+  .summary-item {
+    flex-direction: column;
+  }
+
+  .summary-item .label {
+    margin-bottom: 5px;
+  }
+
+  .deadline-info,
+  .installment-info {
+    flex-direction: column;
+  }
+
+  .deadline-info mat-icon,
+  .installment-info mat-icon {
+    margin-bottom: 8px;
+  }
+}

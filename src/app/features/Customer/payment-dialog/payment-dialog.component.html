@@ -20,8 +20,43 @@
       <span>Processing your request...</span>
     </div>
 
+    <!-- Payment History Section (when there are previous payments) -->
+    <div class="payment-history" *ngIf="previousPayments && previousPayments.length > 0 && !payherePaymentInProgress">
+      <h3>Payment History</h3>
+      <div class="payment-history-list">
+        <div *ngFor="let payment of getPaymentHistory()" class="payment-history-item">
+          <div class="payment-history-details">
+            <div class="payment-date">
+              <mat-icon>calendar_today</mat-icon>
+              <span>{{ formatDate(payment.submittedDate) }}</span>
+            </div>
+            <div class="payment-amount">
+              <mat-icon>payments</mat-icon>
+              <span>Rs. {{ payment.amount | number:'1.2-2' }}</span>
+            </div>
+            <div class="payment-status" [ngClass]="{
+              'success': payment.status === 'completed',
+              'pending': payment.status === 'pending',
+              'rejected': payment.status === 'rejected'
+            }">
+              <mat-icon>{{ payment.status === 'completed' ? 'check_circle' : (payment.status === 'pending' ? 'hourglass_empty' : 'cancel') }}</mat-icon>
+              <span>{{ getPaymentStatusLabel(payment.status) }}</span>
+            </div>
+            <div class="payment-installment" *ngIf="payment.installmentNumber">
+              <mat-icon>filter_{{ payment.installmentNumber }}</mat-icon>
+              <span>Installment {{ payment.installmentNumber }}</span>
+            </div>
+          </div>
+          <div class="payment-history-notes" *ngIf="payment.notes">
+            <mat-icon>note</mat-icon>
+            <span>{{ payment.notes }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Order Summary -->
-    <div class="order-summary">
+    <div class="order-summary" *ngIf="!payherePaymentInProgress">
       <h3>Order Summary</h3>
       <div class="summary-item">
         <span>Base Price:</span>
@@ -41,90 +76,197 @@
       </div>
     </div>
 
-    <!-- Payment Policy Notice -->
-    <div class="payment-notice" *ngIf="isEventWithin24Hours">
-      <mat-icon color="warn">schedule</mat-icon>
-      <p class="notice-text">Your event is in less than 24 hours. Full payment is required to confirm your order.</p>
+    <!-- Payment Status (shown when there are existing payments) -->
+    <div class="payment-status" *ngIf="totalAmountPaid > 0 && !payherePaymentInProgress">
+      <h3>Payment Status</h3>
+      <div class="status-item">
+        <span>Total Order Amount:</span>
+        <span>Rs. {{ order.totalPrice | number:'1.2-2' }}</span>
+      </div>
+      <div class="status-item">
+        <span>Already Paid:</span>
+        <span class="text-success">Rs. {{ totalAmountPaid | number:'1.2-2' }}</span>
+      </div>
+      <div class="status-item" *ngIf="remainingAmount > 0">
+        <span>Remaining Amount:</span>
+        <span class="text-warning">Rs. {{ remainingAmount | number:'1.2-2' }}</span>
+      </div>
+      <div class="status-item" *ngIf="remainingAmount > 0 && order.installmentTotalInstallments">
+        <span>Current Installment:</span>
+        <span>{{ currentInstallment }} of {{ order.installmentTotalInstallments }}</span>
+      </div>
+      <div class="status-notes" *ngIf="remainingAmount > 0">
+        <mat-icon>info</mat-icon>
+        <span>The remaining amount must be paid by <strong>{{ getPaymentDeadline() }}</strong> (12 hours before your event).</span>
+      </div>
     </div>
 
-    <div class="payment-options">
-      <h3>Payment Options</h3>
-      
-      <!-- Payment Amount Options -->
-      <div class="amount-options">
-        <mat-radio-group [(ngModel)]="isFullPayment" (change)="onPaymentOptionChange()" [disabled]="isEventWithin24Hours">
-          <mat-radio-button [value]="true">Pay Full Amount (Rs. {{ order.totalPrice | number:'1.2-2' }})</mat-radio-button>
-          <mat-radio-button [value]="false" *ngIf="!isEventWithin24Hours && calculateHalfPayment() > 0">
-            Pay 50% Now (Rs. {{ calculateHalfPayment() | number:'1.2-2' }})
-          </mat-radio-button>
-        </mat-radio-group>
+    <!-- Event Time Information -->
+    <div class="event-time-info" *ngIf="!payherePaymentInProgress">
+      <div class="time-remaining">
+        <mat-icon color="primary">schedule</mat-icon>
+        <span>Time until event: <strong>{{ getTimeUntilEvent() }}</strong></span>
       </div>
       
-      <!-- Payment Method Selection -->
-      <div class="payment-method">
-        <mat-form-field appearance="fill" class="full-width">
-          <mat-label>Payment Method</mat-label>
-          <mat-select [(ngModel)]="paymentMethod">
-            <mat-option value="payhere">Pay with PayHere</mat-option>
-            <mat-option value="bank-transfer">Bank Transfer</mat-option>
-            <mat-option value="online-transfer">Online Transfer</mat-option>
-          </mat-select>
-        </mat-form-field>
+      <!-- Payment Policy Notice for events within 10 days -->
+      <div class="payment-notice" *ngIf="isEventWithin10Days">
+        <mat-icon color="warn">warning</mat-icon>
+        <p class="notice-text">Your event is in less than 10 days. <strong>Full payment is required</strong> to confirm your order.</p>
       </div>
-      
-      <!-- File Upload for Bank/Online Transfer -->
-      <div *ngIf="paymentMethod !== 'payhere'" class="file-upload">
-        <p>Please upload your payment slip:</p>
-        <button mat-stroked-button (click)="fileInput.click()" class="upload-btn" [disabled]="loading">
-          <mat-icon>file_upload</mat-icon>
-          Select Payment Slip
-        </button>
-        <input hidden (change)="onFileSelected($event)" #fileInput type="file" accept="image/*">
-        
-        <!-- Show selected file name -->
-        <div *ngIf="selectedFile" class="selected-file">
-          <mat-icon>attach_file</mat-icon>
-          <span class="file-name">{{ selectedFile.name }}</span>
-          <button mat-icon-button (click)="selectedFile = null; fileInput.value = ''">
-            <mat-icon>close</mat-icon>
-          </button>
-        </div>
-        
-        <!-- File validation error -->
-        <div *ngIf="fileValidationError" class="file-error">
-          <mat-icon>warning</mat-icon>
-          <span>{{ fileValidationError }}</span>
-        </div>
-        
-        <!-- File upload instructions -->
-        <div class="file-instructions" *ngIf="!selectedFile && !fileValidationError">
-          <p>Accepted file types: JPG, PNG, GIF (max size: 5MB)</p>
-        </div>
+    </div>
 
+    <!-- Payment Form -->
+    <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()" *ngIf="!payherePaymentInProgress && !loading">
+      <div class="payment-options">
+        <h3>Payment Options</h3>
+        
+        <!-- Installment Plan Selection -->
+        <div class="installment-options">
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Installment Plan</mat-label>
+            <mat-select formControlName="installmentPlan" (selectionChange)="onInstallmentPlanChange()">
+              <mat-option *ngFor="let plan of availableInstallmentPlans" [value]="plan.id">
+                {{ plan.name }} - {{ plan.description }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          
+          <!-- Installment Plan Info -->
+          <div class="installment-info" *ngIf="selectedInstallmentPlan && selectedInstallmentPlan.numberOfInstallments > 1">
+            <mat-icon color="primary">info</mat-icon>
+            <p>You are making installment {{ currentInstallment }} of {{ selectedInstallmentPlan.numberOfInstallments }}.</p>
+            <p>Amount for this installment: Rs. {{ getCurrentInstallmentAmount() | number:'1.2-2' }}</p>
+          </div>
+        </div>
+        
+        <!-- Payment Method Selection -->
+        <div class="payment-method">
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Payment Method</mat-label>
+            <mat-select formControlName="paymentMethod">
+              <mat-option value="payhere">Pay with PayHere</mat-option>
+              <mat-option value="bank-transfer">Bank Transfer</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        
+        <!-- Payment Amount (read-only) -->
+        <div class="payment-amount">
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Payment Amount (Rs.)</mat-label>
+            <input matInput formControlName="paymentAmount" type="number" readonly>
+          </mat-form-field>
+        </div>
+        
+        <!-- PayHere Information Section -->
+        <div *ngIf="paymentForm.get('paymentMethod')?.value === 'payhere'" class="payment-method-info">
+          <div class="method-details payhere-info">
+            <div class="method-icon">
+              <mat-icon color="primary">credit_card</mat-icon>
+            </div>
+            <div class="method-description">
+              <p>Pay securely using credit/debit cards, mobile wallets, or bank transfers through PayHere.</p>
+              <p class="small">You will be redirected to the secure PayHere payment gateway to complete your payment.</p>
+            </div>
+          </div>
+          
+          <!-- Using Material icons instead of image assets -->
+          <div class="payment-icons">
+            <div class="payment-icon-wrapper">
+              <mat-icon class="payment-icon">credit_card</mat-icon>
+              <span>Visa</span>
+            </div>
+            <div class="payment-icon-wrapper">
+              <mat-icon class="payment-icon">credit_card</mat-icon>
+              <span>Mastercard</span>
+            </div>
+            <div class="payment-icon-wrapper">
+              <mat-icon class="payment-icon">account_balance</mat-icon>
+              <span>Bank Transfer</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- File Upload for Bank Transfer -->
+        <div *ngIf="paymentForm.get('paymentMethod')?.value === 'bank-transfer'" class="file-upload">
+          <p>Please upload your payment slip:</p>
+          <button mat-stroked-button (click)="fileInput.click()" type="button" class="upload-btn" [disabled]="loading">
+            <mat-icon>file_upload</mat-icon>
+            Select Payment Slip
+          </button>
+          <input hidden (change)="onFileSelected($event)" #fileInput type="file" accept="image/*">
+          
+          <!-- Show selected file name -->
+          <div *ngIf="selectedFile" class="selected-file">
+            <mat-icon>attach_file</mat-icon>
+            <span class="file-name">{{ selectedFile.name }}</span>
+            <button mat-icon-button type="button" (click)="selectedFile = null; fileInput.value = ''">
+              <mat-icon>close</mat-icon>
+            </button>
+          </div>
+          
+          <!-- File validation error -->
+          <div *ngIf="fileValidationError" class="file-error">
+            <mat-icon>warning</mat-icon>
+            <span>{{ fileValidationError }}</span>
+          </div>
+          
+          <!-- File upload instructions -->
+          <div class="file-instructions" *ngIf="!selectedFile && !fileValidationError">
+            <p>Accepted file types: JPG, PNG, GIF (max size: 5MB)</p>
+          </div>
+          
+          <!-- Bank transfer instructions -->
+          <div class="bank-transfer-info">
+            <mat-icon color="primary">account_balance</mat-icon>
+            <div class="instruction-content">
+              <p><strong>Bank Details:</strong></p>
+              <p>Bank: Example Bank</p>
+              <p>Account Name: Decorations Company</p>
+              <p>Account Number: 1234567890</p>
+              <p>Branch: Negombo</p>
+              <p><strong>IMPORTANT:</strong> Please include your Order Number ({{ order.orderNumber }}) in the payment reference.</p>
+            </div>
+          </div>
+        </div>
+        
         <!-- Payment Notes Field -->
         <mat-form-field appearance="fill" class="full-width payment-notes">
           <mat-label>Payment Notes (optional)</mat-label>
-          <textarea matInput [(ngModel)]="paymentNotes" placeholder="Any additional information about your payment"></textarea>
+          <textarea matInput formControlName="notes" placeholder="Any additional information about your payment"></textarea>
         </mat-form-field>
-      </div>
 
-      <!-- Payment Status Notice -->
-      <div class="payment-status-notice" *ngIf="paymentMethod !== 'payhere'">
-        <mat-icon color="primary">info</mat-icon>
-        <p class="notice-text">After uploading your payment slip, our admin will verify it. You'll receive a confirmation once approved.</p>
+        <!-- Payment Status Notice -->
+        <div class="payment-status-notice" *ngIf="paymentForm.get('paymentMethod')?.value === 'bank-transfer'">
+          <mat-icon color="primary">info</mat-icon>
+          <p class="notice-text">After uploading your payment slip, our admin will verify it. You'll receive a confirmation once approved.</p>
+        </div>
+      </div>
+      
+      <!-- Form Actions -->
+      <div class="form-actions">
+        <button mat-button type="button" [disabled]="loading || payherePaymentInProgress" (click)="closeDialog()">Cancel</button>
+        <button 
+          mat-raised-button 
+          color="primary" 
+          type="submit"
+          [disabled]="loading || payherePaymentInProgress || !paymentForm.valid || 
+                    (paymentForm.get('paymentMethod')?.value === 'bank-transfer' && !selectedFile)">
+          <mat-icon *ngIf="loading" class="spinner">refresh</mat-icon>
+          <span *ngIf="!loading">Process Payment</span>
+        </button>
+      </div>
+    </form>
+    
+    <!-- PayHere Payment Progress -->
+    <div *ngIf="payherePaymentInProgress" class="payhere-progress">
+      <mat-icon color="primary" class="large-icon">payments</mat-icon>
+      <h3>PayHere Payment in Progress</h3>
+      <p>You are being redirected to the secure PayHere payment gateway.</p>
+      <p>Please do not close this window until the payment is complete.</p>
+      <div class="payment-animation">
+        <mat-icon class="spinner">sync</mat-icon>
       </div>
     </div>
   </div>
 </mat-dialog-content>
-
-<mat-dialog-actions align="end">
-  <button mat-button [disabled]="loading" (click)="closeDialog()">Cancel</button>
-  <button 
-    mat-raised-button 
-    color="primary" 
-    [disabled]="loading || (paymentMethod !== 'payhere' && !selectedFile)" 
-    (click)="onSubmit()">
-    <mat-icon *ngIf="loading" class="spinner">refresh</mat-icon>
-    <span *ngIf="!loading">Process Payment</span>
-  </button>
-</mat-dialog-actions>

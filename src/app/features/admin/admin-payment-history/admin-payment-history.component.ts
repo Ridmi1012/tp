@@ -24,6 +24,7 @@ import { PageEvent } from '@angular/material/paginator';
 import { Sort } from '@angular/material/sort';
 import { MatDialog } from '@angular/material/dialog';
 
+
 @Component({
   selector: 'app-admin-payment-history',
   imports: [  CommonModule,
@@ -93,34 +94,36 @@ export class AdminPaymentHistoryComponent implements OnInit {
     this.loadPayments();
   }
 
-  loadPayments() {
-    this.loading = true;
-    this.error = null;
-    
-    // Extract filter values
-    const filters = this.filterForm.value;
-    const startDate = filters.startDate ? new Date(filters.startDate).toISOString() : undefined;
-    const endDate = filters.endDate ? new Date(filters.endDate).toISOString() : undefined;
-    
-    this.paymentService.getAllPayments(
-      this.pageIndex + 1, 
-      this.pageSize, 
-      filters.status,
-      startDate,
-      endDate
-    ).subscribe({
-      next: (response) => {
-        this.payments = response.data;
-        this.totalPayments = response.total;
-        this.loading = false;
-      },
-      error: (error) => {
-        console.error('Error loading payments:', error);
-        this.error = 'Failed to load payment history. Please try again.';
-        this.loading = false;
-      }
-    });
-  }
+loadPayments() {
+  this.loading = true;
+  this.error = null;
+  
+  // Extract filter values
+  const filters = this.filterForm.value;
+  const startDate = filters.startDate ? new Date(filters.startDate).toISOString() : undefined;
+  const endDate = filters.endDate ? new Date(filters.endDate).toISOString() : undefined;
+  
+  this.paymentService.getAllPayments(
+    undefined,        // orderId - not provided, so pass undefined
+    filters.status,   // status
+    startDate,        // startDate
+    endDate,          // endDate
+    this.pageIndex + 1, // page
+    this.pageSize,    // pageSize
+    // You can add other parameters if needed (searchTerm, sortField, sortDirection)
+  ).subscribe({
+    next: (response) => {
+      this.payments = response.data;
+      this.totalPayments = response.total;
+      this.loading = false;
+    },
+    error: (error) => {
+      console.error('Error loading payments:', error);
+      this.error = 'Failed to load payment history. Please try again.';
+      this.loading = false;
+    }
+  });
+}
 
   applyFilters() {
     this.pageIndex = 0; // Reset to first page when applying filters
