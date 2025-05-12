@@ -7,7 +7,16 @@ import { switchMap } from 'rxjs/operators';
 import { catchError, throwError } from 'rxjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { tap } from 'rxjs/operators';
+import { HttpParams } from '@angular/common/http';
 
+
+export interface InstallmentPlan {
+  id: number;
+  name: string;
+  numberOfInstallments: number;
+  percentages: number[];
+  description: string;
+}
 
 export interface Payment {
   id: number;
@@ -17,29 +26,56 @@ export interface Payment {
   eventDate: string;
   amount: number;
   paymentType: string; // 'full' or 'partial'
+  method: string; // 'payhere' or 'bank-transfer'
   slipUrl: string;
   slipThumbnail: string;
   notes?: string;
-  submittedDate: string;
-  status: string; // 'pending', 'verified', 'rejected'
+  paymentDateTime?: string; // When payment was made/initiated
+  submittedDate?: string; // Added ? to make optional
+  status: string; // 'pending', 'completed', 'rejected'
   verifiedDate?: string;
   verifiedBy?: string;
   rejectionReason?: string;
+  installmentNumber?: number; // Which installment this payment represents (1st, 2nd, etc.)
+  remainingAmount?: number; // Amount remaining after this payment
+  isActive?: boolean; // Added for PaymentHistoryComponent
+}
+
+export interface PaymentSummary {
+  totalAmount: number;
+  totalPaid: number;
+  remainingAmount: number;
+  isFullyPaid: boolean;
+  paymentStatus: string;
+  installmentPlan?: InstallmentPlan; // Changed to proper type
+  currentInstallment?: number;
+  nextInstallmentAmount?: number;
+  nextInstallmentDueDate?: string;
+  deadlineDate?: string;
+  payments: Payment[];
+  activePaymentId?: number; // Added for PaymentHistoryComponent
+}
+
+export interface PaymentResponse {
+  data: Payment[];
+  total: number;
+  page: number;
+  pageSize: number;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class PaymentService {
-  private apiUrl = 'http://localhost:8083/api/orders';
-
+    private apiUrl = 'http://localhost:8083/api/orders';
+  
   constructor(
     private http: HttpClient,
     private authService: AuthService,
     private cloudinaryService: CloudinaryserviceService
   ) {}
 
-  private getHeaders(): HttpHeaders {
+   private getHeaders(): HttpHeaders {
     const token = this.authService.getToken();
     if (!token) {
       console.error('Authentication token is missing');
@@ -51,12 +87,70 @@ export class PaymentService {
       .set('Authorization', `Bearer ${token}`);
   }
 
-  initiatePayment(orderId: string, amount: number, paymentMethod: 'payhere' | 'bank-transfer' | 'online-transfer'): Observable<any> {
+ getAvailableInstallmentPlans(eventDate: string, totalPrice: number): Observable<InstallmentPlan[]> {
+    const headers = this.getHeaders();
+    return this.http.get<InstallmentPlan[]>(`${this.apiUrl}/installment-plans?eventDate=${eventDate}&totalPrice=${totalPrice}`, { headers })
+      .pipe(
+        catchError(error => {
+          console.error('Error fetching installment plans:', error);
+          return throwError(() => new Error('Failed to fetch installment plans: ' + this.getErrorMessage(error)));
+        })
+      );
+  }
+
+  getAvailableInstallmentPlansForOrder(orderId: string): Observable<InstallmentPlan[]> {
+    const headers = this.getHeaders();
+    return this.http.get<InstallmentPlan[]>(`${this.apiUrl}/${orderId}/installment-plans`, { headers })
+      .pipe(
+        catchError(error => {
+          console.error('Error fetching installment plans for order:', error);
+          return throwError(() => new Error('Failed to fetch installment plans: ' + this.getErrorMessage(error)));
+        })
+      );
+  }
+
+ calculateInstallmentAmount(totalPrice: number, planId: number, installmentNumber: number): number {
+    // Find the plan in our local cache if available
+    const plan = this.getLocalInstallmentPlan(planId);
+    if (!plan || installmentNumber < 1 || installmentNumber > plan.numberOfInstallments) {
+      return 0;
+    }
+    
+    return (plan.percentages[installmentNumber - 1] / 100) * totalPrice;
+  }
+  
+  // Helper method to get a locally cached installment plan
+  private getLocalInstallmentPlan(planId: number): InstallmentPlan | null {
+    // Check localStorage for cached plans
+    const cachedPlansJson = localStorage.getItem('installmentPlans');
+    if (cachedPlansJson) {
+      try {
+        const cachedPlans: InstallmentPlan[] = JSON.parse(cachedPlansJson);
+        return cachedPlans.find(p => p.id === planId) || null;
+      } catch (e) {
+        console.error('Error parsing cached installment plans:', e);
+      }
+    }
+    return null;
+  }
+  
+ 
+   initiatePayment(
+    orderId: string, 
+    amount: number, 
+    paymentMethod: 'payhere' | 'bank-transfer',
+    installmentPlanId?: number,
+    installmentNumber?: number,
+    notes?: string
+  ): Observable<any> {
     const headers = this.getHeaders();
     const paymentData = {
       orderId: orderId,
       amount: amount,
-      paymentMethod: paymentMethod
+      paymentMethod: paymentMethod,
+      installmentPlanId: installmentPlanId,
+      installmentNumber: installmentNumber,
+      notes: notes
     };
     
     // Check if user is authorized to make payments
@@ -67,6 +161,12 @@ export class PaymentService {
     if (paymentMethod === 'payhere') {
       return this.http.post(`${this.apiUrl}/payhere/initiate`, paymentData, { headers })
         .pipe(
+          tap(response => {
+            console.log('PayHere payment initiated:', response);
+            
+            // Create and submit form to PayHere
+            this.submitPayHereForm(response);
+          }),
           catchError(error => {
             console.error('Payment initiation error:', error);
             return throwError(() => new Error('Failed to initiate payment: ' + this.getErrorMessage(error)));
@@ -83,7 +183,70 @@ export class PaymentService {
     }
   }
 
-  uploadPaymentSlip(orderId: string, file: File, amount?: number, notes?: string): Observable<any> {
+   // Method to handle submission to PayHere
+  private submitPayHereForm(payHereData: any): void {
+    // Log all parameters for debugging
+    console.log('PayHere form data:', payHereData);
+    
+    // Create form element
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = payHereData.checkout_url || 'https://sandbox.payhere.lk/pay/checkout';
+    form.style.display = 'none';
+    
+    // Add all fields as hidden input elements
+    Object.keys(payHereData).forEach(key => {
+      // Skip checkout_url as it's not a form parameter
+      if (key !== 'checkout_url') {
+        const hiddenField = document.createElement('input');
+        hiddenField.type = 'hidden';
+        hiddenField.name = key;
+        hiddenField.value = payHereData[key];
+        form.appendChild(hiddenField);
+      }
+    });
+    
+    // Add form to body and submit
+    document.body.appendChild(form);
+    
+    // Log before submission
+    console.log('Submitting PayHere form to:', form.action);
+    console.log('Form HTML:', form.outerHTML);
+    
+    try {
+      form.submit();
+    } catch (error) {
+      console.error('Error submitting PayHere form:', error);
+    }
+  }
+
+  // Verify payment after returning from PayHere
+  verifyPayHerePayment(orderId: string, paymentId: string): Observable<any> {
+    const headers = this.getHeaders();
+    return this.http.post(`${this.apiUrl}/payhere/verify`, 
+      { 
+        orderId: orderId, 
+        paymentId: paymentId 
+      }, 
+      { headers })
+      .pipe(
+        tap(response => console.log('Payment verification successful:', response)),
+        catchError(error => {
+          console.error('PayHere verification error:', error);
+          return throwError(() => new Error('Failed to verify PayHere payment: ' + this.getErrorMessage(error)));
+        })
+      );
+  }
+
+  uploadPaymentSlip(
+    orderId: string, 
+    file: File, 
+    amount: number, 
+    isPartialPayment: boolean = false,
+    installmentPlanId?: number,
+    installmentNumber?: number,
+    notes?: string
+  ): Observable<any> {
     // Validate inputs
     if (!orderId) {
       return throwError(() => new Error('Order ID is required'));
@@ -121,15 +284,18 @@ export class PaymentService {
 
         // After successful upload to Cloudinary, send the image URL to your API
         const headers = this.getHeaders();
+        
         const paymentSlipData = {
           imageUrl: cloudinaryResponse.secure_url,
-          publicId: cloudinaryResponse.public_id,
           amount: amount,
-          isPartialPayment: amount ? true : false,
+          isPartialPayment: isPartialPayment,
+          installmentPlanId: installmentPlanId,
+          installmentNumber: installmentNumber,
           notes: notes
         };
         
-        return this.http.post(`${this.apiUrl}/${orderId}/payment-slip`, paymentSlipData, { headers });
+        // Use the payment-slip-upload endpoint
+        return this.http.post(`${this.apiUrl}/${orderId}/payment-slip-upload`, paymentSlipData, { headers });
       }),
       catchError(error => {
         console.error('Payment slip upload error:', error);
@@ -156,7 +322,19 @@ export class PaymentService {
     );
   }
 
-  // Get all pending payments that need verification (admin only)
+    // Get payment summary for an order
+  getPaymentSummary(orderId: string): Observable<PaymentSummary> {
+    const headers = this.getHeaders();
+    return this.http.get<PaymentSummary>(`${this.apiUrl}/${orderId}/payment-summary`, { headers })
+      .pipe(
+        catchError(error => {
+          console.error('Error fetching payment summary:', error);
+          return throwError(() => new Error('Failed to fetch payment summary: ' + this.getErrorMessage(error)));
+        })
+      );
+  }
+
+   // Get all pending payments that need verification (admin only)
   getPendingPayments(): Observable<Payment[]> {
     const headers = this.getHeaders();
     return this.http.get<Payment[]>(`${this.apiUrl}/pending/verification`, { headers })
@@ -169,7 +347,7 @@ export class PaymentService {
   }
 
   // Get recently verified payments (last 7 days)
-  getRecentlyVerifiedPayments(): Observable<Payment[]> {
+   getRecentlyVerifiedPayments(): Observable<Payment[]> {
     const headers = this.getHeaders();
     return this.http.get<Payment[]>(`${this.apiUrl}/verified/recent`, { headers })
       .pipe(
@@ -206,32 +384,9 @@ export class PaymentService {
       );
   }
 
-  // Get all payments with filtering options (admin only)
-  getAllPayments(
-    page: number = 1, 
-    limit: number = 20, 
-    status?: string, 
-    startDate?: string, 
-    endDate?: string
-  ): Observable<{data: Payment[], total: number}> {
-    const headers = this.getHeaders();
-    let url = `${this.apiUrl}/payments?page=${page}&limit=${limit}`;
-    
-    if (status) url += `&status=${status}`;
-    if (startDate) url += `&startDate=${startDate}`;
-    if (endDate) url += `&endDate=${endDate}`;
-    
-    return this.http.get<{data: Payment[], total: number}>(url, { headers })
-      .pipe(
-        catchError(error => {
-          console.error('Error fetching payments:', error);
-          return throwError(() => new Error('Failed to fetch payments: ' + this.getErrorMessage(error)));
-        })
-      );
-  }
 
   // Get payments for a specific order
-  getPaymentsByOrderId(orderId: string): Observable<Payment[]> {
+   getPaymentsByOrderId(orderId: string): Observable<Payment[]> {
     const headers = this.getHeaders();
     return this.http.get<Payment[]>(`${this.apiUrl}/${orderId}/payments`, { headers })
       .pipe(
@@ -263,4 +418,55 @@ export class PaymentService {
       return 'Unknown error occurred';
     }
   }
+
+  getPendingPaymentsCount(): Observable<number> {
+    const headers = this.getHeaders();
+    return this.http.get<number>(`${this.apiUrl}/payments/pending/count`, { headers })
+      .pipe(
+        catchError(error => {
+          console.error('Error fetching pending payment count:', error);
+          return throwError(() => new Error('Failed to fetch pending payment count: ' + this.getErrorMessage(error)));
+        })
+      );
+  }
+
+   // Get all payments with pagination and filtering
+  getAllPayments(
+    orderId?: string,
+    status?: string,
+    startDate?: string,
+    endDate?: string,
+    page: number = 1,
+    pageSize: number = 10,
+    searchTerm?: string,
+    sortField?: string,
+    sortDirection?: string
+  ): Observable<PaymentResponse> {
+    const headers = this.getHeaders();
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('pageSize', pageSize.toString());
+
+    if (orderId) params = params.set('orderId', orderId);
+    if (status) params = params.set('status', status);
+    if (startDate) params = params.set('startDate', startDate);
+    if (endDate) params = params.set('endDate', endDate);
+    if (searchTerm) params = params.set('searchTerm', searchTerm);
+    if (sortField) params = params.set('sortField', sortField);
+    if (sortDirection) params = params.set('sortDirection', sortDirection);
+
+    return this.http.get<PaymentResponse>(`${this.apiUrl}/payments`, { headers, params })
+      .pipe(
+        catchError(error => {
+          console.error('Error fetching all payments:', error);
+          return throwError(() => new Error('Failed to fetch payments: ' + this.getErrorMessage(error)));
+        })
+      );
+  }
+
+ 
+
+  
+
+ 
 }
