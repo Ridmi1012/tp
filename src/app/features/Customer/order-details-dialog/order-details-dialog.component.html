@@ -29,6 +29,41 @@
 
     <mat-divider></mat-divider>
 
+    <!-- Payment Summary Section (when applicable) -->
+    <div class="payment-summary" *ngIf="paymentSummary && (paymentSummary.totalPaid > 0 || order.paymentStatus !== 'pending')">
+      <h3>Payment Summary</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <label>Total Amount</label>
+          <p>Rs. {{ order.totalPrice | number:'1.2-2' }}</p>
+        </div>
+        <div class="info-item">
+          <label>Paid Amount</label>
+          <p [class.text-success]="paymentSummary.isFullyPaid">
+            Rs. {{ paymentSummary.totalPaid | number:'1.2-2' }}
+            <mat-icon *ngIf="paymentSummary.isFullyPaid" class="icon-success">check_circle</mat-icon>
+          </p>
+        </div>
+        <div class="info-item" *ngIf="!paymentSummary.isFullyPaid">
+          <label>Remaining Amount</label>
+          <p class="text-warning">Rs. {{ paymentSummary.remainingAmount | number:'1.2-2' }}</p>
+        </div>
+        <div class="info-item" *ngIf="order.installmentPlanId && order.installmentTotalInstallments">
+          <label>Installment Plan</label>
+          <p>{{ order.currentInstallmentNumber || 1 }} of {{ order.installmentTotalInstallments }}</p>
+        </div>
+        <div class="info-item full-width" *ngIf="!paymentSummary.isFullyPaid && paymentSummary.deadlineDate">
+          <label>Payment Deadline</label>
+          <p class="deadline-warning">
+            <mat-icon color="warn">schedule</mat-icon>
+            Full payment required by {{ formatDate(paymentSummary.deadlineDate) }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <mat-divider *ngIf="paymentSummary && (paymentSummary.totalPaid > 0 || order.paymentStatus !== 'pending')"></mat-divider>
+
     <!-- Order Information -->
     <div class="order-info">
       <h3>Order Information</h3>
@@ -121,10 +156,26 @@
   </div>
 </mat-dialog-content>
 
-<!-- Update in order-details-dialog.component.html -->
 <mat-dialog-actions align="end">
   <button mat-button (click)="dialogRef.close()">Close</button>
-  <button mat-raised-button color="primary" *ngIf="order.status === 'confirmed'" (click)="openPaymentDialog()">
+  
+  <!-- Payment History Button - always show if there are payments -->
+  <button 
+    mat-stroked-button 
+    color="primary" 
+    *ngIf="shouldShowPaymentHistoryButton()"
+    (click)="openPaymentHistoryDialog()">
+    <mat-icon>history</mat-icon>
+    Payment History
+  </button>
+  
+  <!-- Make Payment Button - only show if order needs payment -->
+  <button 
+    mat-raised-button 
+    color="primary" 
+    *ngIf="shouldShowMakePaymentButton()"
+    (click)="openPaymentDialog()">
+    <mat-icon>payment</mat-icon>
     Make Payment
   </button>
 </mat-dialog-actions>

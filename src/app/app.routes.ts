@@ -34,6 +34,8 @@ import { AdminConfirmDialogComponent } from './features/admin/admin-confirm-dial
 import { AdminPaymentHistoryComponent } from './features/admin/admin-payment-history/admin-payment-history.component';
 import { AdminPaymentVerificationComponent } from './features/admin/admin-payment-verification/admin-payment-verification.component';
 import { AdminEventCalanderComponent } from './features/admin/admin-event-calander/admin-event-calander.component';
+import { PaymentSuccessComponent } from './features/admin/payment-success/payment-success.component';
+import { PaymentCancelComponent } from './features/admin/payment-cancel/payment-cancel.component';
 
 export const routes: Routes = [
  // Public Routes
@@ -137,6 +139,16 @@ export const routes: Routes = [
  component: OngoingComponent,
  canActivate: [authGuard], 
  data: { title: 'My Ongoing Orders' } 
+},
+{
+  path: 'payment-success',
+  component: PaymentSuccessComponent,
+  canActivate: [adminGuard, authGuard]
+},
+{
+  path: 'payment-cancel',
+  component: PaymentCancelComponent,
+  canActivate: [adminGuard, authGuard]
 },
 { 
  path: 'orders/confirmed', 

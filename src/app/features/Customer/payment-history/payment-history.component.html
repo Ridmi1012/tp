@@ -1,0 +1,197 @@
+<h2 mat-dialog-title>Payment History - Order #{{ data.order.orderNumber }}</h2>
+
+<mat-dialog-content>
+  <div class="payment-history-container">
+    <!-- Loading Indicator -->
+    <div *ngIf="loading" class="loading-container">
+      <mat-icon class="spinner">refresh</mat-icon>
+      <p>Loading payment history...</p>
+    </div>
+    
+    <!-- Error Message -->
+    <div *ngIf="error" class="error-message">
+      <mat-icon>error</mat-icon>
+      <p>{{ error }}</p>
+    </div>
+    
+    <!-- Payment Summary Card -->
+    <div *ngIf="!loading && !error && paymentSummary" class="payment-summary-card">
+      <div class="summary-header">
+        <h3>Payment Summary</h3>
+      </div>
+      <div class="summary-content">
+        <div class="summary-item">
+          <span class="label">Total Order Amount:</span>
+          <span class="value">Rs. {{ paymentSummary.totalAmount | number:'1.2-2' }}</span>
+        </div>
+        <div class="summary-item">
+          <span class="label">Total Paid:</span>
+          <span class="value success">Rs. {{ paymentSummary.totalPaid | number:'1.2-2' }}</span>
+        </div>
+        <div class="summary-item" *ngIf="!paymentSummary.isFullyPaid">
+          <span class="label">Remaining Balance:</span>
+          <span class="value warning">Rs. {{ paymentSummary.remainingAmount | number:'1.2-2' }}</span>
+        </div>
+        <div class="payment-status">
+          <mat-chip [color]="paymentSummary.isFullyPaid ? 'primary' : 'warn'" selected>
+            {{ paymentSummary.isFullyPaid ? 'Fully Paid' : 'Partially Paid' }}
+          </mat-chip>
+        </div>
+        
+        <!-- Payment Progress Bar -->
+        <div class="payment-progress">
+          <div class="progress-label">
+            <span>Payment Progress</span>
+            <span>{{ progressPercentage | number:'1.0-0' }}%</span>
+          </div>
+          <div class="progress-bar-container">
+            <div class="progress-bar" [style.width.%]="progressPercentage" [class.complete]="paymentSummary.isFullyPaid"></div>
+          </div>
+        </div>
+        
+        <!-- Deadline information -->
+        <div class="deadline-info" *ngIf="!paymentSummary?.isFullyPaid && paymentSummary?.deadlineDate">
+          <mat-icon color="warn">timer</mat-icon>
+          <div class="deadline-details">
+            <p>Payment Deadline: <strong>{{ paymentSummary.deadlineDate ? formatDate(paymentSummary.deadlineDate) : 'N/A' }}</strong></p>
+            <p>Time Remaining: <strong>{{ getTimeUntilDeadline() }}</strong></p>
+          </div>
+        </div>
+
+        <!-- Installment Plan Info (if applicable) -->
+        <div class="installment-info" *ngIf="paymentSummary.installmentPlan">
+          <mat-icon color="primary">calendar_today</mat-icon>
+          <div class="installment-details">
+            <p>Installment Plan: <strong>{{ paymentSummary.installmentPlan?.name }}</strong></p>
+            <p>Current Installment: 
+              <strong>{{ paymentSummary.currentInstallment }} of {{ paymentSummary.installmentPlan?.numberOfInstallments }}</strong>
+            </p>
+            <p *ngIf="paymentSummary.nextInstallmentAmount && !paymentSummary.isFullyPaid">
+              Next Payment: <strong>Rs. {{ paymentSummary.nextInstallmentAmount | number:'1.2-2' }}</strong>
+            </p>
+            <p *ngIf="paymentSummary.nextInstallmentDueDate && !paymentSummary.isFullyPaid">
+              Due Date: <strong>{{ formatDate(paymentSummary.nextInstallmentDueDate) }}</strong>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Payment Timeline/Table -->
+    <div *ngIf="!loading && !error && payments.length > 0" class="payment-table-container">
+      <h3>Payment Details</h3>
+      
+      <table mat-table [dataSource]="payments" class="payment-table">
+        <!-- Date Column -->
+        <ng-container matColumnDef="date">
+          <th mat-header-cell *matHeaderCellDef>Date</th>
+          <td mat-cell *matCellDef="let payment">
+            {{ formatDate(payment.paymentDateTime || payment.submittedDate) }}
+          </td>
+        </ng-container>
+        
+        <!-- Installment Column -->
+        <ng-container matColumnDef="installment">
+          <th mat-header-cell *matHeaderCellDef>Installment</th>
+          <td mat-cell *matCellDef="let payment">
+            {{ formatInstallment(payment) }}
+            <mat-icon *ngIf="isActivePayment(payment)" class="active-payment-indicator" 
+                      matTooltip="Current active payment">star</mat-icon>
+          </td>
+        </ng-container>
+        
+        <!-- Amount Column -->
+        <ng-container matColumnDef="amount">
+          <th mat-header-cell *matHeaderCellDef>Amount</th>
+          <td mat-cell *matCellDef="let payment" class="amount-cell">
+            <div>
+              <span class="amount">Rs. {{ payment.amount | number:'1.2-2' }}</span>
+            </div>
+          </td>
+        </ng-container>
+        
+        <!-- Method Column -->
+        <ng-container matColumnDef="method">
+          <th mat-header-cell *matHeaderCellDef>Method</th>
+          <td mat-cell *matCellDef="let payment">
+            <div class="payment-method">
+              <mat-icon>{{ getPaymentMethodIcon(payment.method) }}</mat-icon>
+              <span>{{ formatPaymentMethod(payment.method) }}</span>
+            </div>
+          </td>
+        </ng-container>
+        
+        <!-- Status Column -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef>Status</th>
+          <td mat-cell *matCellDef="let payment">
+            <mat-chip [color]="getStatusChipColor(payment.status)" selected>
+              {{ getPaymentStatusText(payment.status) }}
+            </mat-chip>
+          </td>
+        </ng-container>
+        
+        <!-- Notes Column -->
+        <ng-container matColumnDef="notes">
+          <th mat-header-cell *matHeaderCellDef>Notes</th>
+          <td mat-cell *matCellDef="let payment">
+            <div *ngIf="payment.notes" class="payment-notes">{{ payment.notes }}</div>
+            <div *ngIf="payment.rejectionReason" class="rejection-reason">
+              <mat-icon>warning</mat-icon>
+              <span>{{ payment.rejectionReason }}</span>
+            </div>
+          </td>
+        </ng-container>
+        
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" 
+            [class.active-row]="isActivePayment(row)"></tr>
+      </table>
+    </div>
+    
+    <!-- No Payments Message -->
+    <div *ngIf="!loading && !error && payments.length === 0" class="no-payments-message">
+      <mat-icon>info</mat-icon>
+      <p>No payment records found for this order.</p>
+    </div>
+    
+    <!-- Payment Notes Section -->
+    <div *ngIf="!loading && !error && !paymentSummary?.isFullyPaid" class="payment-notes">
+      <mat-divider></mat-divider>
+      <div class="payment-instructions">
+        <h3>Payment Information</h3>
+        <div class="instruction-item">
+          <mat-icon>info</mat-icon>
+          <div class="instruction-content">
+            <p *ngIf="paymentSummary?.deadlineDate">
+              <strong>Payment Deadline:</strong> Full payment must be completed by 
+              {{ paymentSummary?.deadlineDate ? formatDate(paymentSummary?.deadlineDate) : 'N/A' }} 
+              (12 hours before your event).
+            </p>
+            <p>
+              <strong>Payment Methods:</strong> You can pay using PayHere (credit/debit cards, 
+              mobile wallets) or by Bank Transfer (upload payment slip for verification).
+            </p>
+            <p *ngIf="paymentSummary && paymentSummary.remainingAmount > 0">
+              <strong>Remaining Balance:</strong> Rs. {{ paymentSummary.remainingAmount | number:'1.2-2' }}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Close</button>
+  
+  <!-- Make Payment Button (if payment is not complete) -->
+  <button 
+    mat-raised-button 
+    color="primary" 
+    *ngIf="paymentSummary && !paymentSummary.isFullyPaid"
+    [mat-dialog-close]="'make-payment'">
+    <mat-icon>payment</mat-icon>
+    Make Payment
+  </button>
+</mat-dialog-actions>

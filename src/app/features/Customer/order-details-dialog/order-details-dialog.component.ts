@@ -11,6 +11,10 @@ import { CategoryService } from '../../../services/category.service';
 import { OrderService } from '../../../services/order.service';
 import { PaymentDialogComponent } from '../payment-dialog/payment-dialog.component';
 import { MatDialog } from '@angular/material/dialog';
+import { PaymentHistoryComponent } from '../payment-history/payment-history.component';
+import { PaymentSummary } from '../../../services/payment.service';
+import { PaymentService , Payment} from '../../../services/payment.service';
+
 
 
 
@@ -27,13 +31,17 @@ import { MatDialog } from '@angular/material/dialog';
   styleUrl: './order-details-dialog.component.css'
 })
 export class OrderDetailsDialogComponent implements OnInit{
-  categoryName: string = '';
+ categoryName: string = '';
+  paymentSummary: PaymentSummary | null = null;
+  loading: boolean = false;
+  error: string | null = null;
   
   constructor(
     public dialogRef: MatDialogRef<OrderDetailsDialogComponent>,
     @Inject(MAT_DIALOG_DATA) public order: any,
     private categoryService: CategoryService,
     private orderService: OrderService,
+    private paymentService: PaymentService,
     private dialog: MatDialog
   ) {}
 
@@ -46,6 +54,9 @@ export class OrderDetailsDialogComponent implements OnInit{
     if (!this.order.basePrice && this.order.designId) {
       this.loadDesignDetails();
     }
+    
+    // Load payment summary from server
+    this.loadPaymentSummary();
   }
   
   loadDesignDetails(): void {
@@ -83,7 +94,107 @@ export class OrderDetailsDialogComponent implements OnInit{
     }
   }
 
+  loadPaymentSummary(): void {
+    this.loading = true;
+    
+    this.paymentService.getPaymentSummary(this.order._id).subscribe({
+      next: (summary) => {
+        this.paymentSummary = summary;
+        this.loading = false;
+        console.log('Payment summary loaded:', summary);
+      },
+      error: (error) => {
+        console.error('Error loading payment summary:', error);
+        // Fallback to calculating locally
+        this.calculatePaymentSummary();
+        this.loading = false;
+      }
+    });
+  }
+
+
+// Fix the payment calculation with proper typing
+calculatePaymentSummary(): void {
+  // Default values
+   this.paymentSummary = {
+    totalAmount: this.order.totalPrice || 0,
+    totalPaid: 0,
+    remainingAmount: 0,
+    isFullyPaid: false,
+    paymentStatus: 'pending',
+    payments: []
+  };
+  
+  // Calculate total paid from payments
+  if (this.order.payments && this.order.payments.length > 0) {
+    // Sum up all completed payments with proper typing
+    this.paymentSummary.totalPaid = this.order.payments
+      .filter((payment: Payment) => payment.status === 'completed')
+      .reduce((sum: number, payment: Payment) => sum + (payment.amount || 0), 0);
+  }
+  
+  // Calculate remaining amount
+  this.paymentSummary.remainingAmount = Math.max(0, this.paymentSummary.totalAmount - this.paymentSummary.totalPaid);
+  
+  // Determine if fully paid
+  this.paymentSummary.isFullyPaid = this.paymentSummary.remainingAmount === 0 && this.paymentSummary.totalPaid > 0;
+  
+  // Set payment status
+  this.paymentSummary.paymentStatus = this.paymentSummary.isFullyPaid ? 'completed' : 
+                                     (this.paymentSummary.totalPaid > 0 ? 'partial' : 'pending');
+  
+  // Calculate deadline (12 hours before event)
+  if (this.order?.customDetails?.eventDate) {
+    const eventDate = new Date(this.order.customDetails.eventDate);
+    
+    // If event time is also provided, set the hours and minutes
+    if (this.order.customDetails.eventTime) {
+      const [hours, minutes] = this.order.customDetails.eventTime.split(':');
+      eventDate.setHours(parseInt(hours, 10), parseInt(minutes, 10));
+    }
+    
+    // Calculate deadline (12 hours before event)
+    const deadlineDate = new Date(eventDate);
+    deadlineDate.setHours(deadlineDate.getHours() - 12);
+    
+    this.paymentSummary.deadlineDate = deadlineDate.toISOString();
+  }
+  
+  // Use the payments from the order
+  this.paymentSummary.payments = this.order.payments || [];
+}
+
+// Fix the payment message with proper null checks
+getPaymentMessage(): string {
+  if (this.order.status === 'confirmed' || (this.paymentSummary && this.paymentSummary.totalPaid > 0)) {
+    const eventDate = new Date(this.order.customDetails.eventDate);
+    const now = new Date();
+    const hoursUntilEvent = (eventDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+    
+    // If partially paid
+    if (this.paymentSummary && this.paymentSummary.totalPaid > 0 && !this.paymentSummary.isFullyPaid) {
+      if (hoursUntilEvent < 24) {
+        return `Remaining payment of Rs. ${this.paymentSummary.remainingAmount} must be completed immediately.`;
+      } else {
+        return `Remaining payment of Rs. ${this.paymentSummary.remainingAmount} must be completed before your event.`;
+      }
+    }
+    // Not paid yet
+    else if (this.paymentSummary && this.paymentSummary.totalPaid === 0) {
+      if (hoursUntilEvent < 24) {
+        return 'Your event is in less than 24 hours. Please pay the full amount to confirm.';
+      } else {
+        return 'Pay full amount or choose an installment plan to confirm your order.';
+      }
+    }
+  }
+  return '';
+}
+
   getStatusSteps() {
+    const isPartiallyPaid = this.paymentSummary?.paymentStatus === 'partial';
+    const isFullyPaid = this.paymentSummary?.isFullyPaid;
+    
     return [
       { 
         label: 'Order Request Sent', 
@@ -107,16 +218,23 @@ export class OrderDetailsDialogComponent implements OnInit{
       },
       { 
         label: 'Awaiting Payment', 
-        completed: ['partial-payment', 'paid', 'in-progress', 'ready', 'delivered'].includes(this.order.status),
+        completed: isPartiallyPaid || isFullyPaid || ['partial-payment', 'paid', 'in-progress', 'ready', 'delivered'].includes(this.order.status),
+        active: this.order.status === 'confirmed' && !isPartiallyPaid && !isFullyPaid,
         icon: 'payment',
-        active: this.order.status === 'confirmed',
         message: this.getPaymentMessage()
       },
       { 
-        label: 'Payment Confirmed', 
-        completed: ['paid', 'in-progress', 'ready', 'delivered'].includes(this.order.status) || this.order.paymentStatus === 'completed',
+        label: 'Partial Payment Confirmed', 
+        completed: isPartiallyPaid || this.order.paymentStatus === 'partial',
+        icon: 'attach_money',
+        date: isPartiallyPaid || this.order.paymentStatus === 'partial' ? this.order.updatedAt : null,
+        message: isPartiallyPaid ? `Rs. ${this.paymentSummary?.totalPaid} paid. Remaining: Rs. ${this.paymentSummary?.remainingAmount}` : null
+      },
+      { 
+        label: 'Payment Completed', 
+        completed: isFullyPaid || ['paid', 'in-progress', 'ready', 'delivered'].includes(this.order.status),
         icon: 'paid',
-        date: this.order.paymentStatus === 'completed' ? this.order.updatedAt : null
+        date: isFullyPaid ? this.order.updatedAt : null
       },
       { 
         label: 'In Progress', 
@@ -136,7 +254,6 @@ export class OrderDetailsDialogComponent implements OnInit{
     ];
   }
 
-
   openPaymentDialog(): void {
     this.dialog.open(PaymentDialogComponent, {
       width: '600px',
@@ -147,6 +264,8 @@ export class OrderDetailsDialogComponent implements OnInit{
         this.orderService.getOrderById(this.order._id).subscribe({
           next: (updatedOrder) => {
             this.order = updatedOrder;
+            // Reload payment summary with updated data
+            this.loadPaymentSummary();
           },
           error: (error) => {
             console.error('Error refreshing order:', error);
@@ -155,20 +274,17 @@ export class OrderDetailsDialogComponent implements OnInit{
       }
     });
   }
-  getPaymentMessage(): string {
-    if (this.order.status === 'confirmed') {
-      const eventDate = new Date(this.order.customDetails.eventDate);
-      const now = new Date();
-      const hoursUntilEvent = (eventDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-      
-      if (hoursUntilEvent < 24) {
-        return 'Your event is in less than 24 hours. Please pay the full amount to confirm.';
-      } else {
-        return 'Pay full amount or 50% of the base price to confirm your order.';
+  
+  openPaymentHistoryDialog(): void {
+    this.dialog.open(PaymentHistoryComponent, {
+      width: '800px',
+      data: {
+        order: this.order,
+        paymentSummary: this.paymentSummary
       }
-    }
-    return '';
+    });
   }
+  
 
   formatDate(date: string | Date | undefined): string {
     if (!date) return '';
@@ -211,5 +327,21 @@ export class OrderDetailsDialogComponent implements OnInit{
     };
     
     return relationshipMap[relationship] || relationship.charAt(0).toUpperCase() + relationship.slice(1);
+  }
+  
+  shouldShowMakePaymentButton(): boolean {
+    // Show make payment button if:
+    // 1. Order is confirmed but not fully paid
+    // 2. Order has partial payment but not fully paid
+    return (
+      (this.order.status === 'confirmed' || this.order.paymentStatus === 'partial') && 
+      !this.paymentSummary?.isFullyPaid
+    );
+  }
+  
+  shouldShowPaymentHistoryButton(): boolean {
+    // Show payment history button if there are any payments
+    return (this.order.payments && this.order.payments.length > 0) || 
+           (this.paymentSummary?.payments && this.paymentSummary.payments.length > 0);
   }
 }
