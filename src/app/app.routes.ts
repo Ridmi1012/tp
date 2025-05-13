@@ -37,6 +37,7 @@ import { AdminEventCalanderComponent } from './features/admin/admin-event-caland
 import { PaymentSuccessComponent } from './features/admin/payment-success/payment-success.component';
 import { PaymentCancelComponent } from './features/admin/payment-cancel/payment-cancel.component';
 import { RequestSimilerComponent } from './features/Customer/request-similer/request-similer.component';
+import { FullyCustomizeDesignComponent } from './features/Customer/fully-customize-design/fully-customize-design.component';
 
 export const routes: Routes = [
  // Public Routes
@@ -72,6 +73,11 @@ export const routes: Routes = [
    component: CustomereditprofileComponent,
    canActivate: [authGuard]
  },
+  { 
+    path: 'fully-customize-design/:designId', 
+    component: FullyCustomizeDesignComponent,
+    canActivate: [authGuard] // Assuming you have an AuthGuard
+  },
  { 
   path: 'order-as-is/:designId', 
   component: OrderAsIsComponent,

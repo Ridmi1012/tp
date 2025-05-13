@@ -73,7 +73,7 @@
                    class="installment-bar"
                    [class.completed]="isInstallmentPaid(index + 1)"
                    [class.pending]="isInstallmentPending(index + 1)"
-                   [class.current]="index + 1 === paymentSummary?.currentInstallment">
+                   [class.current]="index + 1 === paymentSummary.currentInstallment">
                 <div class="bar-label">{{ index + 1 }}</div>
                 <div class="bar-amount">{{ paymentSummary?.installmentPlan?.percentages?.[index] || 0 }}%</div>
               </div>
