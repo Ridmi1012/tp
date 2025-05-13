@@ -38,6 +38,7 @@ import { PaymentSuccessComponent } from './features/admin/payment-success/paymen
 import { PaymentCancelComponent } from './features/admin/payment-cancel/payment-cancel.component';
 import { RequestSimilerComponent } from './features/Customer/request-similer/request-similer.component';
 import { FullyCustomizeDesignComponent } from './features/Customer/fully-customize-design/fully-customize-design.component';
+import { AdminEditDesignComponent } from './features/admin/admin-edit-design/admin-edit-design.component';
 
 export const routes: Routes = [
  // Public Routes
@@ -103,6 +104,11 @@ export const routes: Routes = [
  path: 'admin/orders/confirmed', 
  component: AdminConfirmedOrdersComponent,
  canActivate: [adminGuard]
+},
+{ 
+  path: 'edit-design/:id', 
+  component: AdminEditDesignComponent,
+  canActivate: [adminGuard]
 },
 {
   path: 'admin/design',
