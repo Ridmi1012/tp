@@ -6,11 +6,9 @@
     <div class="progress-timeline">
       <h3>Order Progress</h3>
       <div class="timeline">
-        <div *ngFor="let step of getStatusSteps(); let i = index" 
-             class="timeline-step" 
-             [class.completed]="step.completed"
-             [class.active]="step.active"
-             [class.cancelled]="step.isCancelled">
+        <div *ngFor="let step of getStatusSteps(); let i = index" class="timeline-step"
+          [class.completed]="step.completed" [class.active]="step.active" [class.pending]="step.pending"
+          [class.cancelled]="step.isCancelled">
           <div class="step-icon">
             <mat-icon>{{ step.icon }}</mat-icon>
           </div>
@@ -21,6 +19,28 @@
               Reason: {{ step.cancellationReason }}
             </p>
             <p *ngIf="step.message" class="step-message">{{ step.message }}</p>
+
+            <div class="payment-rejection-alert" *ngIf="hasRejectedPayment()">
+              <mat-icon color="warn">error</mat-icon>
+              <strong>Payment Rejected</strong>
+              <p>{{ getRejectionReason() }}</p>
+              <p>Please contact your bank or try a different payment method.</p>
+
+              <!-- Show specific installment details if it's an installment rejection -->
+              <div *ngIf="hasRejectedInstallmentPayment()" class="installment-rejection-details">
+                <p class="rejection-amount">Amount: Rs. {{ getRejectedPaymentAmount() | number:'1.2-2' }}</p>
+              </div>
+            </div>
+
+            <!-- Installment specific details -->
+            <div *ngIf="step.installmentDetails" class="installment-details">
+              <span class="installment-amount">{{ step.installmentDetails.percentage }}% (Rs. {{
+                step.installmentDetails.amount | number:'1.2-2' }})</span>
+              <mat-chip *ngIf="step.installmentDetails.status"
+                [color]="getInstallmentChipColor(step.installmentDetails.status)" selected>
+                {{ getInstallmentStatusText(step.installmentDetails.status) }}
+              </mat-chip>
+            </div>
           </div>
           <div *ngIf="i < getStatusSteps().length - 1" class="step-connector"></div>
         </div>
@@ -30,7 +50,8 @@
     <mat-divider></mat-divider>
 
     <!-- Payment Summary Section (when applicable) -->
-    <div class="payment-summary" *ngIf="paymentSummary && (paymentSummary.totalPaid > 0 || order.paymentStatus !== 'pending')">
+    <div class="payment-summary"
+      *ngIf="paymentSummary && (paymentSummary.totalPaid > 0 || order.paymentStatus !== 'pending')">
       <h3>Payment Summary</h3>
       <div class="info-grid">
         <div class="info-item">
@@ -62,7 +83,8 @@
       </div>
     </div>
 
-    <mat-divider *ngIf="paymentSummary && (paymentSummary.totalPaid > 0 || order.paymentStatus !== 'pending')"></mat-divider>
+    <mat-divider
+      *ngIf="paymentSummary && (paymentSummary.totalPaid > 0 || order.paymentStatus !== 'pending')"></mat-divider>
 
     <!-- Order Information -->
     <div class="order-info">
@@ -70,7 +92,8 @@
       <div class="info-grid">
         <div class="info-item">
           <label>Order Type</label>
-          <p>{{ order.orderType === 'as-is' ? 'Standard Design' : (order.orderType === 'custom-design' ? 'Custom Design' : 'Custom Request') }}</p>
+          <p>{{ order.orderType === 'as-is' ? 'Standard Design' : (order.orderType === 'custom-design' ? 'Custom Design'
+            : 'Custom Request') }}</p>
         </div>
         <div class="info-item">
           <label>Created On</label>
@@ -158,23 +181,16 @@
 
 <mat-dialog-actions align="end">
   <button mat-button (click)="dialogRef.close()">Close</button>
-  
+
   <!-- Payment History Button - always show if there are payments -->
-  <button 
-    mat-stroked-button 
-    color="primary" 
-    *ngIf="shouldShowPaymentHistoryButton()"
+  <button mat-stroked-button color="primary" *ngIf="shouldShowPaymentHistoryButton()"
     (click)="openPaymentHistoryDialog()">
     <mat-icon>history</mat-icon>
     Payment History
   </button>
-  
+
   <!-- Make Payment Button - only show if order needs payment -->
-  <button 
-    mat-raised-button 
-    color="primary" 
-    *ngIf="shouldShowMakePaymentButton()"
-    (click)="openPaymentDialog()">
+  <button mat-raised-button color="primary" *ngIf="shouldShowMakePaymentButton()" (click)="openPaymentDialog()">
     <mat-icon>payment</mat-icon>
     Make Payment
   </button>

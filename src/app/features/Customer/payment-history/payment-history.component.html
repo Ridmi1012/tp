@@ -1,4 +1,4 @@
-<h2 mat-dialog-title>Payment History - Order #{{ data.order.orderNumber }}</h2>
+<h2 mat-dialog-title>Payment History - Order #{{ data?.order?.orderNumber }}</h2>
 
 <mat-dialog-content>
   <div class="payment-history-container">
@@ -59,18 +59,32 @@
         </div>
 
         <!-- Installment Plan Info (if applicable) -->
-        <div class="installment-info" *ngIf="paymentSummary.installmentPlan">
+        <div class="installment-info" *ngIf="paymentSummary?.installmentPlan">
           <mat-icon color="primary">calendar_today</mat-icon>
           <div class="installment-details">
-            <p>Installment Plan: <strong>{{ paymentSummary.installmentPlan?.name }}</strong></p>
-            <p>Current Installment: 
-              <strong>{{ paymentSummary.currentInstallment }} of {{ paymentSummary.installmentPlan?.numberOfInstallments }}</strong>
+            <p>Installment Plan: <strong>{{ paymentSummary?.installmentPlan?.name }}</strong></p>
+            <p>Progress: 
+              <strong>{{ getCompletedInstallments() }} of {{ paymentSummary?.installmentPlan?.numberOfInstallments || 0 }} installments paid</strong>
             </p>
-            <p *ngIf="paymentSummary.nextInstallmentAmount && !paymentSummary.isFullyPaid">
+            
+            <!-- Installment progress bars -->
+            <div class="installment-progress-bars">
+              <div *ngFor="let i of [].constructor(paymentSummary?.installmentPlan?.numberOfInstallments || 0); let index = index"
+                   class="installment-bar"
+                   [class.completed]="isInstallmentPaid(index + 1)"
+                   [class.pending]="isInstallmentPending(index + 1)"
+                   [class.current]="index + 1 === paymentSummary?.currentInstallment">
+                <div class="bar-label">{{ index + 1 }}</div>
+                <div class="bar-amount">{{ paymentSummary?.installmentPlan?.percentages?.[index] || 0 }}%</div>
+              </div>
+            </div>
+            
+            <p *ngIf="paymentSummary?.nextInstallmentAmount && !paymentSummary.isFullyPaid">
               Next Payment: <strong>Rs. {{ paymentSummary.nextInstallmentAmount | number:'1.2-2' }}</strong>
             </p>
-            <p *ngIf="paymentSummary.nextInstallmentDueDate && !paymentSummary.isFullyPaid">
-              Due Date: <strong>{{ formatDate(paymentSummary.nextInstallmentDueDate) }}</strong>
+            <p *ngIf="!paymentSummary?.isFullyPaid">
+              Current Status: 
+              <strong>{{ getCurrentInstallmentStatus() }}</strong>
             </p>
           </div>
         </div>
@@ -179,7 +193,7 @@
         </div>
       </div>
     </div>
-  </div>
+  </div> <!-- This was missing! Closing div for payment-history-container -->
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">

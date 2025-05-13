@@ -145,12 +145,12 @@ export class AdminOrdersComponent implements OnInit, OnDestroy {
  // Modify checkForNewOrders in admin-orders.component.ts:
 checkForNewOrders(): void {
   // Keep track of already processed order IDs to prevent duplicates
-  const processedOrderIds = new Set(this.newOrders.map(order => order._id));
+  const processedOrderIds = new Set(this.newOrders.map(order => order.id));
   
   this.orderService.getNewOrders().subscribe({
     next: (orders) => {
       // Only consider truly new orders not already in our list
-      const newOrders = orders.filter(order => !processedOrderIds.has(order._id));
+      const newOrders = orders.filter(order => !processedOrderIds.has(order.id));
       
       if (newOrders.length > 0) {
         // Show a single notification for all new orders

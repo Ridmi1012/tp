@@ -12,11 +12,10 @@ import { MatChipsModule } from '@angular/material/chips';
 import { DatePipe } from '@angular/common';
 import { MatDialogModule } from '@angular/material/dialog';
 import { PaymentSummary } from '../../../services/payment.service';
-import { HttpParams } from '@angular/common/http';
 
 
 interface Order {
-  id: number;
+  id: string; // Fixed: MongoDB uses _id
   orderNumber: string;
   totalPrice: number;
   customDetails?: {
@@ -26,6 +25,7 @@ interface Order {
   installmentPlanId?: number;
   installmentTotalInstallments?: number;
 }
+
 
 
 @Component({
@@ -41,7 +41,7 @@ interface Order {
   styleUrl: './payment-history.component.css'
 })
 export class PaymentHistoryComponent implements OnInit {
- payments: Payment[] = [];
+  payments: Payment[] = [];
   paymentSummary: PaymentSummary | null = null;
   loading: boolean = true;
   error: string | null = null;
@@ -68,8 +68,8 @@ export class PaymentHistoryComponent implements OnInit {
       return;
     }
 
-    // Load payments from the server - Convert id to string
-    this.paymentService.getPaymentsByOrderId(this.data.order.id.toString()).subscribe({
+    // Load payments from the server
+    this.paymentService.getPaymentsByOrderId(this.data.order.id).subscribe({
       next: (payments) => {
         console.log(`Received ${payments.length} payments from API`);
         this.payments = payments;
@@ -97,8 +97,7 @@ export class PaymentHistoryComponent implements OnInit {
       return;
     }
     
-    // Convert id to string
-    this.paymentService.getPaymentSummary(this.data.order.id.toString()).subscribe({
+    this.paymentService.getPaymentSummary(this.data.order.id).subscribe({
       next: (summary) => {
         this.paymentSummary = summary;
         
@@ -124,7 +123,7 @@ export class PaymentHistoryComponent implements OnInit {
     
     // Calculate total paid from completed payments
     totalPaid = this.payments
-      .filter(payment => payment.status === 'completed')
+      .filter(payment => payment.status === 'completed' || payment.status === 'confirmed')
       .reduce((sum, payment) => sum + (payment.amount || 0), 0);
     
     const remainingAmount = Math.max(0, totalAmount - totalPaid);
@@ -184,6 +183,7 @@ export class PaymentHistoryComponent implements OnInit {
   getStatusChipColor(status: string): string {
     switch (status?.toLowerCase()) {
       case 'completed':
+      case 'confirmed':
       case 'verified':
         return 'primary';
       case 'pending':
@@ -249,6 +249,8 @@ export class PaymentHistoryComponent implements OnInit {
     switch (status.toLowerCase()) {
       case 'completed':
         return 'Completed';
+      case 'confirmed':
+        return 'Confirmed';
       case 'pending':
         return 'Pending Verification';
       case 'verified':
@@ -260,52 +262,26 @@ export class PaymentHistoryComponent implements OnInit {
     }
   }
   
-  // Format installment number display
+    // Format installment number display
   formatInstallment(payment: Payment): string {
     if (!payment.installmentNumber) return 'Full Payment';
+    
+    // If we have payment summary with installment plan info
+    if (this.paymentSummary?.installmentPlan) {
+      return `Installment ${payment.installmentNumber} of ${this.paymentSummary.installmentPlan.numberOfInstallments}`;
+    }
     
     // If we have installment plan info in the order
     if (this.data.order.installmentPlanId) {
       return `Installment ${payment.installmentNumber} of ${this.data.order.installmentTotalInstallments || '?'}`;
     }
     
-    return `Installment ${payment.installmentNumber}`;
-  }
-  
-  // Get time until payment deadline
-  getTimeUntilDeadline(): string {
-    if (!this.paymentSummary?.deadlineDate) return 'Unknown';
-    
-    try {
-      const now = new Date();
-      const deadlineDate = new Date(this.paymentSummary.deadlineDate);
-      
-      // Check if deadline date is valid
-      if (isNaN(deadlineDate.getTime())) {
-        return 'Unknown';
-      }
-      
-      // Calculate days until deadline
-      const daysUntilDeadline = Math.floor((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      
-      if (daysUntilDeadline < 0) {
-        return 'Deadline has passed';
-      } else if (daysUntilDeadline === 0) {
-        // Calculate hours
-        const hoursUntilDeadline = Math.floor((deadlineDate.getTime() - now.getTime()) / (1000 * 60 * 60));
-        if (hoursUntilDeadline <= 0) {
-          return 'Less than an hour';
-        }
-        return `${hoursUntilDeadline} hour${hoursUntilDeadline !== 1 ? 's' : ''}`;
-      } else if (daysUntilDeadline === 1) {
-        return '1 day';
-      } else {
-        return `${daysUntilDeadline} days`;
-      }
-    } catch (error) {
-      console.error(`Error calculating time until deadline: ${this.paymentSummary.deadlineDate}`, error);
-      return 'Unknown';
+    // If installmentNumber is 1 and paymentType is 'full'
+    if (payment.paymentType === 'full' && payment.installmentNumber === 1) {
+      return 'Full Payment';
     }
+    
+    return `Installment ${payment.installmentNumber}`;
   }
   
   // Check if a payment is the active payment
@@ -320,4 +296,83 @@ export class PaymentHistoryComponent implements OnInit {
     
     return false;
   }
+
+  getTimeUntilDeadline(): string {
+  if (!this.paymentSummary?.deadlineDate) {
+    return 'N/A';
+  }
+
+  const deadline = new Date(this.paymentSummary.deadlineDate);
+  const now = new Date();
+  const diffMs = deadline.getTime() - now.getTime();
+
+  if (diffMs < 0) {
+    return 'Overdue';
+  }
+
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  const days = Math.floor(hours / 24);
+  const remainingHours = hours % 24;
+
+  if (days > 0) {
+    return `${days} day${days !== 1 ? 's' : ''} ${remainingHours} hour${remainingHours !== 1 ? 's' : ''}`;
+  } else {
+    return `${hours} hour${hours !== 1 ? 's' : ''}`;
+  }
+}
+
+getCompletedInstallments(): number {
+  if (!this.paymentSummary?.installmentPlan || !this.payments.length) {
+    return 0;
+  }
+
+  return this.payments.filter(payment => 
+    payment.installmentNumber && 
+    (payment.status === 'completed' || payment.status === 'confirmed')
+  ).length;
+}
+
+isInstallmentPaid(installmentNumber: number): boolean {
+  return this.payments.some(payment => 
+    payment.installmentNumber === installmentNumber && 
+    (payment.status === 'completed' || payment.status === 'confirmed')
+  );
+}
+
+isInstallmentPending(installmentNumber: number): boolean {
+  const payment = this.payments.find(p => p.installmentNumber === installmentNumber);
+  if (!payment) {
+    return installmentNumber > (this.paymentSummary?.currentInstallment || 1);
+  }
+  return payment.status === 'pending';
+}
+
+getCurrentInstallmentStatus(): string {
+  if (!this.paymentSummary) {
+    return 'Unknown';
+  }
+
+  if (this.paymentSummary.isFullyPaid) {
+    return 'All installments completed';
+  }
+
+  const currentInstallment = this.paymentSummary.currentInstallment || 1;
+  const currentPayment = this.payments.find(p => p.installmentNumber === currentInstallment);
+
+  if (currentPayment) {
+    switch (currentPayment.status) {
+      case 'completed':
+      case 'confirmed':
+        return `Installment ${currentInstallment} paid`;
+      case 'pending':
+        return `Installment ${currentInstallment} awaiting verification`;
+      case 'rejected':
+        return `Installment ${currentInstallment} was rejected`;
+      default:
+        return `Installment ${currentInstallment} in progress`;
+    }
+  } else {
+    return `Awaiting installment ${currentInstallment} payment`;
+  }
+}
 }

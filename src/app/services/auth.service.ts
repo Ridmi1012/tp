@@ -39,35 +39,37 @@ export class AuthService {
   }
 
   login(username: string, password: string): Observable<any> {
-    const loginPayload = { username, password };
-    const headers = new HttpHeaders().set('Content-Type', 'application/json');
-    
-    return this.http.post<any>(this.loginUrl, loginPayload, { headers }).pipe(
-      tap(response => {
-        console.log('Login successful', response);
-        if (response.token) {
-          this.saveToken(response.token);
-          this.saveUserType(response.userType);
-          
-          // Save additional user details - ensure customerId is saved
-          this.saveUserDetails({
-            firstName: response.firstName,
-            lastName: response.lastName,
-            customerId: response.userId, // Ensure this is saved as customerId
-            userId: response.userId,
-            username: username
-          });
-          
-          // Notify subscribers about auth change
-          this.authChangeSubject.next(true);
-        }
-      }),
-      catchError(error => {
-        console.error('Login failed', error);
-        return throwError(() => error);
-      })
-    );
-  }
+  const loginPayload = { username, password };
+  const headers = new HttpHeaders().set('Content-Type', 'application/json');
+  
+  return this.http.post<any>(this.loginUrl, loginPayload, { headers }).pipe(
+    tap(response => {
+      console.log('Login successful', response);
+      if (response.token) {
+        this.saveToken(response.token);
+        this.saveUserType(response.userType);
+        
+        // Save complete user details including email and contact
+        this.saveUserDetails({
+          firstName: response.firstName,
+          lastName: response.lastName,
+          email: response.email,  // Make sure this is included
+          contact: response.contact,  // Make sure this is included
+          customerId: response.userId,
+          userId: response.userId,
+          username: username
+        });
+        
+        // Notify subscribers about auth change
+        this.authChangeSubject.next(true);
+      }
+    }),
+    catchError(error => {
+      console.error('Login failed', error);
+      return throwError(() => error);
+    })
+  );
+}
 
   // Change password method
   changePassword(username: string, currentPassword: string, newPassword: string): Observable<any> {
@@ -109,6 +111,35 @@ export class AuthService {
     const userDetails = this.getUserDetails();
     return of(userDetails);
   }
+
+  getCustomerDetails(customerId?: number): Observable<any> {
+  // If no customerId provided, get it from stored details
+  const id = customerId || this.getCustomerId();
+  
+  if (!id) {
+    return throwError(() => new Error('No customer ID available'));
+  }
+  
+  const headers = this.getAuthHeaders();
+  return this.http.get<any>(`${this.apiUrl}/customers/${id}`, { headers }).pipe(
+    tap(response => {
+      // Merge the fetched data with existing stored data
+      const currentDetails = this.getUserDetails() || {};
+      const updatedDetails = {
+        ...currentDetails,
+        ...response,
+        customerId: id
+      };
+      
+      // Update localStorage with complete details
+      this.saveUserDetails(updatedDetails);
+    }),
+    catchError(error => {
+      console.error('Error fetching customer details:', error);
+      return throwError(() => error);
+    })
+  );
+}
 
   saveToken(token: string): void {
     localStorage.setItem('authToken', token);
