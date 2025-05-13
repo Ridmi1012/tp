@@ -8,6 +8,7 @@ export interface Customer {
   firstName: string;
   lastName: string;
   email: string;
+  username?: string;  // Add this line
   contact: string;
   address?: string;
 }
