@@ -36,6 +36,7 @@ import { AdminPaymentVerificationComponent } from './features/admin/admin-paymen
 import { AdminEventCalanderComponent } from './features/admin/admin-event-calander/admin-event-calander.component';
 import { PaymentSuccessComponent } from './features/admin/payment-success/payment-success.component';
 import { PaymentCancelComponent } from './features/admin/payment-cancel/payment-cancel.component';
+import { RequestSimilerComponent } from './features/Customer/request-similer/request-similer.component';
 
 export const routes: Routes = [
  // Public Routes
@@ -56,7 +57,11 @@ export const routes: Routes = [
   component: ReviewFormComponent,
    canActivate: [authGuard]
   },
-
+  { 
+  path: 'request-similar/:id', 
+  component: RequestSimilerComponent,
+  canActivate: [authGuard]
+},
  { 
    path: 'ongoing', 
    component: OngoingComponent,

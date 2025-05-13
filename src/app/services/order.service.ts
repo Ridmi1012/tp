@@ -6,6 +6,14 @@ import { HttpHeaders } from '@angular/common/http';
 import { catchError, tap } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 
+export interface OrderItemRequest {
+  itemId: number;
+  itemName: string;
+  itemCategory: string;
+  quantity: number;
+  pricePerUnit: number;
+  status: 'active' | 'dropped';
+}
 
 // Interface for Payment
 export interface Payment {
@@ -22,7 +30,7 @@ export interface Payment {
 // Interface for creating a new order
 export interface CreateOrderData {
   designId: string;
-  orderType: string;
+  orderType: string; // 'as-is' or 'request-similar'
   customDetails: {
     customName: string;
     customAge: string;
@@ -40,7 +48,13 @@ export interface CreateOrderData {
   };
   status: string;
   customerId: string;
+  
+  // NEW - Fields for request-similar
+  themeColor?: string;
+  conceptCustomization?: string;
+  orderItems?: OrderItemRequest[];
 }
+
 
 // Base interface for order data structure
 export interface OrderData {
@@ -74,12 +88,17 @@ export interface OrderData {
   createdAt: string;
   updatedAt: string;
   payments?: Payment[];
+  
+  // NEW - Fields for request-similar
+  themeColor?: string;
+  conceptCustomization?: string;
+  orderItems?: OrderItemRequest[];
 }
 
 export interface Order extends OrderData {
   installmentPlanId: any;
-installmentTotalInstallments: any;
-  _id: string;
+  installmentTotalInstallments: any;
+  id: string;
   orderNumber: string;
   totalPrice?: number;
   paymentStatus: 'pending' | 'partial' | 'completed';
@@ -163,6 +182,31 @@ export class OrderService {
         })
       );
     }
+
+    updateOrderItems(orderId: string, items: OrderItemRequest[]): Observable<Order> {
+  const headers = this.getHeaders();
+  
+  return this.http.put<Order>(`${this.apiUrl}/${orderId}/items`, items, { headers }).pipe(
+    tap(order => console.log('Order items updated successfully:', order)),
+    catchError(error => {
+      console.error('Error updating order items:', error);
+      return throwError(() => new Error('Failed to update order items: ' + this.getErrorMessage(error)));
+    })
+  );
+}
+
+// NEW - Method to update customization
+updateCustomization(orderId: string, customization: { themeColor?: string; conceptCustomization?: string }): Observable<Order> {
+  const headers = this.getHeaders();
+  
+  return this.http.patch<Order>(`${this.apiUrl}/${orderId}/customization`, customization, { headers }).pipe(
+    tap(order => console.log('Customization updated successfully:', order)),
+    catchError(error => {
+      console.error('Error updating customization:', error);
+      return throwError(() => new Error('Failed to update customization: ' + this.getErrorMessage(error)));
+    })
+  );
+}
   
     // Get all orders for a customer
     getCustomerOrders(customerId: string): Observable<Order[]> {

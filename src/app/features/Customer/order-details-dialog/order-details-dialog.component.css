@@ -1,353 +1,411 @@
-/* Order Details Dialog Styling with Pink Theme */
-
 /* Dialog Container */
-.mat-dialog-container {
-    padding: 0;
-    border-radius: 12px;
-    overflow: hidden;
+.mat-mdc-dialog-container {
+  padding: 0 !important;
+}
+
+.mat-mdc-dialog-content {
+  padding: 0 24px 24px !important;
+  margin: 0 !important;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.mat-mdc-dialog-actions {
+  padding: 16px 24px !important;
+  margin: 0 !important;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Dialog Title */
+h2[mat-dialog-title] {
+  font-size: 24px;
+  font-weight: 500;
+  color: #333;
+  padding: 24px 24px 16px;
+  margin: 0;
+  background-color: #f5f5f5;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+/* Order Details Container */
+.order-details {
+  padding: 0;
+}
+
+/* Progress Timeline */
+.progress-timeline {
+  padding: 24px;
+  background-color: #fff;
+}
+
+.progress-timeline h3 {
+  font-size: 18px;
+  font-weight: 500;
+  color: #333;
+  margin: 0 0 24px 0;
+}
+
+.timeline {
+  position: relative;
+  padding: 0;
+}
+
+.timeline-step {
+  display: flex;
+  position: relative;
+  padding-bottom: 24px;
+  min-height: 60px;
+}
+
+.timeline-step:last-child {
+  padding-bottom: 0;
+}
+
+.timeline-step.completed .step-icon {
+  background-color: #4caf50;
+  color: white;
+}
+
+.timeline-step.active .step-icon {
+  background-color: #2196f3;
+  color: white;
+  animation: pulse 2s infinite;
+}
+
+.timeline-step.pending .step-icon {
+  background-color: #f5f5f5;
+  color: #999;
+  border: 2px solid #e0e0e0;
+}
+
+.timeline-step.cancelled .step-icon {
+  background-color: #f44336;
+  color: white;
+}
+
+.step-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #e0e0e0;
+  color: #666;
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+}
+
+.step-icon mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+}
+
+.step-content {
+  flex: 1;
+  padding-left: 16px;
+}
+
+.step-content h4 {
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+  margin: 0 0 4px 0;
+}
+
+.step-date {
+  font-size: 14px;
+  color: #666;
+  margin: 0;
+}
+
+.cancellation-reason {
+  font-size: 14px;
+  color: #f44336;
+  margin: 8px 0 0 0;
+  font-style: italic;
+}
+
+.step-message {
+  font-size: 14px;
+  color: #1976d2;
+  margin: 8px 0 0 0;
+  padding: 8px 12px;
+  background-color: #e3f2fd;
+  border-radius: 4px;
+  border-left: 3px solid #1976d2;
+}
+
+.installment-details {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.installment-amount {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.step-connector {
+  position: absolute;
+  left: 20px;
+  top: 40px;
+  width: 2px;
+  height: calc(100% - 40px);
+  background-color: #e0e0e0;
+  z-index: 1;
+}
+
+.timeline-step.completed .step-connector {
+  background-color: #4caf50;
+}
+
+/* Section Headings */
+.payment-summary h3,
+.order-info h3,
+.event-details h3,
+.customer-info h3 {
+  font-size: 18px;
+  font-weight: 500;
+  color: #333;
+  margin: 0 0 16px 0;
+}
+
+/* Payment Summary */
+.payment-summary {
+  padding: 24px;
+  background-color: #f8f9fa;
+}
+
+/* Info Grid */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.info-item.full-width {
+  grid-column: 1 / -1;
+}
+
+.info-item label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+
+.info-item p {
+  font-size: 16px;
+  color: #333;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.info-item p strong {
+  font-weight: 600;
+}
+
+/* Text Colors */
+.text-success {
+  color: #4caf50;
+}
+
+.text-warning {
+  color: #ff9800;
+}
+
+.icon-success {
+  color: #4caf50;
+  font-size: 18px;
+}
+
+/* Deadline Warning */
+.deadline-warning {
+  color: #f44336;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.deadline-warning mat-icon {
+  font-size: 20px;
+}
+
+/* Main Sections */
+.order-info,
+.event-details,
+.customer-info {
+  padding: 24px;
+  background-color: #fff;
+}
+
+/* Loading Text */
+.loading-text {
+  color: #666;
+  font-style: italic;
+}
+
+/* Material Divider */
+mat-divider {
+  margin: 0 !important;
+}
+
+/* Material Chip */
+mat-chip {
+  font-size: 12px !important;
+  min-height: 24px !important;
+  padding: 0 8px !important;
+}
+
+/* Animation for Active State */
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(33, 150, 243, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(33, 150, 243, 0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .info-grid {
+    grid-template-columns: 1fr;
   }
   
-  mat-dialog-title {
-    background: linear-gradient(135deg, #fdeef1 0%, #ffc4d1 100%);
-    color: #333;
-    font-size: 1.8rem;
-    font-weight: 700;
-    padding: 24px;
-    margin: 0;
-    border-bottom: 1px solid rgba(224, 95, 103, 0.2);
+  h2[mat-dialog-title] {
+    font-size: 20px;
+    padding: 16px;
   }
   
-  mat-dialog-content {
-    padding: 0;
-    max-height: 70vh;
+  .progress-timeline,
+  .payment-summary,
+  .order-info,
+  .event-details,
+  .customer-info {
+    padding: 16px;
   }
   
-  .order-details {
-    padding: 0;
+  .mat-mdc-dialog-content {
+    padding: 0 16px 16px !important;
   }
   
-  mat-dialog-actions {
-    background-color: #fdeef1;
-    border-top: 1px solid rgba(224, 95, 103, 0.2);
-    padding: 16px 24px;
-    margin: 0;
+  .mat-mdc-dialog-actions {
+    padding: 16px !important;
+    flex-direction: column-reverse;
   }
   
-  /* Section Styling */
-  .order-details > div {
-    padding: 24px;
+  .mat-mdc-dialog-actions button {
+    width: 100%;
   }
-  
-  .order-details h3 {
-    color: #e05f67;
-    font-size: 1.4rem;
-    font-weight: 600;
-    margin-top: 0;
-    margin-bottom: 20px;
-  }
-  
-  mat-divider {
-    margin: 0;
-    border-top-color: rgba(224, 95, 103, 0.2);
-  }
-  
-  /* Progress Timeline */
-  .progress-timeline {
-    padding-bottom: 30px;
-  }
-  
-  .timeline {
-    position: relative;
-    padding: 20px 0;
-  }
-  
-  .timeline-step {
-    display: flex;
-    position: relative;
-    margin-bottom: 30px;
-  }
-  
-  .timeline-step:last-child {
-    margin-bottom: 0;
-  }
-  
+}
+
+/* Scrollbar Styling */
+.mat-mdc-dialog-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.mat-mdc-dialog-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.mat-mdc-dialog-content::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.mat-mdc-dialog-content::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* Button Styles */
+button[mat-button],
+button[mat-stroked-button],
+button[mat-raised-button] {
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+button[mat-raised-button] mat-icon,
+button[mat-stroked-button] mat-icon {
+  margin-right: 8px;
+  font-size: 20px;
+}
+
+/* Additional Utility Classes */
+.mb-0 { margin-bottom: 0 !important; }
+.mb-1 { margin-bottom: 8px !important; }
+.mb-2 { margin-bottom: 16px !important; }
+.mb-3 { margin-bottom: 24px !important; }
+
+.mt-0 { margin-top: 0 !important; }
+.mt-1 { margin-top: 8px !important; }
+.mt-2 { margin-top: 16px !important; }
+.mt-3 { margin-top: 24px !important; }
+
+.text-center { text-align: center !important; }
+.text-left { text-align: left !important; }
+.text-right { text-align: right !important; }
+
+.font-weight-bold { font-weight: 600 !important; }
+.font-weight-normal { font-weight: 400 !important; }
+
+.timeline-step.rejected {
   .step-icon {
-    min-width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background-color: #f8f9fa;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-right: 15px;
-    border: 2px solid #6c757d;
-    z-index: 2;
-    transition: all 0.3s ease;
-  }
-  
-  .step-icon mat-icon {
-    color: #6c757d;
-    font-size: 24px;
-    height: 24px;
-    width: 24px;
-    transition: all 0.3s ease;
+    background-color: #f44336;
+    color: white;
   }
   
   .step-connector {
-    position: absolute;
-    top: 50px;
-    left: 25px;
-    bottom: -30px;
-    width: 2px;
-    background-color: #6c757d;
-    z-index: 1;
-    transition: background-color 0.3s ease;
-  }
-  
-  .timeline-step.completed .step-icon {
-    background-color: #e8f5e9;
-    border-color: #4caf50;
-    box-shadow: 0 0 10px rgba(76, 175, 80, 0.2);
-  }
-  
-  .timeline-step.completed .step-icon mat-icon {
-    color: #4caf50;
-  }
-  
-  .timeline-step.completed .step-connector {
-    background-color: #4caf50;
-  }
-  
-  .timeline-step.active .step-icon {
-    background-color: #fff8e1;
-    border-color: #ffc107;
-    box-shadow: 0 0 10px rgba(255, 193, 7, 0.2);
-  }
-  
-  .timeline-step.active .step-icon mat-icon {
-    color: #ffc107;
-  }
-  
-  .timeline-step.cancelled .step-icon {
-    background-color: #ffebee;
-    border-color: #f44336;
-    box-shadow: 0 0 10px rgba(244, 67, 54, 0.2);
-  }
-  
-  .timeline-step.cancelled .step-icon mat-icon {
-    color: #f44336;
-  }
-  
-  .timeline-step.cancelled .step-connector {
     background-color: #f44336;
+  }
+}
+
+.installment-rejection-details {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #ffcdd2;
+}
+
+.rejection-amount {
+  font-weight: 500;
+}
+
+/* Update timeline step styling for rejected status */
+.timeline-step.rejected {
+  .step-icon {
+    background-color: #f44336;
+    color: white;
   }
   
   .step-content {
-    flex: 1;
-    padding-top: 5px;
-  }
-  
-  .step-content h4 {
-    margin: 0;
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #333;
-  }
-  
-  .step-date {
-    margin: 5px 0 0 0;
-    font-size: 0.9rem;
-    color: #6c757d;
-  }
-  
-  .cancellation-reason {
-    margin: 5px 0 0 0;
-    color: #f44336;
-    font-size: 0.9rem;
-    font-style: italic;
-  }
-  
-  .step-message {
-    margin: 5px 0 0 0;
-    font-size: 0.9rem;
-    color: #495057;
-  }
-  
-  .info-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 20px;
-  }
-  
-  .info-item {
-    display: flex;
-    padding: 10px;
-    flex-direction: column;
-    transition: all 0.3s ease;
-    min-width: 0; /* Ensures content can shrink below min-content if needed */
-  }
-  
-  .info-item.full-width {
-    grid-column: 1 / -1;
-  }
-  
-  .info-item label {
-    font-size: 0.9rem;
-    color: #6c757d;
-    margin-bottom: 5px;
-    font-weight: 500;
-  }
-  
-  .info-item p {
-    margin: 0;
-    font-size: 1rem;
-    color: #333;
-    word-break: break-word;
-    overflow-wrap: break-word; /* Helps with long words */
-    white-space: normal; /* Allows text to wrap */
-    padding: 5px 10px;
-    background-color: rgba(253, 238, 241, 0.3);
-    border-radius: 6px;
-    border-left: 3px solid #e05f67;
-    min-height: 20px; /* Minimum height for consistency */
-  }
-  
-  /* Responsive adjustments */
-  @media (max-width: 992px) {
-    .info-grid {
-      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    .step-message {
+      color: #f44336;
+      font-weight: 500;
     }
   }
   
-  @media (max-width: 768px) {
-    .info-grid {
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    }
+  .step-connector {
+    background-color: #f44336;
   }
-  
-  @media (max-width: 576px) {
-    .info-grid {
-      grid-template-columns: 1fr; /* Single column for very small screens */
-      gap: 15px;
-    }
-  }
-  
-  /* Dialog Actions */
-  mat-dialog-actions button {
-    padding: 8px 20px;
-    border-radius: 50px;
-    font-weight: 600;
-    font-size: 0.95rem;
-    transition: all 0.3s ease;
-  }
-  
-  mat-dialog-actions button[mat-button] {
-    color: #6c757d;
-  }
-  
-  mat-dialog-actions button[mat-button]:hover {
-    background-color: rgba(108, 117, 125, 0.1);
-  }
-  
-  mat-dialog-actions button[mat-raised-button] {
-    background-color: #e05f67;
-    color: white;
-    box-shadow: 0 4px 10px rgba(224, 95, 103, 0.2);
-  }
-  
-  mat-dialog-actions button[mat-raised-button]:hover {
-    background-color: #d74b55;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(224, 95, 103, 0.3);
-  }
-  
-  /* Loading State */
-  .info-item p:contains('Loading...') {
-    font-style: italic;
-    color: #6c757d;
-  }
-  
-  /* Responsive Adjustments */
-  @media (max-width: 992px) {
-    .info-grid {
-      grid-template-columns: repeat(2, 1fr);
-    }
-  }
-  
-  @media (max-width: 768px) {
-    mat-dialog-title {
-      font-size: 1.6rem;
-      padding: 20px;
-    }
-    
-    .order-details h3 {
-      font-size: 1.3rem;
-    }
-    
-    .order-details > div {
-      padding: 20px;
-    }
-  }
-  
-  @media (max-width: 576px) {
-    .info-grid {
-      grid-template-columns: 1fr;
-      gap: 15px;
-    }
-    
-    mat-dialog-title {
-      font-size: 1.4rem;
-      padding: 16px;
-    }
-    
-    .order-details > div {
-      padding: 16px;
-    }
-    
-    .timeline-step {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    
-    .step-icon {
-      margin-bottom: 10px;
-    }
-    
-    .step-connector {
-      display: none;
-    }
-    
-    mat-dialog-actions {
-      flex-direction: column-reverse;
-      gap: 10px;
-    }
-    
-    mat-dialog-actions button {
-      width: 100%;
-    }
-  }
-
-  .payment-status {
-    display: flex;
-    align-items: center;
-    margin-top: 5px;
-  }
-  
-  .status-indicator {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    margin-right: 8px;
-  }
-  
-  .status-pending {
-    background-color: #ffc107; /* Amber/yellow for pending */
-  }
-  
-  .status-verified, .status-completed {
-    background-color: #4caf50; /* Green for verified/completed */
-  }
-  
-  .status-rejected {
-    background-color: #f44336; /* Red for rejected */
-  }
+}

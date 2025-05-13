@@ -5,9 +5,9 @@ import { AuthService } from './auth.service';
 import { CloudinaryserviceService } from './cloudinaryservice.service';
 import { switchMap } from 'rxjs/operators';
 import { catchError, throwError } from 'rxjs';
-import { HttpErrorResponse } from '@angular/common/http';
 import { tap } from 'rxjs/operators';
 import { HttpParams } from '@angular/common/http';
+import { map } from 'rxjs/operators';
 
 
 export interface InstallmentPlan {
@@ -25,20 +25,20 @@ export interface Payment {
   customerName: string;
   eventDate: string;
   amount: number;
-  paymentType: string; // 'full' or 'partial'
+  paymentType: string; // 'full' or 'installment' (changed from 'partial')
   method: string; // 'payhere' or 'bank-transfer'
-  slipUrl: string;
-  slipThumbnail: string;
+  slipUrl?: string;
+  slipThumbnail?: string;
   notes?: string;
-  paymentDateTime?: string; // When payment was made/initiated
-  submittedDate?: string; // Added ? to make optional
-  status: string; // 'pending', 'completed', 'rejected'
+  paymentDateTime?: string;
+  submittedDate?: string;
+  status: string; // 'pending', 'completed', 'rejected', 'partial'
   verifiedDate?: string;
   verifiedBy?: string;
   rejectionReason?: string;
-  installmentNumber?: number; // Which installment this payment represents (1st, 2nd, etc.)
-  remainingAmount?: number; // Amount remaining after this payment
-  isActive?: boolean; // Added for PaymentHistoryComponent
+  installmentNumber?: number;
+  remainingAmount?: number;
+  isActive?: boolean; // Only present in PaymentResponse from backend
 }
 
 export interface PaymentSummary {
@@ -47,13 +47,14 @@ export interface PaymentSummary {
   remainingAmount: number;
   isFullyPaid: boolean;
   paymentStatus: string;
-  installmentPlan?: InstallmentPlan; // Changed to proper type
+  installmentPlan?: InstallmentPlan;
   currentInstallment?: number;
+  totalInstallments?: number;
   nextInstallmentAmount?: number;
   nextInstallmentDueDate?: string;
   deadlineDate?: string;
   payments: Payment[];
-  activePaymentId?: number; // Added for PaymentHistoryComponent
+  activePaymentId?: number;
 }
 
 export interface PaymentResponse {
@@ -75,7 +76,7 @@ export class PaymentService {
     private cloudinaryService: CloudinaryserviceService
   ) {}
 
-   private getHeaders(): HttpHeaders {
+  private getHeaders(): HttpHeaders {
     const token = this.authService.getToken();
     if (!token) {
       console.error('Authentication token is missing');
@@ -87,7 +88,8 @@ export class PaymentService {
       .set('Authorization', `Bearer ${token}`);
   }
 
- getAvailableInstallmentPlans(eventDate: string, totalPrice: number): Observable<InstallmentPlan[]> {
+  // This is not used anymore - backend provides plans based on order
+  getAvailableInstallmentPlans(eventDate: string, totalPrice: number): Observable<InstallmentPlan[]> {
     const headers = this.getHeaders();
     return this.http.get<InstallmentPlan[]>(`${this.apiUrl}/installment-plans?eventDate=${eventDate}&totalPrice=${totalPrice}`, { headers })
       .pipe(
@@ -98,19 +100,38 @@ export class PaymentService {
       );
   }
 
-  getAvailableInstallmentPlansForOrder(orderId: string): Observable<InstallmentPlan[]> {
-    const headers = this.getHeaders();
-    return this.http.get<InstallmentPlan[]>(`${this.apiUrl}/${orderId}/installment-plans`, { headers })
-      .pipe(
-        catchError(error => {
-          console.error('Error fetching installment plans for order:', error);
-          return throwError(() => new Error('Failed to fetch installment plans: ' + this.getErrorMessage(error)));
-        })
-      );
-  }
+ getAvailableInstallmentPlansForOrder(orderId: string): Observable<InstallmentPlan[]> {
+  const headers = this.getHeaders();
+  return this.http.get<any>(`${this.apiUrl}/${orderId}/installment-plans`, { headers })
+    .pipe(
+      tap(response => {
+        console.log('Raw API response:', response);
+        // Check if the response has a data property
+        if (response && response.data) {
+          console.log('Response has data property:', response.data);
+        }
+      }),
+      // Extract the array from the response if needed
+      map(response => {
+        if (Array.isArray(response)) {
+          return response;
+        } else if (response && Array.isArray(response.data)) {
+          return response.data;
+        } else if (response && Array.isArray(response.plans)) {
+          return response.plans;
+        }
+        console.error('Unexpected response format:', response);
+        return [];
+      }),
+      catchError(error => {
+        console.error('Error fetching installment plans for order:', error);
+        return throwError(() => new Error('Failed to fetch installment plans: ' + this.getErrorMessage(error)));
+      })
+    );
+}
 
- calculateInstallmentAmount(totalPrice: number, planId: number, installmentNumber: number): number {
-    // Find the plan in our local cache if available
+  calculateInstallmentAmount(totalPrice: number, planId: number, installmentNumber: number): number {
+    // Frontend calculation - backend does its own
     const plan = this.getLocalInstallmentPlan(planId);
     if (!plan || installmentNumber < 1 || installmentNumber > plan.numberOfInstallments) {
       return 0;
@@ -119,9 +140,7 @@ export class PaymentService {
     return (plan.percentages[installmentNumber - 1] / 100) * totalPrice;
   }
   
-  // Helper method to get a locally cached installment plan
   private getLocalInstallmentPlan(planId: number): InstallmentPlan | null {
-    // Check localStorage for cached plans
     const cachedPlansJson = localStorage.getItem('installmentPlans');
     if (cachedPlansJson) {
       try {
@@ -134,8 +153,7 @@ export class PaymentService {
     return null;
   }
   
- 
-   initiatePayment(
+  initiatePayment(
     orderId: string, 
     amount: number, 
     paymentMethod: 'payhere' | 'bank-transfer',
@@ -159,11 +177,11 @@ export class PaymentService {
     }
     
     if (paymentMethod === 'payhere') {
+      // PayHere initiation doesn't create DB records
       return this.http.post(`${this.apiUrl}/payhere/initiate`, paymentData, { headers })
         .pipe(
           tap(response => {
             console.log('PayHere payment initiated:', response);
-            
             // Create and submit form to PayHere
             this.submitPayHereForm(response);
           }),
@@ -173,6 +191,7 @@ export class PaymentService {
           })
         );
     } else {
+      // Bank transfer creates payment record
       return this.http.post(`${this.apiUrl}/payment`, paymentData, { headers })
         .pipe(
           catchError(error => {
@@ -183,20 +202,15 @@ export class PaymentService {
     }
   }
 
-   // Method to handle submission to PayHere
   private submitPayHereForm(payHereData: any): void {
-    // Log all parameters for debugging
     console.log('PayHere form data:', payHereData);
     
-    // Create form element
     const form = document.createElement('form');
     form.method = 'POST';
     form.action = payHereData.checkout_url || 'https://sandbox.payhere.lk/pay/checkout';
     form.style.display = 'none';
     
-    // Add all fields as hidden input elements
     Object.keys(payHereData).forEach(key => {
-      // Skip checkout_url as it's not a form parameter
       if (key !== 'checkout_url') {
         const hiddenField = document.createElement('input');
         hiddenField.type = 'hidden';
@@ -206,12 +220,9 @@ export class PaymentService {
       }
     });
     
-    // Add form to body and submit
     document.body.appendChild(form);
     
-    // Log before submission
     console.log('Submitting PayHere form to:', form.action);
-    console.log('Form HTML:', form.outerHTML);
     
     try {
       form.submit();
@@ -220,7 +231,6 @@ export class PaymentService {
     }
   }
 
-  // Verify payment after returning from PayHere
   verifyPayHerePayment(orderId: string, paymentId: string): Observable<any> {
     const headers = this.getHeaders();
     return this.http.post(`${this.apiUrl}/payhere/verify`, 
@@ -247,7 +257,6 @@ export class PaymentService {
     installmentNumber?: number,
     notes?: string
   ): Observable<any> {
-    // Validate inputs
     if (!orderId) {
       return throwError(() => new Error('Order ID is required'));
     }
@@ -256,7 +265,6 @@ export class PaymentService {
       return throwError(() => new Error('No file selected'));
     }
 
-    // Check if user is logged in and has the CUSTOMER role
     if (!this.authService.isLoggedIn()) {
       return throwError(() => new Error('Authentication required to upload payment slips'));
     }
@@ -265,7 +273,6 @@ export class PaymentService {
       return throwError(() => new Error('You do not have permission to upload payment slips. Please login as a customer.'));
     }
 
-    // Validate file type and size
     if (!this.isValidFileType(file)) {
       return throwError(() => new Error('Invalid file type. Please upload an image.'));
     }
@@ -274,7 +281,6 @@ export class PaymentService {
       return throwError(() => new Error('File size exceeds 5MB limit.'));
     }
 
-    // Use the CloudinaryService to upload the file
     return this.cloudinaryService.uploadImage(file).pipe(
       tap(response => console.log('Cloudinary upload succeeded:', response.secure_url)),
       switchMap(cloudinaryResponse => {
@@ -282,7 +288,6 @@ export class PaymentService {
           return throwError(() => new Error('Failed to upload image to Cloudinary.'));
         }
 
-        // After successful upload to Cloudinary, send the image URL to your API
         const headers = this.getHeaders();
         
         const paymentSlipData = {
@@ -294,7 +299,6 @@ export class PaymentService {
           notes: notes
         };
         
-        // Use the payment-slip-upload endpoint
         return this.http.post(`${this.apiUrl}/${orderId}/payment-slip-upload`, paymentSlipData, { headers });
       }),
       catchError(error => {
@@ -322,7 +326,6 @@ export class PaymentService {
     );
   }
 
-    // Get payment summary for an order
   getPaymentSummary(orderId: string): Observable<PaymentSummary> {
     const headers = this.getHeaders();
     return this.http.get<PaymentSummary>(`${this.apiUrl}/${orderId}/payment-summary`, { headers })
@@ -334,7 +337,6 @@ export class PaymentService {
       );
   }
 
-   // Get all pending payments that need verification (admin only)
   getPendingPayments(): Observable<Payment[]> {
     const headers = this.getHeaders();
     return this.http.get<Payment[]>(`${this.apiUrl}/pending/verification`, { headers })
@@ -346,8 +348,7 @@ export class PaymentService {
       );
   }
 
-  // Get recently verified payments (last 7 days)
-   getRecentlyVerifiedPayments(): Observable<Payment[]> {
+  getRecentlyVerifiedPayments(): Observable<Payment[]> {
     const headers = this.getHeaders();
     return this.http.get<Payment[]>(`${this.apiUrl}/verified/recent`, { headers })
       .pipe(
@@ -358,7 +359,6 @@ export class PaymentService {
       );
   }
 
-  // Verify a payment (admin only)
   verifyPayment(orderId: string, paymentId: string): Observable<any> {
     const headers = this.getHeaders();
     return this.http.post(`${this.apiUrl}/${orderId}/payment/${paymentId}/verify`, { approved: true }, { headers })
@@ -370,7 +370,6 @@ export class PaymentService {
       );
   }
 
-  // Reject a payment with reason (admin only)
   rejectPayment(orderId: string, paymentId: string, reason: string): Observable<any> {
     const headers = this.getHeaders();
     return this.http.post(`${this.apiUrl}/${orderId}/payment/${paymentId}/verify`, 
@@ -384,9 +383,7 @@ export class PaymentService {
       );
   }
 
-
-  // Get payments for a specific order
-   getPaymentsByOrderId(orderId: string): Observable<Payment[]> {
+  getPaymentsByOrderId(orderId: string): Observable<Payment[]> {
     const headers = this.getHeaders();
     return this.http.get<Payment[]>(`${this.apiUrl}/${orderId}/payments`, { headers })
       .pipe(
@@ -430,7 +427,6 @@ export class PaymentService {
       );
   }
 
-   // Get all payments with pagination and filtering
   getAllPayments(
     orderId?: string,
     status?: string,
@@ -463,10 +459,4 @@ export class PaymentService {
         })
       );
   }
-
- 
-
-  
-
- 
 }

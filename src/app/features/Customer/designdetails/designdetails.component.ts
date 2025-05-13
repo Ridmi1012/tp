@@ -128,16 +128,16 @@ export class DesigndetailsComponent implements OnInit {
   }
 
   requestSimilarDesign(): void {
-    // Check login status for similar design request too
-    if (this.authService.isLoggedIn()) {
-      this.router.navigate(['/customize', this.design.designID, 'similar']);
-    } else {
-      const returnUrl = `/customize/${this.design.designID}/similar`;
-      this.router.navigate(['/login'], { 
-        queryParams: { returnUrl }
-      });
-    }
+  if (this.authService.isLoggedIn()) {
+    // Change navigation to request-similar route
+    this.router.navigate(['/request-similar', this.design.designID]);
+  } else {
+    const returnUrl = `/request-similar/${this.design.designID}`;
+    this.router.navigate(['/login'], { 
+      queryParams: { returnUrl }
+    });
   }
+}
 
   goBack(): void {
     this.router.navigate(['/portfolio']);

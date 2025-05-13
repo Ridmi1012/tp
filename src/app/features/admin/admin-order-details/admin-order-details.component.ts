@@ -11,7 +11,7 @@ import { AdminConfirmDialogComponent } from '../admin-confirm-dialog/admin-confi
 import { AuthService } from '../../../services/auth.service';
 import { TemplateRef, ViewChild } from '@angular/core';
 import { NotificationService } from '../../../services/notification.service';
-
+import { OrderItemRequest } from '../../../services/order.service';
 @Component({
   selector: 'app-admin-order-details',
   imports: [CommonModule, RouterModule, ReactiveFormsModule, MatDialogModule, MatButtonModule, FormsModule],
@@ -19,14 +19,13 @@ import { NotificationService } from '../../../services/notification.service';
   styleUrl: './admin-order-details.component.css'
 })
 export class AdminOrderDetailsComponent implements OnInit{
-   // View template references for dialogs
-   @ViewChild('pricingDialogTemplate') pricingDialogTemplate!: TemplateRef<any>;
-   @ViewChild('fullImageTemplate') fullImageTemplate!: TemplateRef<any>;
-   @ViewChild('cancelDialogTemplate') cancelDialogTemplate!: TemplateRef<any>;
-   @ViewChild('paymentSlipTemplate') paymentSlipTemplate!: TemplateRef<any>;
-   
-   
-    // Properties
+  // View template references for dialogs
+  @ViewChild('pricingDialogTemplate') pricingDialogTemplate!: TemplateRef<any>;
+  @ViewChild('fullImageTemplate') fullImageTemplate!: TemplateRef<any>;
+  @ViewChild('cancelDialogTemplate') cancelDialogTemplate!: TemplateRef<any>;
+  @ViewChild('paymentSlipTemplate') paymentSlipTemplate!: TemplateRef<any>;
+  
+  // Properties
   order: Order | null = null;
   design: any = null;
   loading = true;
@@ -42,7 +41,7 @@ export class AdminOrderDetailsComponent implements OnInit{
   fullImageDialogRef: MatDialogRef<any> | null = null;
   cancelDialogRef: MatDialogRef<any> | null = null;
   paymentSlipDialogRef: MatDialogRef<any> | null = null;
-   
+  
   statusOptions = [
     { value: 'pending', label: 'Pending' },
     { value: 'confirmed', label: 'Confirmed' },
@@ -51,7 +50,7 @@ export class AdminOrderDetailsComponent implements OnInit{
     { value: 'completed', label: 'Completed' },
     { value: 'cancelled', label: 'Cancelled' }
   ];
- 
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -69,7 +68,6 @@ export class AdminOrderDetailsComponent implements OnInit{
     });
   }
 
- 
   ngOnInit(): void {
     // Check if user is admin
     if (!this.authService.isAdmin()) {
@@ -82,7 +80,7 @@ export class AdminOrderDetailsComponent implements OnInit{
     
     this.loadOrderDetails();
   }
- 
+
   loadOrderDetails(): void {
     this.loading = true;
     this.error = null;
@@ -178,7 +176,7 @@ export class AdminOrderDetailsComponent implements OnInit{
       }
     });
   }
- 
+
   // Helper method to update form with order data
   private updateFormWithOrderData(order: Order): void {
     // Update form with existing values
@@ -197,10 +195,10 @@ export class AdminOrderDetailsComponent implements OnInit{
     // Check if payment slip is available
     // This would be an API call in a real implementation to get payment details
     // For now, we'll simulate it
-    this.checkPaymentDetails(order._id);
+    this.checkPaymentDetails(order.id);
   }
 
-  // Simulated method to check for payment details
+  // Check for payment details
   checkPaymentDetails(orderId: string): void {
     // In a real implementation, this would be an API call to get payment details
     // For now, we'll just check if the order is in 'partial-payment' status
@@ -209,207 +207,240 @@ export class AdminOrderDetailsComponent implements OnInit{
       this.paymentSlipUrl = 'https://example.com/payment-slip.jpg';
     }
   }
- // Dialog management methods
- openPricingDialog(confirmAfter: boolean = false): void {
-  this.confirmFromPricing = confirmAfter;
-  this.pricingDialogRef = this.dialog.open(this.pricingDialogTemplate, {
-    width: '500px',
-    disableClose: true
-  });
-}
- 
-closePricingDialog(): void {
-  if (this.pricingDialogRef) {
-    this.pricingDialogRef.close();
-    this.pricingDialogRef = null;
+
+  // Calculate total of active order items
+  getActiveItemsTotal(): number {
+    if (!this.order || !this.order.orderItems) {
+      return 0;
+    }
+    
+    return this.order.orderItems
+      .filter(item => item.status === 'active')
+      .reduce((total, item) => total + (item.pricePerUnit * item.quantity), 0);
   }
-  this.confirmFromPricing = false;
-}
- 
-savePricingAndClose(): void {
-  if (!this.order || !this.additionalCostsForm.valid) {
-    this.snackBar.open('Please ensure all cost values are valid.', 'Close', { duration: 3000 });
-    return;
+
+  // Calculate total price for request-similar orders
+  calculateRequestSimilarPrice(): number {
+    if (!this.order || this.order.orderType !== 'request-similar') {
+      return this.calculateTotalPrice();
+    }
+    
+    const itemsTotal = this.getActiveItemsTotal();
+    const transportationCost = this.additionalCostsForm.value.transportationCost || 0;
+    const additionalRentalCost = this.additionalCostsForm.value.additionalRentalCost || 0;
+    
+    return itemsTotal + transportationCost + additionalRentalCost;
   }
-  
-  const formValues = this.additionalCostsForm.value;
-  
-  // Show loading state
-  this.loading = true;
-  
-  this.orderService.updateOrder(this.order._id, {
-    transportationCost: formValues.transportationCost,
-    additionalRentalCost: formValues.additionalRentalCost
-  }).subscribe({
-    next: (updatedOrder) => {
-      this.order = updatedOrder;
-      this.snackBar.open('Additional costs updated successfully!', 'Close', {
-        duration: 3000
-      });
-      this.loading = false;
-      this.closePricingDialog();
-    },
-    error: (err) => {
-      console.error('Error updating additional costs:', err);
-      this.loading = false;
-      
-      // Enhanced error handling
-      if (err.status === 401 || err.status === 403) {
-        this.snackBar.open('Authorization failed. Please refresh the page or log in again.', 'Refresh', {
-          duration: 5000
-        }).onAction().subscribe(() => {
-          window.location.reload();
-        });
-      } else {
-        this.snackBar.open(err.message || 'Failed to update additional costs. Please try again.', 'Close', {
+
+  // Dialog management methods
+  openPricingDialog(confirmAfter: boolean = false): void {
+    this.confirmFromPricing = confirmAfter;
+    this.pricingDialogRef = this.dialog.open(this.pricingDialogTemplate, {
+      width: '500px',
+      disableClose: true
+    });
+  }
+
+  closePricingDialog(): void {
+    if (this.pricingDialogRef) {
+      this.pricingDialogRef.close();
+      this.pricingDialogRef = null;
+    }
+    this.confirmFromPricing = false;
+  }
+
+  savePricingAndClose(): void {
+    if (!this.order || !this.additionalCostsForm.valid) {
+      this.snackBar.open('Please ensure all cost values are valid.', 'Close', { duration: 3000 });
+      return;
+    }
+    
+    const formValues = this.additionalCostsForm.value;
+    
+    // Show loading state
+    this.loading = true;
+    
+    this.orderService.updateOrder(this.order.id, {
+      transportationCost: formValues.transportationCost,
+      additionalRentalCost: formValues.additionalRentalCost
+    }).subscribe({
+      next: (updatedOrder) => {
+        this.order = updatedOrder;
+        this.snackBar.open('Additional costs updated successfully!', 'Close', {
           duration: 3000
         });
+        this.loading = false;
+        this.closePricingDialog();
+      },
+      error: (err) => {
+        console.error('Error updating additional costs:', err);
+        this.loading = false;
+        
+        // Enhanced error handling
+        if (err.status === 401 || err.status === 403) {
+          this.snackBar.open('Authorization failed. Please refresh the page or log in again.', 'Refresh', {
+            duration: 5000
+          }).onAction().subscribe(() => {
+            window.location.reload();
+          });
+        } else {
+          this.snackBar.open(err.message || 'Failed to update additional costs. Please try again.', 'Close', {
+            duration: 3000
+          });
+        }
       }
-    }
-  });
-}
- 
-openFullImage(imageUrl: string): void {
-  this.currentFullImage = imageUrl;
-  this.fullImageDialogRef = this.dialog.open(this.fullImageTemplate, {
-    width: '90%',
-    maxWidth: '1000px'
-  });
-}
- 
-closeFullImage(): void {
-  if (this.fullImageDialogRef) {
-    this.fullImageDialogRef.close();
-    this.fullImageDialogRef = null;
+    });
   }
-}
 
-openPaymentSlipDialog(): void {
-  if (this.paymentSlipUrl) {
-    this.currentFullImage = this.paymentSlipUrl;
-    this.paymentSlipDialogRef = this.dialog.open(this.paymentSlipTemplate, {
+  openFullImage(imageUrl: string): void {
+    this.currentFullImage = imageUrl;
+    this.fullImageDialogRef = this.dialog.open(this.fullImageTemplate, {
       width: '90%',
       maxWidth: '1000px'
     });
-  } else {
-    this.snackBar.open('No payment slip available for this order.', 'Close', {
-      duration: 3000
+  }
+
+  closeFullImage(): void {
+    if (this.fullImageDialogRef) {
+      this.fullImageDialogRef.close();
+      this.fullImageDialogRef = null;
+    }
+  }
+
+  openPaymentSlipDialog(): void {
+    if (this.paymentSlipUrl) {
+      this.currentFullImage = this.paymentSlipUrl;
+      this.paymentSlipDialogRef = this.dialog.open(this.paymentSlipTemplate, {
+        width: '90%',
+        maxWidth: '1000px'
+      });
+    } else {
+      this.snackBar.open('No payment slip available for this order.', 'Close', {
+        duration: 3000
+      });
+    }
+  }
+
+  closePaymentSlipDialog(): void {
+    if (this.paymentSlipDialogRef) {
+      this.paymentSlipDialogRef.close();
+      this.paymentSlipDialogRef = null;
+    }
+  }
+
+  approvePayment(): void {
+    if (!this.order) return;
+
+    const dialogRef = this.dialog.open(AdminConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Approve Payment',
+        message: 'Are you sure you want to approve this payment? This will update the order status.',
+        showInput: false
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && this.order) {
+        // Show loading state
+        this.loading = true;
+        
+        // In a real implementation, this would be an API call to approve payment
+        // For now, we'll update the order status to 'paid'
+        this.orderService.updateOrder(this.order.id, { 
+          status: 'paid', 
+          paymentStatus: 'completed' 
+        }).subscribe({
+          next: (updatedOrder) => {
+            this.order = updatedOrder;
+            this.snackBar.open('Payment approved successfully!', 'Close', {
+              duration: 3000
+            });
+            this.loading = false;
+            this.closePaymentSlipDialog();
+          },
+          error: (err) => {
+            console.error('Error approving payment:', err);
+            this.loading = false;
+            this.snackBar.open('Failed to approve payment. Please try again.', 'Close', {
+              duration: 3000
+            });
+          }
+        });
+      }
     });
   }
-}
 
-closePaymentSlipDialog(): void {
-  if (this.paymentSlipDialogRef) {
-    this.paymentSlipDialogRef.close();
-    this.paymentSlipDialogRef = null;
+  rejectPayment(): void {
+    if (!this.order) return;
+
+    const dialogRef = this.dialog.open(AdminConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: 'Reject Payment',
+        message: 'Are you sure you want to reject this payment? Please provide a reason:',
+        showInput: true,
+        inputLabel: 'Rejection Reason'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result && result.input && this.order) {
+        // Show loading state
+        this.loading = true;
+        
+        // In a real implementation, this would be an API call to reject payment
+        // For now, we'll update the order status back to 'confirmed'
+        this.orderService.updateOrder(this.order.id, { 
+          status: 'confirmed',
+          paymentStatus: 'pending'
+        }).subscribe({
+          next: (updatedOrder) => {
+            this.order = updatedOrder;
+            this.snackBar.open('Payment rejected. The customer will be notified.', 'Close', {
+              duration: 3000
+            });
+            this.loading = false;
+            this.closePaymentSlipDialog();
+            
+            // Send notification to customer (this would be handled by backend)
+          },
+          error: (err) => {
+            console.error('Error rejecting payment:', err);
+            this.loading = false;
+            this.snackBar.open('Failed to reject payment. Please try again.', 'Close', {
+              duration: 3000
+            });
+          }
+        });
+      }
+    });
   }
-}
 
-approvePayment(): void {
-  if (!this.order) return;
-
-  const dialogRef = this.dialog.open(AdminConfirmDialogComponent, {
-    width: '400px',
-    data: {
-      title: 'Approve Payment',
-      message: 'Are you sure you want to approve this payment? This will update the order status.',
-      showInput: false
-    }
-  });
-
-  dialogRef.afterClosed().subscribe(result => {
-    if (result && this.order) {
-      // Show loading state
-      this.loading = true;
-      
-      // In a real implementation, this would be an API call to approve payment
-      // For now, we'll update the order status to 'paid'
-      this.orderService.updateOrder(this.order._id, { 
-        status: 'paid', 
-        paymentStatus: 'completed' 
-      }).subscribe({
-        next: (updatedOrder) => {
-          this.order = updatedOrder;
-          this.snackBar.open('Payment approved successfully!', 'Close', {
-            duration: 3000
-          });
-          this.loading = false;
-          this.closePaymentSlipDialog();
-        },
-        error: (err) => {
-          console.error('Error approving payment:', err);
-          this.loading = false;
-          this.snackBar.open('Failed to approve payment. Please try again.', 'Close', {
-            duration: 3000
-          });
-        }
+  cancelOrder(): void {
+    // Check if order can be cancelled (business logic)
+    if (this.order && (this.order.status === 'completed' || this.order.status === 'cancelled')) {
+      this.snackBar.open('This order cannot be cancelled in its current status.', 'Close', {
+        duration: 3000
       });
+      return;
     }
-  });
-}
-
-rejectPayment(): void {
-  if (!this.order) return;
-
-  const dialogRef = this.dialog.open(AdminConfirmDialogComponent, {
-    width: '400px',
-    data: {
-      title: 'Reject Payment',
-      message: 'Are you sure you want to reject this payment? Please provide a reason:',
-      showInput: true,
-      inputLabel: 'Rejection Reason'
-    }
-  });
-
-  dialogRef.afterClosed().subscribe(result => {
-    if (result && result.input && this.order) {
-      // Show loading state
-      this.loading = true;
-      
-      // In a real implementation, this would be an API call to reject payment
-      // For now, we'll update the order status back to 'confirmed'
-      this.orderService.updateOrder(this.order._id, { 
-        status: 'confirmed',
-        paymentStatus: 'pending'
-      }).subscribe({
-        next: (updatedOrder) => {
-          this.order = updatedOrder;
-          this.snackBar.open('Payment rejected. The customer will be notified.', 'Close', {
-            duration: 3000
-          });
-          this.loading = false;
-          this.closePaymentSlipDialog();
-          
-          // Send notification to customer (this would be handled by backend)
-        },
-        error: (err) => {
-          console.error('Error rejecting payment:', err);
-          this.loading = false;
-          this.snackBar.open('Failed to reject payment. Please try again.', 'Close', {
-            duration: 3000
-          });
-        }
-      });
-    }
-  });
-}
- 
-cancelOrder(): void {
-  this.cancellationReason = '';
-  this.cancelDialogRef = this.dialog.open(this.cancelDialogTemplate, {
-    width: '500px',
-    disableClose: true
-  });
-}
- 
-closeCancelDialog(): void {
-  if (this.cancelDialogRef) {
-    this.cancelDialogRef.close();
-    this.cancelDialogRef = null;
+    
+    // Allow cancellation for confirmed orders as per the updated business requirement
+    this.cancellationReason = '';
+    this.cancelDialogRef = this.dialog.open(this.cancelDialogTemplate, {
+      width: '500px',
+      disableClose: true
+    });
   }
-}
- 
-   
+
+  closeCancelDialog(): void {
+    if (this.cancelDialogRef) {
+      this.cancelDialogRef.close();
+      this.cancelDialogRef = null;
+    }
+  }
+
   confirmCancellation(): void {
     if (!this.order || !this.cancellationReason.trim()) {
       this.snackBar.open('Please provide a reason for cancellation.', 'Close', { duration: 3000 });
@@ -419,7 +450,7 @@ closeCancelDialog(): void {
     // Show loading state
     this.loading = true;
     
-    this.orderService.cancelOrder(this.order._id, this.cancellationReason).subscribe({
+    this.orderService.cancelOrder(this.order.id, this.cancellationReason).subscribe({
       next: (updatedOrder) => {
         this.order = updatedOrder;
         this.snackBar.open('Order cancelled successfully!', 'Close', {
@@ -449,65 +480,70 @@ closeCancelDialog(): void {
       }
     });
   }
- 
-   confirmOrderAfterPricing(): void {
-     if (!this.order || !this.additionalCostsForm.valid) {
-       this.snackBar.open('Please ensure all cost values are valid.', 'Close', { duration: 3000 });
-       return;
-     }
- 
-     // Show loading state
-     this.loading = true;
-     
-     const formValues = this.additionalCostsForm.value;
-     
-     // Log debug info before sending request
-     console.log('Confirming order with pricing:', {
-       orderId: this.order._id,
-       transportationCost: formValues.transportationCost,
-       additionalRentalCost: formValues.additionalRentalCost
-     });
-     console.log('Auth token present:', !!this.authService.getToken());
-     
-     this.orderService.confirmOrder(this.order._id, {
-       transportationCost: formValues.transportationCost,
-       additionalRentalCost: formValues.additionalRentalCost
-     }).subscribe({
-       next: (updatedOrder) => {
-         this.order = updatedOrder;
-         this.snackBar.open('Order confirmed successfully!', 'Close', {
-           duration: 3000
-         });
-         this.loading = false;
-         this.closePricingDialog();
-         
-         // Notify the customer
-         this.notifyCustomer('Order Confirmed', `Your order #${updatedOrder.orderNumber} has been confirmed. Total amount: Rs. ${this.calculateTotalPrice()}`);
-       },
-       error: (err) => {
-         console.error('Error confirming order:', err);
-         this.loading = false;
-         
-         if (err.status === 401 || err.status === 403) {
-           this.snackBar.open('Authorization failed. Please refresh the page or log in again.', 'Refresh', {
-             duration: 5000
-           }).onAction().subscribe(() => {
-             window.location.reload();
-           });
-         } else {
-           this.snackBar.open(err.message || 'Failed to confirm order. Please try again.', 'Close', {
-             duration: 3000
-           });
-         }
-       }
-     });
-   }
- 
-   updateOrderStatus(status: string): void {
+
+  confirmOrderAfterPricing(): void {
+    if (!this.order || !this.additionalCostsForm.valid) {
+      this.snackBar.open('Please ensure all cost values are valid.', 'Close', { duration: 3000 });
+      return;
+    }
+
+    // Show loading state
+    this.loading = true;
+    
+    const formValues = this.additionalCostsForm.value;
+    
+    // Log debug info before sending request
+    console.log('Confirming order with pricing:', {
+      orderId: this.order.id,
+      transportationCost: formValues.transportationCost,
+      additionalRentalCost: formValues.additionalRentalCost
+    });
+    console.log('Auth token present:', !!this.authService.getToken());
+    
+    this.orderService.confirmOrder(this.order.id, {
+      transportationCost: formValues.transportationCost,
+      additionalRentalCost: formValues.additionalRentalCost
+    }).subscribe({
+      next: (updatedOrder) => {
+        this.order = updatedOrder;
+        this.snackBar.open('Order confirmed successfully!', 'Close', {
+          duration: 3000
+        });
+        this.loading = false;
+        this.closePricingDialog();
+        
+        // Use the appropriate price calculation for request-similar orders
+        const totalPrice = this.order.orderType === 'request-similar' 
+          ? this.calculateRequestSimilarPrice() 
+          : this.calculateTotalPrice();
+          
+        // Notify the customer
+        this.notifyCustomer('Order Confirmed', `Your order #${updatedOrder.orderNumber} has been confirmed. Total amount: Rs. ${totalPrice}`);
+      },
+      error: (err) => {
+        console.error('Error confirming order:', err);
+        this.loading = false;
+        
+        if (err.status === 401 || err.status === 403) {
+          this.snackBar.open('Authorization failed. Please refresh the page or log in again.', 'Refresh', {
+            duration: 5000
+          }).onAction().subscribe(() => {
+            window.location.reload();
+          });
+        } else {
+          this.snackBar.open(err.message || 'Failed to confirm order. Please try again.', 'Close', {
+            duration: 3000
+          });
+        }
+      }
+    });
+  }
+
+  updateOrderStatus(status: string): void {
     if (!this.order) {
       return;
     }
-  
+
     const dialogRef = this.dialog.open(AdminConfirmDialogComponent, {
       width: '400px',
       data: {
@@ -516,14 +552,14 @@ closeCancelDialog(): void {
         showInput: false
       }
     });
-  
+
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
         // Show loading state
         this.loading = true;
         
         // Pass an object with the status property instead of just the status string
-        this.orderService.updateOrder(this.order!._id, { status: status }).subscribe({
+        this.orderService.updateOrder(this.order!.id, { status: status }).subscribe({
           next: (updatedOrder) => {
             this.order = updatedOrder;
             this.snackBar.open('Order status updated successfully!', 'Close', {
@@ -562,105 +598,158 @@ closeCancelDialog(): void {
   }
 
   // Create an event from the order
-createEvent(): void {
-  // In a real implementation, this would be an API call to create an event
-  // For now, we'll just show a success message
-  this.snackBar.open('Event created successfully in the calendar!', 'View Calendar', {
-    duration: 5000
-  }).onAction().subscribe(() => {
-    this.router.navigate(['/events/calendar']);
-  });
-}
+  createEvent(): void {
+    // In a real implementation, this would be an API call to create an event
+    // For now, we'll just show a success message
+    this.snackBar.open('Event created successfully in the calendar!', 'View Calendar', {
+      duration: 5000
+    }).onAction().subscribe(() => {
+      this.router.navigate(['/events/calendar']);
+    });
+  }
 
- 
-private getStatusChangeMessage(status: string): string {
-  const orderNumber = this.order?.orderNumber || '';
-  
-  switch (status) {
-    case 'in-progress':
-      return `Your order #${orderNumber} is now in progress. We're working on your custom decoration!`;
-    case 'ready-for-delivery':
-      return `Your order #${orderNumber} is ready for delivery. We'll be in touch shortly to arrange delivery details.`;
-    case 'completed':
-      return `Your order #${orderNumber} has been completed. Thank you for choosing our services!`;
-    default:
-      return `Your order #${orderNumber} status has been updated to ${this.getStatusLabel(status)}.`;
+  private getStatusChangeMessage(status: string): string {
+    const orderNumber = this.order?.orderNumber || '';
+    
+    switch (status) {
+      case 'in-progress':
+        return `Your order #${orderNumber} is now in progress. We're working on your custom decoration!`;
+      case 'ready-for-delivery':
+        return `Your order #${orderNumber} is ready for delivery. We'll be in touch shortly to arrange delivery details.`;
+      case 'completed':
+        return `Your order #${orderNumber} has been completed. Thank you for choosing our services!`;
+      default:
+        return `Your order #${orderNumber} status has been updated to ${this.getStatusLabel(status)}.`;
+    }
   }
-}
- 
-   // Helper method to notify customers about order changes
-private notifyCustomer(title: string, message: string): void {
-  // This would typically connect to your backend notification service
-  // For now, we'll just log the notification
-  console.log(`Customer notification - ${title}: ${message}`);
-  
-  // In a real implementation, you would send this to your backend
-  // this.notificationService.sendCustomerNotification(this.order!.customerId, title, message);
-}
- 
-calculateTotalPrice(): number {
-  if (!this.order) {
-    return 0;
+
+  // Helper method to notify customers about order changes
+  private notifyCustomer(title: string, message: string): void {
+    // This would typically connect to your backend notification service
+    // For now, we'll just log the notification
+    console.log(`Customer notification - ${title}: ${message}`);
+    
+    // In a real implementation, you would send this to your backend
+    // this.notificationService.sendCustomerNotification(this.order!.customerId, title, message);
   }
-  
-  const basePrice = this.design?.basePrice || 0;
-  const transportationCost = this.additionalCostsForm.value.transportationCost || 0;
-  const additionalRentalCost = this.additionalCostsForm.value.additionalRentalCost || 0;
-  
-  return basePrice + transportationCost + additionalRentalCost;
-}
- 
-getPaymentStatusLabel(status: string): string {
-  switch (status) {
-    case 'pending':
-      return 'Pending';
-    case 'partial':
-      return 'Partially Paid';
-    case 'completed':
-      return 'Paid';
-    default:
-      return status;
+
+  calculateTotalPrice(): number {
+    if (!this.order) {
+      return 0;
+    }
+    
+    const basePrice = this.design?.basePrice || 0;
+    const transportationCost = this.additionalCostsForm.value.transportationCost || 0;
+    const additionalRentalCost = this.additionalCostsForm.value.additionalRentalCost || 0;
+    
+    return basePrice + transportationCost + additionalRentalCost;
   }
-}
- 
-formatTime(time: string | undefined): string {
-  if (!time) return 'N/A';
-  
-  // Convert 24-hour time format to 12-hour format with AM/PM
-  const [hours, minutes] = time.split(':');
-  const hour = parseInt(hours, 10);
-  const ampm = hour >= 12 ? 'PM' : 'AM';
-  const hour12 = hour % 12 || 12; // Convert 0 to 12 for 12 AM
-  
-  return `${hour12}:${minutes} ${ampm}`;
-}
- 
-goBack(): void {
-  this.router.navigate(['/admin/orders']);
-}
- 
-   // Helper method to get order status label
-getStatusLabel(status: string): string {
-  const statusObj = this.statusOptions.find(opt => opt.value === status);
-  return statusObj ? statusObj.label : status;
-}
- 
-   // Get order type display name
-getOrderTypeDisplay(type: string): string {
-  switch (type) {
-    case 'as-is':
-      return 'Standard Order';
-    case 'custom-design':
-      return 'Custom Design';
-    case 'custom-request':
-      return 'Custom Request';
-    default:
-      return type || 'Unknown';
+
+  getPaymentStatusLabel(status: string): string {
+    switch (status) {
+      case 'pending':
+        return 'Pending';
+      case 'partial':
+        return 'Partially Paid';
+      case 'completed':
+        return 'Paid';
+      default:
+        return status;
+    }
   }
-}
- 
-   // Retry loading order details
-   retryLoad(): void {
+
+  formatTime(time: string | undefined): string {
+    if (!time) return 'N/A';
+    
+    // Convert 24-hour time format to 12-hour format with AM/PM
+    const [hours, minutes] = time.split(':');
+    const hour = parseInt(hours, 10);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 || 12; // Convert 0 to 12 for 12 AM
+    
+    return `${hour12}:${minutes} ${ampm}`;
+  }
+
+  goBack(): void {
+    this.router.navigate(['/admin/orders']);
+  }
+
+  // Helper method to get order status label
+  getStatusLabel(status: string): string {
+    const statusObj = this.statusOptions.find(opt => opt.value === status);
+    return statusObj ? statusObj.label : status;
+  }
+
+  // Get order type display name
+  getOrderTypeDisplay(type: string): string {
+    switch (type) {
+      case 'as-is':
+        return 'Standard Order';
+      case 'request-similar':
+        return 'Request Similar Design';
+      case 'custom-design':
+        return 'Custom Design';
+      case 'custom-request':
+        return 'Custom Request';
+      default:
+        return type || 'Unknown';
+    }
+  }
+
+  // Get theme color display name
+  getThemeColorDisplay(color: string): string {
+    if (!color || color === 'original') return 'Original Theme';
+    
+    // Capitalize first letter
+    return color.charAt(0).toUpperCase() + color.slice(1) + ' Theme';
+  }
+
+  // Get concept display name
+  getConceptDisplay(concept: string): string {
+    if (!concept || concept === 'original') return 'Original Concept';
+    
+    // Capitalize first letter and handle special cases
+    const formattedConcept = concept.replace(/-/g, ' ');
+    return formattedConcept.charAt(0).toUpperCase() + formattedConcept.slice(1);
+  }
+
+  // Check if an order item is changed from original
+  isItemChanged(item: OrderItemRequest): boolean {
+    if (!this.design || !this.design.items) return false;
+    
+    const originalItem = this.design.items.find((designItem: any) => 
+      designItem.item.itemID === item.itemId
+    );
+    
+    if (!originalItem) return true; // New item added
+    
+    return item.quantity !== originalItem.defaultQuantity || item.status === 'dropped';
+  }
+
+  // Check if an order item is new (not from original design)
+  isNewItem(item: OrderItemRequest): boolean {
+    if (!this.design || !this.design.items) return true;
+    
+    const originalItem = this.design.items.find((designItem: any) => 
+      designItem.item.itemID === item.itemId
+    );
+    
+    return !originalItem; // Returns true if item is not found in original design
+  }
+
+  // Get original quantity for an item
+  getOriginalQuantity(itemId: number): number {
+    if (!this.design || !this.design.items) return 0;
+    
+    const originalItem = this.design.items.find((designItem: any) => 
+      designItem.item.itemID === itemId
+    );
+    
+    return originalItem ? originalItem.defaultQuantity : 0;
+  }
+
+  // Retry loading order details
+  retryLoad(): void {
     this.loadOrderDetails();
   }
 }

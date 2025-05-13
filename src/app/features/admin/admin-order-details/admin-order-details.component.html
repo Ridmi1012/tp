@@ -22,6 +22,9 @@
         <div class="status-badge" [ngClass]="order.status">
           {{ getStatusLabel(order.status) }}
         </div>
+        <div class="order-type-badge" [ngClass]="order.orderType">
+          {{ getOrderTypeDisplay(order.orderType) }}
+        </div>
       </div>
       <div class="order-meta">
         <div class="summary-item" *ngIf="order.customDetails && order.customDetails.eventDate">
@@ -78,7 +81,14 @@
           <div class="customer-details">
             <div class="customer-item">
               <span class="label">Name</span>
-              <span class="value">{{ order.customerInfo.firstName || 'N/A' }} {{ order.customerInfo.lastName || '' }}</span>
+              <span class="value">
+                <ng-container *ngIf="order.customerInfo.firstName || order.customerInfo.lastName">
+                  {{ order.customerInfo.firstName || '' }} {{ order.customerInfo.lastName || '' }}
+                </ng-container>
+                <ng-container *ngIf="!order.customerInfo.firstName && !order.customerInfo.lastName">
+                  N/A
+                </ng-container>
+              </span>
             </div>
             <div class="customer-item">
               <span class="label">Email</span>
@@ -94,6 +104,21 @@
             <div class="customer-item" *ngIf="order.customerInfo.relationshipToPerson">
               <span class="label">Relationship</span>
               <span class="value">{{ order.customerInfo.relationshipToPerson }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Customization Section for request-similar orders -->
+        <div class="order-section customization-info" *ngIf="order.orderType === 'request-similar'">
+          <h2>Customization Details</h2>
+          <div class="customization-details">
+            <div class="customization-item" *ngIf="order.themeColor">
+              <span class="label">Theme Color</span>
+              <span class="value">{{ getThemeColorDisplay(order.themeColor) }}</span>
+            </div>
+            <div class="customization-item" *ngIf="order.conceptCustomization">
+              <span class="label">Design Concept</span>
+              <span class="value">{{ getConceptDisplay(order.conceptCustomization) }}</span>
             </div>
           </div>
         </div>
@@ -115,13 +140,13 @@
             </div>
             <div class="design-info">
               <h3>{{ design.name }}</h3>
-              <p class="price">Base Price: Rs. {{ design.basePrice }}</p>
+              <p class="price" *ngIf="order.orderType !== 'request-similar'">Base Price: Rs. {{ design.basePrice }}</p>
               <p class="category" *ngIf="design.category">Category: {{ design.category.name }}</p>
               <p class="description">{{ design.description }}</p>
               
               <!-- Pricing button to open dialog -->
               <button (click)="openPricingDialog()" class="pricing-button">
-                <span class="material-icons"></span> View & Edit Pricing
+                <span class="material-icons">calculate</span> View & Edit Pricing
               </button>
             </div>
           </div>
@@ -134,6 +159,46 @@
                    [alt]="design.name + ' additional image'"
                    class="thumbnail"
                    (click)="openFullImage(image)">
+            </div>
+          </div>
+        </div>
+
+        <!-- Items Section for request-similar orders -->
+        <div class="order-section items-section" *ngIf="order.orderType === 'request-similar' && order.orderItems">
+          <h2>Order Items</h2>
+          <div class="items-list">
+            <div *ngFor="let item of order.orderItems" 
+                 class="item-row" 
+                 [ngClass]="{'dropped': item.status === 'dropped', 'changed': isItemChanged(item)}">
+              <div class="item-info">
+                <h4>{{ item.itemName }}</h4>
+                <span class="item-status" *ngIf="item.status === 'dropped'">Dropped</span>
+                <span class="item-status new" *ngIf="isNewItem(item)">New Item</span>
+              </div>
+              <div class="item-details">
+                <div class="quantity">
+                  <span class="label">Quantity:</span>
+                  <span class="value">{{ item.quantity }}</span>
+                  <span class="original-quantity" *ngIf="isItemChanged(item) && getOriginalQuantity(item.itemId) > 0">
+                    (was {{ getOriginalQuantity(item.itemId) }})
+                  </span>
+                </div>
+                <div class="price">
+                  <span class="label">Price/Unit:</span>
+                  <span class="value">Rs. {{ item.pricePerUnit }}</span>
+                </div>
+                <div class="total">
+                  <span class="label">Total:</span>
+                  <span class="value" [ngClass]="{'strikethrough': item.status === 'dropped'}">
+                    Rs. {{ item.pricePerUnit * item.quantity }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="items-total">
+              <span class="label">Items Total:</span>
+              <span class="value">Rs. {{ getActiveItemsTotal() }}</span>
             </div>
           </div>
         </div>
@@ -224,7 +289,8 @@
     
     <div class="dialog-content">
       <form [formGroup]="additionalCostsForm" class="costs-form">
-        <div class="form-row">
+        <!-- For standard orders -->
+        <div class="form-row" *ngIf="order?.orderType !== 'request-similar'">
           <div class="form-group">
             <label for="basePrice">Base Price</label>
             <div class="input-group">
@@ -233,6 +299,23 @@
                 type="text" 
                 id="basePrice" 
                 [value]="design?.basePrice || 0"
+                disabled
+                class="form-control"
+              >
+            </div>
+          </div>
+        </div>
+
+        <!-- For request-similar orders -->
+        <div class="form-row" *ngIf="order?.orderType === 'request-similar'">
+          <div class="form-group">
+            <label for="itemsTotal">Items Total</label>
+            <div class="input-group">
+              <span class="currency">Rs.</span>
+              <input 
+                type="text" 
+                id="itemsTotal" 
+                [value]="getActiveItemsTotal()"
                 disabled
                 class="form-control"
               >
@@ -280,7 +363,7 @@
               <input 
                 type="text" 
                 id="totalPrice" 
-                [value]="calculateTotalPrice()"
+                [value]="order?.orderType === 'request-similar' ? calculateRequestSimilarPrice() : calculateTotalPrice()"
                 disabled
                 class="form-control total-price"
               >

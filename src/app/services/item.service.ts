@@ -4,20 +4,25 @@ import { Observable } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { throwError } from 'rxjs';  
 import { AuthService } from './auth.service';
+import { HttpHeaders } from '@angular/common/http';
 
 export interface Item {
   itemID: number;
   name: string;
   description: string;
   unitPrice: number;
-
+  pricePerUnit?: number; // Optional for backward compatibility
+  category?: {
+    categoryID: number;
+    name: string;
+  };
+  categoryID?: string; // Optional for backward compatibility
 }
 
 export interface ItemRequest {
   name: string;
   description: string;
   unitPrice: number;
-
 }
 
 @Injectable({
@@ -31,6 +36,13 @@ export class ItemService {
     private authService: AuthService
   ) { }
 
+  private getHeaders(): HttpHeaders {
+    const token = this.authService.getToken();
+    return new HttpHeaders()
+      .set('Content-Type', 'application/json')
+      .set('Authorization', `Bearer ${token}`);
+  }
+
   getItems(): Observable<Item[]> {
     console.log('Fetching items from:', this.apiUrl);
     // GET requests don't need authentication
@@ -43,6 +55,12 @@ export class ItemService {
   getItemById(id: number): Observable<Item> {
     // GET requests don't need authentication
     return this.http.get<Item>(`${this.apiUrl}/${id}`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+   getItemsByCategory(categoryId: string): Observable<Item[]> {
+    return this.http.get<Item[]>(`${this.apiUrl}/category/${categoryId}`).pipe(
       catchError(this.handleError)
     );
   }
