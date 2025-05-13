@@ -118,9 +118,9 @@ export class DesigndetailsComponent implements OnInit {
   customizeDesign(): void {
     // Check login status for customize design too
     if (this.authService.isLoggedIn()) {
-      this.router.navigate(['/customize', this.design.designID]);
+      this.router.navigate(['/fully-customize-design', this.design.designID]);
     } else {
-      const returnUrl = `/customize/${this.design.designID}`;
+      const returnUrl = `/fully-customize-design/${this.design.designID}`;
       this.router.navigate(['/login'], { 
         queryParams: { returnUrl }
       });

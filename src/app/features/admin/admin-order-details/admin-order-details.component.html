@@ -109,7 +109,7 @@
         </div>
 
         <!-- Customization Section for request-similar orders -->
-        <div class="order-section customization-info" *ngIf="order.orderType === 'request-similar'">
+        <div class="order-section customization-info" *ngIf="order.orderType === 'request-similar' || order.orderType === 'full-custom'">
           <h2>Customization Details</h2>
           <div class="customization-details">
             <div class="customization-item" *ngIf="order.themeColor">
@@ -122,12 +122,20 @@
             </div>
           </div>
         </div>
+
+        <!-- Special Instructions for full-custom orders -->
+        <div class="order-section special-instructions" *ngIf="order.orderType === 'full-custom' && order.specialNote">
+          <h2>Design Instructions</h2>
+          <div class="instructions-content">
+            <p>{{ order.specialNote }}</p>
+          </div>
+        </div>
       </div>
 
       <!-- Right Column: Design Image and Info -->
       <div class="order-column right-column">
-        <!-- Design Preview -->
-        <div class="order-section design-preview" *ngIf="design">
+        <!-- Design Preview for standard and request-similar orders -->
+        <div class="order-section design-preview" *ngIf="design && order.orderType !== 'full-custom'">
           <h2>Design Information</h2>
           <div class="design-card">
             <div class="design-image-container">
@@ -140,7 +148,7 @@
             </div>
             <div class="design-info">
               <h3>{{ design.name }}</h3>
-              <p class="price" *ngIf="order.orderType !== 'request-similar'">Base Price: Rs. {{ design.basePrice }}</p>
+              <p class="price" *ngIf="order.orderType === 'as-is'">Base Price: Rs. {{ design.basePrice }}</p>
               <p class="category" *ngIf="design.category">Category: {{ design.category.name }}</p>
               <p class="description">{{ design.description }}</p>
               
@@ -163,8 +171,33 @@
           </div>
         </div>
 
-        <!-- Items Section for request-similar orders -->
-        <div class="order-section items-section" *ngIf="order.orderType === 'request-similar' && order.orderItems">
+        <!-- Inspiration Photos for full-custom orders -->
+        <div class="order-section inspiration-photos" *ngIf="order.orderType === 'full-custom' && order.inspirationPhotos && order.inspirationPhotos.length > 0">
+          <h2>Inspiration Photos</h2>
+          <div class="image-grid">
+            <img *ngFor="let photo of order.inspirationPhotos" 
+                 [src]="photo" 
+                 alt="Inspiration photo"
+                 class="thumbnail inspiration-thumbnail"
+                 (click)="openFullImage(photo)">
+          </div>
+        </div>
+
+        <!-- Design info for full-custom orders -->
+        <div class="order-section custom-design-info" *ngIf="order.orderType === 'full-custom'">
+          <h2>Custom Design Details</h2>
+          <div class="design-info">
+            <p>This is a fully customized design created from scratch based on customer requirements.</p>
+            
+            <!-- Pricing button to open dialog -->
+            <button (click)="openPricingDialog()" class="pricing-button">
+              <span class="material-icons">calculate</span> View & Edit Pricing
+            </button>
+          </div>
+        </div>
+
+        <!-- Items Section for request-similar and full-custom orders -->
+        <div class="order-section items-section" *ngIf="(order.orderType === 'request-similar' || order.orderType === 'full-custom') && order.orderItems">
           <h2>Order Items</h2>
           <div class="items-list">
             <div *ngFor="let item of order.orderItems" 
@@ -173,13 +206,13 @@
               <div class="item-info">
                 <h4>{{ item.itemName }}</h4>
                 <span class="item-status" *ngIf="item.status === 'dropped'">Dropped</span>
-                <span class="item-status new" *ngIf="isNewItem(item)">New Item</span>
+                <span class="item-status new" *ngIf="isNewItem(item) && order.orderType === 'request-similar'">New Item</span>
               </div>
               <div class="item-details">
                 <div class="quantity">
                   <span class="label">Quantity:</span>
                   <span class="value">{{ item.quantity }}</span>
-                  <span class="original-quantity" *ngIf="isItemChanged(item) && getOriginalQuantity(item.itemId) > 0">
+                  <span class="original-quantity" *ngIf="isItemChanged(item) && getOriginalQuantity(item.itemId) > 0 && order.orderType === 'request-similar'">
                     (was {{ getOriginalQuantity(item.itemId) }})
                   </span>
                 </div>
@@ -277,7 +310,7 @@
   </div>
 </div>
 
-<!-- Pricing Dialog Template -->
+<!-- Updated Pricing Dialog Template -->
 <ng-template #pricingDialogTemplate>
   <div class="pricing-dialog">
     <div class="dialog-header">
@@ -289,37 +322,27 @@
     
     <div class="dialog-content">
       <form [formGroup]="additionalCostsForm" class="costs-form">
-        <!-- For standard orders -->
-        <div class="form-row" *ngIf="order?.orderType !== 'request-similar'">
+        <!-- Base price for all order types -->
+        <div class="form-row">
           <div class="form-group">
-            <label for="basePrice">Base Price</label>
+            <label for="basePrice">
+              <span *ngIf="order?.orderType === 'as-is'">Design Base Price</span>
+              <span *ngIf="order?.orderType === 'request-similar'">Items Total</span>
+              <span *ngIf="order?.orderType === 'full-custom'">Base Price</span>
+            </label>
             <div class="input-group">
               <span class="currency">Rs.</span>
               <input 
-                type="text" 
+                type="number" 
                 id="basePrice" 
-                [value]="design?.basePrice || 0"
-                disabled
+                formControlName="basePrice"
                 class="form-control"
+                [disabled]="order?.orderType === 'as-is' || order?.status === 'cancelled' || order?.status === 'completed'"
               >
             </div>
-          </div>
-        </div>
-
-        <!-- For request-similar orders -->
-        <div class="form-row" *ngIf="order?.orderType === 'request-similar'">
-          <div class="form-group">
-            <label for="itemsTotal">Items Total</label>
-            <div class="input-group">
-              <span class="currency">Rs.</span>
-              <input 
-                type="text" 
-                id="itemsTotal" 
-                [value]="getActiveItemsTotal()"
-                disabled
-                class="form-control"
-              >
-            </div>
+            <p class="help-text" *ngIf="order?.orderType === 'request-similar'">
+              Calculated from items: Rs. {{ getActiveItemsTotal() }}
+            </p>
           </div>
         </div>
 
@@ -363,7 +386,7 @@
               <input 
                 type="text" 
                 id="totalPrice" 
-                [value]="order?.orderType === 'request-similar' ? calculateRequestSimilarPrice() : calculateTotalPrice()"
+                [value]="calculateTotalPrice()"
                 disabled
                 class="form-control total-price"
               >
@@ -401,18 +424,18 @@
   </div>
 </ng-template>
 
-<!-- Updated Full Image Modal Template -->
+<!-- Full Image Modal Template -->
 <ng-template #fullImageTemplate>
   <div class="modal-overlay">
     <div class="full-image-modal">
       <div class="modal-header">
-        <h2>Design Image</h2>
+        <h2>Image View</h2>
         <button (click)="closeFullImage()" class="close-btn">
           <span class="material-icons">close</span>
         </button>
       </div>
       <div class="modal-body">
-        <img [src]="currentFullImage" alt="Full size design image" class="full-image">
+        <img [src]="currentFullImage" alt="Full size image" class="full-image">
       </div>
     </div>
   </div>

@@ -1,0 +1,390 @@
+<!-- Success Modal -->
+<div class="success-modal" *ngIf="showSuccessMessage">
+    <div class="success-content">
+        <div class="success-icon">✓</div>
+        <h2>Order Submitted Successfully!</h2>
+        <p>{{ successMessage }}</p>
+        <p>Redirecting to your orders...</p>
+    </div>
+</div>
+
+<!-- Main Container -->
+<div class="fully-customize-container">
+    <div class="header">
+        <h1>Create Custom Design</h1>
+        <p class="description">Design your perfect event decoration from scratch</p>
+    </div>
+
+    <div class="content-wrapper">
+        <!-- Order Form -->
+        <div class="order-form-container">
+            <form [formGroup]="orderForm" (ngSubmit)="onSubmit()" class="order-form">
+
+                <!-- Your Information Section -->
+                <div class="form-section">
+                    <h3>Your Information</h3>
+                    <p class="section-description">Please verify your contact details for this order</p>
+
+                    <div formGroupName="customerInfo">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="firstName">First Name</label>
+                                <input type="text" id="firstName" formControlName="firstName" class="form-control"
+                                    placeholder="Your first name">
+                                <div class="error-message"
+                                    *ngIf="orderForm.get('customerInfo.firstName')?.invalid && orderForm.get('customerInfo.firstName')?.touched">
+                                    First name is required
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="lastName">Last Name</label>
+                                <input type="text" id="lastName" formControlName="lastName" class="form-control"
+                                    placeholder="Your last name">
+                                <div class="error-message"
+                                    *ngIf="orderForm.get('customerInfo.lastName')?.invalid && orderForm.get('customerInfo.lastName')?.touched">
+                                    Last name is required
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="email">Email</label>
+                                <input type="email" id="email" formControlName="email" class="form-control"
+                                    placeholder="Your email address">
+                                <div class="error-message"
+                                    *ngIf="orderForm.get('customerInfo.email')?.invalid && orderForm.get('customerInfo.email')?.touched">
+                                    <ng-container
+                                        *ngIf="orderForm.get('customerInfo.email')?.errors?.['required']">Email is
+                                        required</ng-container>
+                                    <ng-container *ngIf="orderForm.get('customerInfo.email')?.errors?.['email']">Please
+                                        enter a valid email address</ng-container>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="contact">Contact Number</label>
+                                <input type="tel" id="contact" formControlName="contact" class="form-control"
+                                    placeholder="Your phone number">
+                                <div class="error-message"
+                                    *ngIf="orderForm.get('customerInfo.contact')?.invalid && orderForm.get('customerInfo.contact')?.touched">
+                                    <ng-container
+                                        *ngIf="orderForm.get('customerInfo.contact')?.errors?.['required']">Contact
+                                        number is required</ng-container>
+                                    <ng-container
+                                        *ngIf="orderForm.get('customerInfo.contact')?.errors?.['pattern']">Please enter
+                                        a valid phone number (10-15 digits)</ng-container>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="relationshipToPerson">Relationship to the Person</label>
+                            <select id="relationshipToPerson" formControlName="relationshipToPerson"
+                                class="form-control">
+                                <option value="">Select your relationship</option>
+                                <option value="self">Myself</option>
+                                <option value="parent">Parent</option>
+                                <option value="sibling">Sibling</option>
+                                <option value="spouse">Spouse</option>
+                                <option value="friend">Friend</option>
+                                <option value="relative">Relative</option>
+                                <option value="colleague">Colleague</option>
+                                <option value="other">Other</option>
+                            </select>
+                            <div class="error-message"
+                                *ngIf="orderForm.get('customerInfo.relationshipToPerson')?.invalid && orderForm.get('customerInfo.relationshipToPerson')?.touched">
+                                Please select your relationship to the person
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Design Customization Section -->
+                <div class="form-section">
+                    <h3>Design Customization</h3>
+                    <p class="section-description">Customize the theme and concept of your design</p>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="themeColor">Theme Color</label>
+                            <select id="themeColor" formControlName="themeColor" class="form-control">
+                                <option *ngFor="let color of themeColors" [value]="color.value">{{ color.label }}
+                                </option>
+                            </select>
+                            <div class="error-message"
+                                *ngIf="orderForm.get('themeColor')?.invalid && orderForm.get('themeColor')?.touched">
+                                Please select a theme color
+                            </div>
+                        </div>
+
+                        <div class="form-group" *ngIf="orderForm.get('themeColor')?.value === 'custom'">
+                            <label for="customThemeColor">Custom Theme Color</label>
+                            <input type="text" id="customThemeColor" formControlName="customThemeColor"
+                                class="form-control" placeholder="e.g., Navy Blue and Gold">
+                            <div class="error-message"
+                                *ngIf="orderForm.get('customThemeColor')?.invalid && orderForm.get('customThemeColor')?.touched">
+                                Please specify your custom color theme
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="conceptCustomization">Design Concept</label>
+                            <select id="conceptCustomization" formControlName="conceptCustomization"
+                                class="form-control">
+                                <option *ngFor="let concept of conceptOptions" [value]="concept.value">{{ concept.label
+                                    }}</option>
+                            </select>
+                            <div class="error-message"
+                                *ngIf="orderForm.get('conceptCustomization')?.invalid && orderForm.get('conceptCustomization')?.touched">
+                                Please select a design concept
+                            </div>
+                        </div>
+
+                        <div class="form-group" *ngIf="orderForm.get('conceptCustomization')?.value === 'custom'">
+                            <label for="customConcept">Custom Concept Description</label>
+                            <textarea id="customConcept" formControlName="customConcept" class="form-control" rows="3"
+                                placeholder="Describe your custom concept..."></textarea>
+                            <div class="error-message"
+                                *ngIf="orderForm.get('customConcept')?.invalid && orderForm.get('customConcept')?.touched">
+                                Please describe your custom concept
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Special Instructions -->
+                    <div class="form-group">
+                        <label for="specialNote">Special Instructions</label>
+                        <textarea id="specialNote" formControlName="specialNote" class="form-control" rows="4"
+                            placeholder="Describe in detail how you want your design to look..."></textarea>
+                    </div>
+
+                    <!-- Inspiration Photos -->
+                    <div class="inspiration-photos">
+                        <h4>Inspiration Photos (Optional)</h4>
+                        <p class="help-text">Upload up to 3 photos to show us your vision</p>
+                        
+                        <div class="photos-container">
+                            <div class="uploaded-photos">
+                                <div *ngFor="let photo of inspirationPhotos; let i = index" class="photo-item">
+                                    <img [src]="photo" alt="Inspiration {{i+1}}">
+                                    <button type="button" class="btn-remove-photo" (click)="removeInspirationPhoto(i)">
+                                        <span class="remove-icon">×</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div *ngIf="inspirationPhotos.length < 3" class="upload-button-container">
+                                <label class="upload-button">
+                                    <span class="upload-icon">+</span>
+                                    <span>Add Photo</span>
+                                    <input 
+                                        type="file" 
+                                        accept="image/*" 
+                                        (change)="uploadInspirationPhoto($event)"
+                                        style="display: none;">
+                                </label>
+                                <div *ngIf="uploadingPhoto" class="uploading-indicator">
+                                    <span class="spinner"></span>
+                                    Uploading...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Items Management Section -->
+                <div class="form-section">
+                    <h3>Design Items</h3>
+                    <p class="section-description">Add items to create your perfect design</p>
+
+                    <div class="items-management">
+                        <!-- Selected Items -->
+                        <div *ngIf="orderItems.length > 0" class="selected-items">
+                            <h4>Your Selected Items</h4>
+                            <div class="items-list">
+                                <div *ngFor="let item of orderItems" class="item-card">
+                                    <div class="item-header">
+                                        <h5>{{ item.itemName }}</h5>
+                                    </div>
+                                    <div class="item-details">
+                                        <div class="quantity-control">
+                                            <label>Quantity:</label>
+                                            <input type="number" min="1" [value]="item.quantity"
+                                                (change)="onQuantityChange(item, $event)">
+                                        </div>
+                                        <div class="price-info">
+                                            <span>Price/Unit: Rs. {{ item.pricePerUnit }}</span>
+                                            <span>Total: Rs. {{ item.pricePerUnit * item.quantity }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="item-actions">
+                                        <button type="button" class="btn-remove" (click)="removeItem(item)">
+                                            Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="total-section">
+                                <p class="total-price">Total Items Price: Rs. {{ totalItemsPrice }}</p>
+                                <p class="price-note">* Final price will include transportation and additional costs</p>
+                            </div>
+                        </div>
+
+                        <!-- Add New Items -->
+                        <h4>Available Items</h4>
+                        <div class="add-items-container">
+                            <select class="form-control" #newItemSelect (change)="addNewItem(+newItemSelect.value)">
+                                <option value="">Select an item to add...</option>
+                                <option *ngFor="let item of getAvailableItems()" [value]="item.itemID">
+                                    {{ item.name }} - Rs. {{ item.unitPrice || item.pricePerUnit }}/unit
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Personalization Details Section -->
+                <div class="form-section">
+                    <h3>Personalization Details</h3>
+                    <p class="section-description">Enter the name and details to display on the design</p>
+
+                    <div class="form-group">
+                        <label for="customName">Custom Name</label>
+                        <input type="text" id="customName" formControlName="customName" class="form-control"
+                            placeholder="Enter the name to display">
+                        <div class="error-message"
+                            *ngIf="orderForm.get('customName')?.invalid && orderForm.get('customName')?.touched">
+                            Name is required
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="customAge">Age / Year of Celebration</label>
+                        <input type="text" id="customAge" formControlName="customAge" class="form-control"
+                            placeholder="e.g., 25 or 2024">
+                        <div class="error-message"
+                            *ngIf="orderForm.get('customAge')?.invalid && orderForm.get('customAge')?.touched">
+                            <ng-container *ngIf="orderForm.get('customAge')?.errors?.['required']">Age/Year is
+                                required</ng-container>
+                            <ng-container *ngIf="orderForm.get('customAge')?.errors?.['min']">Please enter a valid
+                                age</ng-container>
+                            <ng-container *ngIf="orderForm.get('customAge')?.errors?.['max']">Please enter a valid
+                                age</ng-container>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Event Details Section -->
+                <div class="form-section">
+                    <h3>Event Details</h3>
+                    <p class="section-description">Provide information about your event</p>
+
+                    <div class="form-group">
+                        <label for="venue">Venue of the Event</label>
+                        <textarea id="venue" formControlName="venue" class="form-control" rows="3"
+                            placeholder="Enter the complete address of the venue"></textarea>
+                        <div class="error-message"
+                            *ngIf="orderForm.get('venue')?.invalid && orderForm.get('venue')?.touched">
+                            Venue is required
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="eventDate">Date of the Event</label>
+                            <input type="date" id="eventDate" formControlName="eventDate" class="form-control"
+                                [min]="minEventDate">
+                            <div class="error-message"
+                                *ngIf="orderForm.get('eventDate')?.invalid && orderForm.get('eventDate')?.touched">
+                                Please select a valid date
+                            </div>
+                            <div class="error-message" *ngIf="orderForm.hasError('pastDateTime')">
+                                Event date and time cannot be in the past
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="eventTime">Time of the Event</label>
+                            <input type="time" id="eventTime" formControlName="eventTime" class="form-control">
+                            <div class="error-message"
+                                *ngIf="orderForm.get('eventTime')?.invalid && orderForm.get('eventTime')?.touched">
+                                Time is required
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Order Status Messages -->
+                    <div
+                        *ngIf="orderForm.get('eventDate')?.valid && orderForm.get('eventTime')?.valid && !orderForm.hasError('pastDateTime')">
+                        <div class="error-message" *ngIf="orderStatus === 'cannotPlace'">
+                            <span class="warning-icon">⚠️</span>
+                            <span>Your event is too close to the current time (less than 5 hours away). Order cannot be
+                                placed.</span>
+                        </div>
+
+                        <div class="warning-message" *ngIf="orderStatus === 'contactOwner'">
+                            <span class="warning-icon">⚠️</span>
+                            <div>
+                                <p>Your event is within the next {{ hoursDifference | number:'1.0-0' }} hours. This
+                                    requires special handling.</p>
+                                <p>Please contact the owner directly to discuss your order:</p>
+                                <ul>
+                                    <li>Phone: <a href="tel:+94771234567">+94 77 123 4567</a></li>
+                                    <li>WhatsApp: <a href="https://wa.me/94771234567">+94 77 123 4567</a></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="success-message" *ngIf="orderStatus === 'canPlace' && hoursDifference > 0">
+                            <span class="success-icon">✓</span>
+                            <span>Your event is scheduled for {{ hoursDifference | number:'1.0-0' }} hours from now.
+                                Order can be placed normally.</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="eventCategory">Event Category</label>
+                        <select id="eventCategory" formControlName="eventCategory" class="form-control">
+                            <option value="">Select event type</option>
+                            <option *ngFor="let category of categories" [value]="category.categoryID">
+                                {{ category.name }}
+                            </option>
+                        </select>
+                        <div class="error-message"
+                            *ngIf="orderForm.get('eventCategory')?.invalid && orderForm.get('eventCategory')?.touched">
+                            Please select an event category
+                        </div>
+                        <p class="help-text">
+                            * Select the type of event you're ordering for
+                        </p>
+                    </div>
+                </div>
+
+                <div class="error-banner" *ngIf="submitError">
+                    <div class="error-content">
+                        <span class="error-icon">⚠️</span>
+                        <span>{{ submitError }}</span>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" (click)="onCancel()" [disabled]="loading">
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn-primary"
+                        [disabled]="loading || orderForm.invalid || orderStatus !== 'canPlace'">
+                        <ng-container *ngIf="!loading">Submit Order</ng-container>
+                        <ng-container *ngIf="loading">
+                            <span class="spinner"></span>
+                            Processing...
+                        </ng-container>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

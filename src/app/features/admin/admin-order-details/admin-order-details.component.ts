@@ -63,6 +63,7 @@ export class AdminOrderDetailsComponent implements OnInit{
   ) {
     // Initialize form
     this.additionalCostsForm = this.fb.group({
+      basePrice: [0, [Validators.required, Validators.min(0)]],
       transportationCost: [0, [Validators.required, Validators.min(0)]],
       additionalRentalCost: [0, [Validators.required, Validators.min(0)]]
     });
@@ -118,16 +119,23 @@ export class AdminOrderDetailsComponent implements OnInit{
         this.order = order;
         console.log('Order loaded successfully:', order);
         
-        // Load design details if designId exists
-        if (order.designId) {
+        // Update form with existing values
+        this.updateFormWithOrderData(order);
+        
+        // Load design details if designId exists and not a custom design
+        if (order.designId && order.designId !== '0' && order.orderType !== 'full-custom') {
           this.orderService.getDesignById(order.designId).subscribe({
             next: (design) => {
               this.design = design;
               this.loading = false;
               console.log('Design loaded successfully:', design);
               
-              // Update form with existing values
-              this.updateFormWithOrderData(order);
+              // Update form with design base price
+              if (design.basePrice) {
+                this.additionalCostsForm.patchValue({
+                  basePrice: design.basePrice
+                });
+              }
             },
             error: (err) => {
               console.error('Error loading design:', err);
@@ -137,15 +145,10 @@ export class AdminOrderDetailsComponent implements OnInit{
               this.snackBar.open('Could not load design details, but order information is available.', 'Close', {
                 duration: 3000
               });
-              
-              // Still update the form with available order data
-              this.updateFormWithOrderData(order);
             }
           });
         } else {
           this.loading = false;
-          // Update form with existing values even if there's no design
-          this.updateFormWithOrderData(order);
         }
       },
       error: (err) => {
@@ -180,6 +183,12 @@ export class AdminOrderDetailsComponent implements OnInit{
   // Helper method to update form with order data
   private updateFormWithOrderData(order: Order): void {
     // Update form with existing values
+    if (order.basePrice !== undefined) {
+      this.additionalCostsForm.patchValue({
+        basePrice: order.basePrice
+      });
+    }
+    
     if (order.transportationCost !== undefined) {
       this.additionalCostsForm.patchValue({
         transportationCost: order.transportationCost
@@ -219,17 +228,29 @@ export class AdminOrderDetailsComponent implements OnInit{
       .reduce((total, item) => total + (item.pricePerUnit * item.quantity), 0);
   }
 
-  // Calculate total price for request-similar orders
-  calculateRequestSimilarPrice(): number {
-    if (!this.order || this.order.orderType !== 'request-similar') {
-      return this.calculateTotalPrice();
+  // Calculate total price for different order types
+  calculateTotalPrice(): number {
+    if (!this.order) {
+      return 0;
     }
     
-    const itemsTotal = this.getActiveItemsTotal();
+    let baseTotal = 0;
+    
+    switch (this.order.orderType) {
+      case 'request-similar':
+      case 'full-custom':
+        baseTotal = this.getActiveItemsTotal();
+        break;
+      case 'as-is':
+      default:
+        baseTotal = this.additionalCostsForm.value.basePrice || 0;
+        break;
+    }
+    
     const transportationCost = this.additionalCostsForm.value.transportationCost || 0;
     const additionalRentalCost = this.additionalCostsForm.value.additionalRentalCost || 0;
     
-    return itemsTotal + transportationCost + additionalRentalCost;
+    return baseTotal + transportationCost + additionalRentalCost;
   }
 
   // Dialog management methods
@@ -260,20 +281,27 @@ export class AdminOrderDetailsComponent implements OnInit{
     // Show loading state
     this.loading = true;
     
-    this.orderService.updateOrder(this.order.id, {
+    const updateData: any = {
       transportationCost: formValues.transportationCost,
       additionalRentalCost: formValues.additionalRentalCost
-    }).subscribe({
+    };
+    
+    // For fully-custom and request-similar orders, also save the base price
+    if (this.order.orderType === 'full-custom' || this.order.orderType === 'request-similar') {
+      updateData.basePrice = formValues.basePrice;
+    }
+    
+    this.orderService.updateOrder(this.order.id, updateData).subscribe({
       next: (updatedOrder) => {
         this.order = updatedOrder;
-        this.snackBar.open('Additional costs updated successfully!', 'Close', {
+        this.snackBar.open('Pricing updated successfully!', 'Close', {
           duration: 3000
         });
         this.loading = false;
         this.closePricingDialog();
       },
       error: (err) => {
-        console.error('Error updating additional costs:', err);
+        console.error('Error updating pricing:', err);
         this.loading = false;
         
         // Enhanced error handling
@@ -284,7 +312,7 @@ export class AdminOrderDetailsComponent implements OnInit{
             window.location.reload();
           });
         } else {
-          this.snackBar.open(err.message || 'Failed to update additional costs. Please try again.', 'Close', {
+          this.snackBar.open(err.message || 'Failed to update pricing. Please try again.', 'Close', {
             duration: 3000
           });
         }
@@ -495,15 +523,23 @@ export class AdminOrderDetailsComponent implements OnInit{
     // Log debug info before sending request
     console.log('Confirming order with pricing:', {
       orderId: this.order.id,
+      basePrice: formValues.basePrice,
       transportationCost: formValues.transportationCost,
       additionalRentalCost: formValues.additionalRentalCost
     });
     console.log('Auth token present:', !!this.authService.getToken());
     
-    this.orderService.confirmOrder(this.order.id, {
+    const confirmData: any = {
       transportationCost: formValues.transportationCost,
       additionalRentalCost: formValues.additionalRentalCost
-    }).subscribe({
+    };
+    
+    // For fully-custom and request-similar orders, include base price
+    if (this.order.orderType === 'full-custom' || this.order.orderType === 'request-similar') {
+      confirmData.basePrice = formValues.basePrice;
+    }
+    
+    this.orderService.confirmOrder(this.order.id, confirmData).subscribe({
       next: (updatedOrder) => {
         this.order = updatedOrder;
         this.snackBar.open('Order confirmed successfully!', 'Close', {
@@ -512,10 +548,7 @@ export class AdminOrderDetailsComponent implements OnInit{
         this.loading = false;
         this.closePricingDialog();
         
-        // Use the appropriate price calculation for request-similar orders
-        const totalPrice = this.order.orderType === 'request-similar' 
-          ? this.calculateRequestSimilarPrice() 
-          : this.calculateTotalPrice();
+        const totalPrice = this.calculateTotalPrice();
           
         // Notify the customer
         this.notifyCustomer('Order Confirmed', `Your order #${updatedOrder.orderNumber} has been confirmed. Total amount: Rs. ${totalPrice}`);
@@ -633,18 +666,6 @@ export class AdminOrderDetailsComponent implements OnInit{
     // this.notificationService.sendCustomerNotification(this.order!.customerId, title, message);
   }
 
-  calculateTotalPrice(): number {
-    if (!this.order) {
-      return 0;
-    }
-    
-    const basePrice = this.design?.basePrice || 0;
-    const transportationCost = this.additionalCostsForm.value.transportationCost || 0;
-    const additionalRentalCost = this.additionalCostsForm.value.additionalRentalCost || 0;
-    
-    return basePrice + transportationCost + additionalRentalCost;
-  }
-
   getPaymentStatusLabel(status: string): string {
     switch (status) {
       case 'pending':
@@ -691,6 +712,8 @@ export class AdminOrderDetailsComponent implements OnInit{
         return 'Custom Design';
       case 'custom-request':
         return 'Custom Request';
+      case 'full-custom':
+        return 'Fully Customized';
       default:
         return type || 'Unknown';
     }
@@ -700,17 +723,28 @@ export class AdminOrderDetailsComponent implements OnInit{
   getThemeColorDisplay(color: string): string {
     if (!color || color === 'original') return 'Original Theme';
     
-    // Capitalize first letter
-    return color.charAt(0).toUpperCase() + color.slice(1) + ' Theme';
+    // Handle both dash-separated and space-separated formats
+    const formattedColor = color.replace(/-/g, ' ');
+    
+    // Capitalize each word
+    return formattedColor
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
   }
 
   // Get concept display name
   getConceptDisplay(concept: string): string {
     if (!concept || concept === 'original') return 'Original Concept';
     
-    // Capitalize first letter and handle special cases
+    // Handle dash-separated format
     const formattedConcept = concept.replace(/-/g, ' ');
-    return formattedConcept.charAt(0).toUpperCase() + formattedConcept.slice(1);
+    
+    // Capitalize each word
+    return formattedConcept
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
   }
 
   // Check if an order item is changed from original
