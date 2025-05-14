@@ -39,6 +39,7 @@ import { PaymentCancelComponent } from './features/admin/payment-cancel/payment-
 import { RequestSimilerComponent } from './features/Customer/request-similer/request-similer.component';
 import { FullyCustomizeDesignComponent } from './features/Customer/fully-customize-design/fully-customize-design.component';
 import { AdminEditDesignComponent } from './features/admin/admin-edit-design/admin-edit-design.component';
+import { ForgotPasswordComponent } from './auth/forgot-password/forgot-password.component';
 
 export const routes: Routes = [
  // Public Routes
@@ -53,6 +54,14 @@ export const routes: Routes = [
  
  // Customer Service Routes (available to non-logged in users)
  { path: 'reviews', component: ReviewsComponent},
+ {
+  path: 'forgot-password',
+  component: ForgotPasswordComponent
+},
+{
+  path: 'reset-password',
+  component: ResetpasswordComponent
+},
  
  // Protected Customer Routes
  {path:'review-form',
