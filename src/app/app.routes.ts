@@ -63,11 +63,12 @@ export const routes: Routes = [
   component: ReviewFormComponent,
    canActivate: [authGuard]
   },
-  { 
-  path: 'request-similar/:id', 
-  component: RequestSimilerComponent,
-  canActivate: [authGuard]
-},
+   {
+    path: 'request-similar/:id',
+    component: RequestSimilerComponent,
+    canActivate: [authGuard],
+    data: { role: 'CUSTOMER' }
+  },
  { 
    path: 'ongoing', 
    component: OngoingComponent,
@@ -81,17 +82,20 @@ export const routes: Routes = [
   { 
     path: 'fully-customize-design/:designId', 
     component: FullyCustomizeDesignComponent,
-    canActivate: [authGuard] // Assuming you have an AuthGuard
+    canActivate: [authGuard], 
+    data: { role: 'CUSTOMER' }
   },
    { 
     path: 'request-new-design', 
     component: FullyCustomizeDesignComponent,
-    canActivate: [authGuard] // Assuming you have an AuthGuard
+    canActivate: [authGuard],
+    data: { role: 'CUSTOMER' }
   },
  { 
   path: 'order-as-is/:designId', 
   component: OrderAsIsComponent,
-  canActivate: [authGuard]
+  canActivate: [authGuard],
+  data: { role: 'CUSTOMER' }
 },
  { 
    path: 'change-password', 
@@ -102,22 +106,27 @@ export const routes: Routes = [
  { 
   path: 'admin-dashboard', 
   component: AdmindashboardComponent,
-  canActivate: [adminGuard]
+  canActivate: [adminGuard],
+  data: { role: 'ADMIN' }
 },
 { 
   path: 'admin-portfolio', 
   component: AdmindesingsportfolioComponent,
-  canActivate: [adminGuard]
+  canActivate: [adminGuard],
+  data: { role: 'ADMIN' }
+
 },
 { 
  path: 'admin/orders/confirmed', 
  component: AdminConfirmedOrdersComponent,
- canActivate: [adminGuard]
+ canActivate: [adminGuard],
+ data: { role: 'ADMIN' }
 },
 { 
   path: 'edit-design/:id', 
   component: AdminEditDesignComponent,
-  canActivate: [adminGuard]
+  canActivate: [adminGuard],
+  data: { role: 'ADMIN' }
 },
 {
   path: 'admin/design',
