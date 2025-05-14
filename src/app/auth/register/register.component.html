@@ -15,52 +15,56 @@
       <div class="name-fields">
         <div class="input-group">
           <label for="firstName">First Name</label>
-          <input type="text" id="firstName" formControlName="firstName" placeholder="First Name">
+          <input type="text" id="firstName" formControlName="firstName" placeholder="First Name" required>
           <small *ngIf="registerForm.get('firstName')?.invalid && registerForm.get('firstName')?.touched">First Name is required</small>
         </div>
 
         <div class="input-group">
           <label for="lastName">Last Name</label>
-          <input type="text" id="lastName" formControlName="lastName" placeholder="Last Name">
+          <input type="text" id="lastName" formControlName="lastName" placeholder="Last Name" required>
           <small *ngIf="registerForm.get('lastName')?.invalid && registerForm.get('lastName')?.touched">Last Name is required</small>
         </div>
       </div>
 
       <div class="input-group">
         <label for="contact">Contact Number</label>
-        <input type="text" id="contact" formControlName="contact" placeholder="Enter your contact number">
-        <small *ngIf="registerForm.get('contact')?.invalid && registerForm.get('contact')?.touched">Valid contact number is required</small>
+        <input type="text" id="contact" formControlName="contact" placeholder="Enter your contact number" required>
+        <!-- MODIFIED: Updated error message to show exactly 10 digits requirement -->
+        <small *ngIf="registerForm.get('contact')?.invalid && registerForm.get('contact')?.touched">Contact number must be exactly 10 digits</small>
       </div>
 
       <div class="input-group">
         <label for="email">Email</label>
-        <input type="email" id="email" formControlName="email" placeholder="Enter your email">
+        <input type="email" id="email" formControlName="email" placeholder="Enter your email" required>
         <small *ngIf="registerForm.get('email')?.invalid && registerForm.get('email')?.touched">Valid email is required</small>
       </div>
 
       <div class="input-group">
         <label for="username">Username</label>
-        <input type="text" id="username" formControlName="username" placeholder="Enter your username">
+        <input type="text" id="username" formControlName="username" placeholder="Enter your username" required>
         <small *ngIf="registerForm.get('username')?.invalid && registerForm.get('username')?.touched">Username is required</small>
       </div>
 
       <div class="input-group password-group">
         <label for="password">Password</label>
         <div class="password-wrapper">
-          <input [type]="showPassword ? 'text' : 'password'" id="password" formControlName="password" placeholder="Enter your password">
+          <input [type]="showPassword ? 'text' : 'password'" id="password" formControlName="password" placeholder="Enter your password" required>
           <span class="toggle-eye" (click)="togglePasswordVisibility()">
             {{ showPassword ? '🙈' : '👁️' }}
           </span>
         </div>
+        <!-- MODIFIED: Updated error messages for password validation -->
         <small *ngIf="registerForm.get('password')?.invalid && registerForm.get('password')?.touched">
-          Password must be at least 6 characters
+          <span *ngIf="registerForm.get('password')?.errors?.['required']">Password is required</span>
+          <span *ngIf="registerForm.get('password')?.errors?.['minlength']">Password must be at least 8 characters</span>
+          <span *ngIf="registerForm.get('password')?.errors?.['sameAsUsername']">Password cannot be the same as username</span>
         </small>
       </div>
 
       <div class="input-group password-group">
         <label for="confirmPassword">Confirm Password</label>
         <div class="password-wrapper">
-          <input [type]="showConfirmPassword ? 'text' : 'password'" id="confirmPassword" formControlName="confirmPassword" placeholder="Confirm your password">
+          <input [type]="showConfirmPassword ? 'text' : 'password'" id="confirmPassword" formControlName="confirmPassword" placeholder="Confirm your password" required>
           <span class="toggle-eye" (click)="toggleConfirmPasswordVisibility()">
             {{ showConfirmPassword ? '🙈' : '👁️' }}
           </span>
