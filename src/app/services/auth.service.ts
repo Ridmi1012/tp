@@ -12,6 +12,9 @@ export class AuthService {
   private registerUrl = `${this.apiUrl}/customers`;
   private loginUrl = `${this.apiUrl}/auth/login`;
   private changePasswordUrl = `${this.apiUrl}/password/change`;
+   private forgotPasswordUrl = `${this.apiUrl}/password/forgot`; // NEW URL
+  private resetPasswordUrl = `${this.apiUrl}/password/reset`; // NEW URL
+  private validateTokenUrl = `${this.apiUrl}/password/validate-token`; // NEW URL
   private adminUrl = `${this.apiUrl}/admin`;
   
   // Subject to notify subscribers about authentication changes
@@ -329,5 +332,51 @@ export class AuthService {
   getPendingPaymentsCount(): Observable<number> {
     // Replace with your actual API endpoint
     return this.http.get<number>(`${this.apiUrl}/payments/count/pending`);
+  }
+
+  requestPasswordReset(username: string): Observable<any> {
+    const payload = { username };
+    const headers = new HttpHeaders().set('Content-Type', 'application/json');
+    
+    return this.http.post(this.forgotPasswordUrl, payload, { headers }).pipe(
+      tap(response => console.log('Password reset requested', response)),
+      catchError(error => {
+        console.error('Password reset request failed', error);
+        return throwError(() => error);
+      })
+    );
+  }
+
+   /**
+   * NEW METHOD - Reset password with token
+   * Resets the password using the provided reset token
+   */
+  resetPassword(token: string, newPassword: string): Observable<any> {
+    const payload = { token, newPassword };
+    const headers = new HttpHeaders().set('Content-Type', 'application/json');
+    
+    return this.http.post(this.resetPasswordUrl, payload, { headers }).pipe(
+      tap(response => console.log('Password reset successful', response)),
+      catchError(error => {
+        console.error('Password reset failed', error);
+        return throwError(() => error);
+      })
+    );
+  }
+  
+  /**
+   * NEW METHOD - Validate reset token
+   * Checks if a reset token is still valid
+   */
+  validateResetToken(token: string): Observable<any> {
+    const headers = new HttpHeaders().set('Content-Type', 'application/json');
+    
+    return this.http.get(`${this.validateTokenUrl}?token=${token}`, { headers }).pipe(
+      tap(response => console.log('Token validation response', response)),
+      catchError(error => {
+        console.error('Token validation failed', error);
+        return throwError(() => error);
+      })
+    );
   }
 }

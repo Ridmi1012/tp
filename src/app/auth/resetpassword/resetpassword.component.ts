@@ -2,8 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators , ReactiveFormsModule} from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
-import { CustomerService } from '../../services/customer.service';
 import { CommonModule } from '@angular/common'; 
+import { ActivatedRoute } from '@angular/router';
 
 
 @Component({
@@ -13,35 +13,42 @@ import { CommonModule } from '@angular/common';
   styleUrl: './resetpassword.component.css'
 })
 export class ResetpasswordComponent implements OnInit{
-  passwordForm!: FormGroup; // The ! tells TypeScript that this will be initialized before use
+  resetPasswordForm!: FormGroup;
   isLoading = false;
   successMessage = '';
   errorMessage = '';
-  currentUser: any;
-
+  token: string = '';
+  tokenValid = false;
+  
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private customerService: CustomerService,
-    private router: Router
-  ) { }
-
+    private router: Router,
+    private route: ActivatedRoute
+  ) {}
+  
+  /**
+   * NEW METHOD - Initialize component
+   */
   ngOnInit(): void {
-    this.checkUserLoggedIn();
+    // Get token from query parameters
+    this.route.queryParams.subscribe(params => {
+      this.token = params['token'] || '';
+      if (this.token) {
+        this.validateToken();
+      } else {
+        this.errorMessage = 'No reset token provided';
+      }
+    });
+    
     this.initForm();
   }
-
-  checkUserLoggedIn(): void {
-    if (!this.authService.isLoggedIn() || !this.authService.isCustomer()) {
-      this.router.navigate(['/login']);
-      return;
-    }
-    this.currentUser = this.authService.getUserDetails();
-  }
-
+  
+  /**
+   * NEW METHOD - Initialize form
+   */
   initForm(): void {
-    this.passwordForm = this.fb.group({
-      currentPassword: ['', [Validators.required]],
+    this.resetPasswordForm = this.fb.group({
       newPassword: ['', [
         Validators.required, 
         Validators.minLength(8),
@@ -50,58 +57,87 @@ export class ResetpasswordComponent implements OnInit{
       confirmPassword: ['', [Validators.required]]
     }, { validators: this.passwordMatchValidator });
   }
-
+  
+  /**
+   * NEW METHOD - Validate password match
+   */
   passwordMatchValidator(form: FormGroup): { passwordMismatch: boolean } | null {
     const newPassword = form.get('newPassword')?.value;
     const confirmPassword = form.get('confirmPassword')?.value;
-
+    
     return newPassword === confirmPassword ? null : { passwordMismatch: true };
   }
-
+  
+  /**
+   * NEW METHOD - Check if field is invalid
+   */
   isFieldInvalid(fieldName: string): boolean {
-    const field = this.passwordForm.get(fieldName);
+    const field = this.resetPasswordForm.get(fieldName);
     return field !== null && field.invalid && (field.dirty || field.touched);
   }
-
-  changePassword(): void {
-    if (this.passwordForm.invalid) {
+  
+  /**
+   * NEW METHOD - Validate reset token
+   */
+  validateToken(): void {
+    this.isLoading = true;
+    
+    this.authService.validateResetToken(this.token).subscribe({
+      next: (response) => {
+        this.isLoading = false;
+        this.tokenValid = response.isValid;
+        if (!this.tokenValid) {
+          this.errorMessage = 'Invalid or expired reset token';
+        }
+      },
+      error: (error) => {
+        this.isLoading = false;
+        this.errorMessage = 'Error validating token';
+        console.error('Token validation error:', error);
+      }
+    });
+  }
+  
+  /**
+   * NEW METHOD - Reset password
+   */
+  resetPassword(): void {
+    if (this.resetPasswordForm.invalid || !this.tokenValid) {
       return;
     }
-
+    
     this.isLoading = true;
     this.errorMessage = '';
     this.successMessage = '';
-
-    const passwordData = {
-      username: this.currentUser.username,
-      currentPassword: this.passwordForm.value.currentPassword,
-      newPassword: this.passwordForm.value.newPassword
-    };
-
-    this.customerService.changePassword(passwordData).subscribe({
+    
+    const newPassword = this.resetPasswordForm.value.newPassword;
+    
+    this.authService.resetPassword(this.token, newPassword).subscribe({
       next: (response) => {
         this.isLoading = false;
-        this.successMessage = 'Password successfully updated!';
-        this.passwordForm.reset();
+        this.successMessage = 'Password reset successfully!';
         
-        // Navigate back to profile page after 2 seconds
+        // Redirect to login after 2 seconds
         setTimeout(() => {
-          this.router.navigate(['/log2book']);
+          this.router.navigate(['/login']);
         }, 2000);
       },
       error: (error) => {
         this.isLoading = false;
-        if (error.status === 401) {
-          this.errorMessage = 'Current password is incorrect';
+        if (error.status === 400) {
+          this.errorMessage = 'Invalid or expired reset token';
         } else {
           this.errorMessage = 'An error occurred. Please try again later.';
         }
-        console.error('Password change error:', error);
+        console.error('Password reset error:', error);
       }
     });
   }
-
-  cancel(): void {
-    this.router.navigate(['/log2book']);
+  
+  /**
+   * NEW METHOD - Navigate back to login
+   */
+  backToLogin(): void {
+    this.router.navigate(['/login']);
   }
 }

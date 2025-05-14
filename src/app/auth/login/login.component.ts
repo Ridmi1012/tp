@@ -1,25 +1,23 @@
 import { Component } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { Router , ActivatedRoute} from '@angular/router';
+import { Router , ActivatedRoute, RouterLink} from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, FormsModule, CommonModule],
+  imports: [ReactiveFormsModule, FormsModule, CommonModule, RouterLink],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
 
 export class LoginComponent {
-  username: string = '';
+ username: string = '';
   password: string = '';
   errorMessage: string = '';
   showPassword: boolean = false;
-  forgotPasswordModalVisible: boolean = false;
-  resetEmail: string = '';
-  resetPasswordSuccess: boolean = false;
+  // REMOVED: Modal-related properties (forgotPasswordModalVisible, resetEmail, resetPasswordSuccess)
   returnUrl: string = '';
 
   constructor(
@@ -106,36 +104,4 @@ export class LoginComponent {
     });
   }
 
-  // Forgot password modal functions
-  showForgotPasswordModal() {
-    this.forgotPasswordModalVisible = true;
-    this.resetEmail = '';
-    this.resetPasswordSuccess = false;
-  }
-
-  closeForgotPasswordModal() {
-    this.forgotPasswordModalVisible = false;
-  }
-
-  sendResetLink() {
-    if (!this.resetEmail) {
-      this.errorMessage = 'Please enter your email address';
-      return;
-    }
-
-    // this.authService.forgotPassword(this.resetEmail).subscribe({
-    //   next: (response: any) => {
-    //     console.log('Reset password response:', response);
-    //     this.resetPasswordSuccess = true;
-    //     // Display success message and close modal after delay
-    //     setTimeout(() => {
-    //       this.closeForgotPasswordModal();
-    //     }, 3000);
-    //   },
-    //   error: (err: any) => {
-    //     console.error('Reset password error:', err);
-    //     this.errorMessage = err.error?.message || 'Failed to send reset link. Please try again.';
-    //   }
-    // });
-  }
 }
