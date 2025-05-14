@@ -13,12 +13,13 @@ import { CloudinaryserviceService } from '../../../services/cloudinaryservice.se
   styleUrl: './designdetails.component.css'
 })
 export class DesigndetailsComponent implements OnInit {
-  design!: Design; // Using definite assignment assertion
+ design!: Design; // Using definite assignment assertion
   loading: boolean = true;
   error: string = '';
   selectedImage: string = '';
   imagePlaceholder: string = '/assets/placeholder-image.png';
   showOrderModal = false;
+  showLoginRedirectOverlay = false;
 
   constructor(
     private designService: DesignService,
@@ -110,6 +111,15 @@ export class DesigndetailsComponent implements OnInit {
     return this.cloudinaryService.getImageUrl(publicId);
   }
 
+  private redirectToLogin(returnUrl: string): void {
+    this.showLoginRedirectOverlay = true;
+    setTimeout(() => {
+      this.router.navigate(['/login'], { 
+        queryParams: { returnUrl }
+      });
+    }, 2000); // Show message for 2 seconds before redirecting
+  }
+
   orderAsIs(): void {
     // Check if the user is logged in
     this.showOrderModal = false;
@@ -120,40 +130,34 @@ export class DesigndetailsComponent implements OnInit {
       // If logged in, navigate directly to the order page
       this.router.navigate(['/order-as-is', this.design.designID]);
     } else {
-      // If not logged in, redirect to login with return URL
-      console.log('User not logged in, redirecting to login with returnUrl');
+      // If not logged in, show overlay message then redirect to login
+      console.log('User not logged in, showing message then redirecting to login');
       const returnUrl = `/order-as-is/${this.design.designID}`;
-      this.router.navigate(['/login'], { 
-        queryParams: { returnUrl }
-      });
+      this.redirectToLogin(returnUrl);
     }
   }
 
   customizeDesign(): void {
     // Check login status for customize design too
-     this.showOrderModal = false;
+    this.showOrderModal = false;
     if (this.authService.isLoggedIn()) {
       this.router.navigate(['/fully-customize-design', this.design.designID]);
     } else {
       const returnUrl = `/fully-customize-design/${this.design.designID}`;
-      this.router.navigate(['/login'], { 
-        queryParams: { returnUrl }
-      });
+      this.redirectToLogin(returnUrl);
     }
   }
 
   requestSimilarDesign(): void {
-     this.showOrderModal = false;
-  if (this.authService.isLoggedIn()) {
-    // Change navigation to request-similar route
-    this.router.navigate(['/request-similar', this.design.designID]);
-  } else {
-    const returnUrl = `/request-similar/${this.design.designID}`;
-    this.router.navigate(['/login'], { 
-      queryParams: { returnUrl }
-    });
+    this.showOrderModal = false;
+    if (this.authService.isLoggedIn()) {
+      // Change navigation to request-similar route
+      this.router.navigate(['/request-similar', this.design.designID]);
+    } else {
+      const returnUrl = `/request-similar/${this.design.designID}`;
+      this.redirectToLogin(returnUrl);
+    }
   }
-}
 
   goBack(): void {
     this.router.navigate(['/portfolio']);

@@ -1,67 +1,80 @@
 <div class="customer-portfolio-container">
-    <div class="portfolio-header">
-      <h1 class="portfolio-title">Our Design Portfolio</h1>
-      <p class="portfolio-subtitle">Find the perfect design for your needs or request a custom one</p>
-    
-      <!-- Category Filter -->
-      <div class="category-filter">
-        <span class="filter-label">Filter by category:</span>
-        <div class="filter-options">
-          <button [class.active]="selectedCategoryId === null" 
-                  class="category-btn" 
-                  (click)="onCategoryChange(null)">
-            All Designs
-          </button>
-          <button *ngFor="let category of categories" 
-                  [class.active]="selectedCategoryId === category.categoryID"
-                  class="category-btn" 
-                  (click)="onCategoryChange(category.categoryID)">
-            {{ category.name }}
-          </button>
-        </div>
+  <!-- Login Redirect Overlay -->
+  <div class="login-redirect-overlay" *ngIf="showLoginRedirectOverlay">
+    <div class="login-redirect-message">
+      <div class="login-icon">
+        <i class="fas fa-user-circle"></i>
       </div>
-    </div>
-  
-    <!-- Custom Design CTA -->
-    <div class="custom-design-cta">
-      <h3>Looking for something unique?</h3>
-      <p>Can't find what you're looking for? Request a completely new design tailored to your needs.</p>
-      <button class="request-new-btn" (click)="requestNewDesign()">Request New Design</button>
-    </div>
-  
-    <!-- Designs Grid -->
-    <div class="designs-grid">
-      <div *ngFor="let design of designs" class="design-card">
-        <!-- Design Image -->
-        <div class="design-image">
-          <img [src]="design.imageUrl" alt="{{ design.name }}" (error)="onImageError($event)" />
-          <div class="design-overlay">
-            <button class="view-details-btn" (click)="viewDesignDetails(design.designID)">View Details</button>
-          </div>
-        </div>
-  
-        <!-- Design Content -->
-        <div class="design-content">
-          <h3 class="design-title">{{ design.name }}</h3>
-          <p class="design-category">{{ design.category.name }}</p>
-          <p class="design-price">Base Price: Rs.{{ design.basePrice }}</p>
-          <p class="price-note">Final price may vary based on location due to transportation costs</p>
-        </div>
-  
-        <!-- Design Options -->
-        <div class="design-options">
-          <button class="option-btn same-design" (click)="viewDesignDetails(design.designID)">
-            Order As Is
-          </button>
-          <button class="option-btn customize-btn" (click)="requestCustomization(design.designID)">
-            Customize
-          </button>
-        </div>
-      </div>
-    </div>
-  
-    <!-- No designs message -->
-    <div *ngIf="designs.length === 0" class="no-designs-message">
-      No designs available for this category. Please select another category or request a custom design.
+      <h3>Please Log In</h3>
+      <p>You need to be logged in to request a new design.</p>
+      <p class="redirect-info">Redirecting to login page...</p>
+      <div class="redirect-loader"></div>
     </div>
   </div>
+  
+  <div class="portfolio-header">
+    <h1 class="portfolio-title">Our Design Portfolio</h1>
+    <p class="portfolio-subtitle">Find the perfect design for your needs or request a custom one</p>
+    
+    <!-- Category Filter -->
+    <div class="category-filter">
+      <span class="filter-label">Filter by category:</span>
+      <div class="filter-options">
+        <button [class.active]="selectedCategoryId === null" 
+                class="category-btn" 
+                (click)="onCategoryChange(null)">
+          All Designs
+        </button>
+        <button *ngFor="let category of categories" 
+                [class.active]="selectedCategoryId === category.categoryID"
+                class="category-btn" 
+                (click)="onCategoryChange(category.categoryID)">
+          {{ category.name }}
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Custom Design CTA -->
+  <div class="custom-design-cta">
+    <h3>Looking for something unique?</h3>
+    <p>Can't find what you're looking for? Request a completely new design tailored to your needs.</p>
+    <button class="request-new-btn" (click)="requestNewDesign()">Request New Design</button>
+  </div>
+  
+  <!-- Designs Grid -->
+  <div class="designs-grid">
+    <div *ngFor="let design of designs" class="design-card">
+      <!-- Design Image -->
+      <div class="design-image">
+        <img [src]="design.imageUrl" alt="{{ design.name }}" (error)="onImageError($event)" />
+        <div class="design-overlay">
+          <button class="view-details-btn" (click)="viewDesignDetails(design.designID)">View Details</button>
+        </div>
+      </div>
+      
+      <!-- Design Content -->
+      <div class="design-content">
+        <h3 class="design-title">{{ design.name }}</h3>
+        <p class="design-category">{{ design.category.name }}</p>
+        <p class="design-price">Base Price: Rs.{{ design.basePrice }}</p>
+        <p class="price-note">Final price may vary based on location due to transportation costs</p>
+      </div>
+      
+      <!-- Design Options -->
+      <div class="design-options">
+        <button class="option-btn same-design" (click)="viewDesignDetails(design.designID)">
+          Order As Is
+        </button>
+        <button class="option-btn customize-btn" (click)="requestCustomization(design.designID)">
+          Customize
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- No designs message -->
+  <div *ngIf="designs.length === 0" class="no-designs-message">
+    No designs available for this category. Please select another category or request a custom design.
+  </div>
+</div>

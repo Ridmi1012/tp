@@ -5,6 +5,7 @@ import { CategoryService } from '../../../services/category.service';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Design } from '../../../services/design.service';
 import { Category } from '../../../services/category.service';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-portfolio',
@@ -17,10 +18,12 @@ export class PortfolioComponent  {
   categories: Category[] = [];
   selectedCategoryId: number | null = null;
   errorMessage: string = '';
-  
+  showLoginRedirectOverlay = false;
+   
   constructor(
     private designService: DesignService,
     private categoryService: CategoryService,
+    private authService: AuthService,
     private router: Router,
     private route: ActivatedRoute
   ) { }
@@ -101,8 +104,28 @@ export class PortfolioComponent  {
     this.router.navigate(['/design-details', designId]);
   }
 
-  requestNewDesign() {
-    this.router.navigate(['/request-new-design']);
+  private redirectToLogin(returnUrl: string): void {
+    this.showLoginRedirectOverlay = true;
+    setTimeout(() => {
+      this.router.navigate(['/login'], { 
+        queryParams: { returnUrl }
+      });
+    }, 2000); // Show message for 2 seconds before redirecting
   }
-  
+
+  requestNewDesign() {
+    // Check if the user is logged in
+    const isLoggedIn = this.authService.isLoggedIn();
+    console.log('User logged in status:', isLoggedIn);
+    
+    if (isLoggedIn) {
+      // If logged in, navigate directly to request new design page
+      this.router.navigate(['/request-new-design']);
+    } else {
+      // If not logged in, show overlay message then redirect to login
+      console.log('User not logged in, showing message then redirecting to login');
+      const returnUrl = '/request-new-design';
+      this.redirectToLogin(returnUrl);
+    }
+  }
 }

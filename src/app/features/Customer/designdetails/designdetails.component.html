@@ -1,4 +1,17 @@
 <div class="design-details-container">
+  <!-- Login Redirect Overlay -->
+  <div class="login-redirect-overlay" *ngIf="showLoginRedirectOverlay">
+    <div class="login-redirect-message">
+      <div class="login-icon">
+        <i class="fas fa-user-circle"></i>
+      </div>
+      <h3>Please Log In</h3>
+      <p>You need to be logged in to place an order.</p>
+      <p class="redirect-info">Redirecting to login page...</p>
+      <div class="redirect-loader"></div>
+    </div>
+  </div>
+  
   <div *ngIf="loading" class="loading-spinner">
     <div class="spinner"></div>
     <p>Loading design details...</p>
