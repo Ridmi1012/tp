@@ -79,6 +79,11 @@ export const routes: Routes = [
     component: FullyCustomizeDesignComponent,
     canActivate: [authGuard] // Assuming you have an AuthGuard
   },
+   { 
+    path: 'request-new-design', 
+    component: FullyCustomizeDesignComponent,
+    canActivate: [authGuard] // Assuming you have an AuthGuard
+  },
  { 
   path: 'order-as-is/:designId', 
   component: OrderAsIsComponent,

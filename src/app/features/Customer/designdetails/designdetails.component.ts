@@ -18,6 +18,7 @@ export class DesigndetailsComponent implements OnInit {
   error: string = '';
   selectedImage: string = '';
   imagePlaceholder: string = '/assets/placeholder-image.png';
+  showOrderModal = false;
 
   constructor(
     private designService: DesignService,
@@ -35,6 +36,18 @@ export class DesigndetailsComponent implements OnInit {
       this.error = 'Design ID not provided';
       this.loading = false;
     }
+     setTimeout(() => {
+      this.showOrderModal = true;
+    }, 5000);
+  }
+
+  toggleOrderModal() {
+    this.showOrderModal = !this.showOrderModal;
+  }
+  
+  closeOrderModal(event: Event) {
+    event.preventDefault();
+    this.showOrderModal = false;
   }
 
   loadDesign(id: number): void {
@@ -99,6 +112,7 @@ export class DesigndetailsComponent implements OnInit {
 
   orderAsIs(): void {
     // Check if the user is logged in
+    this.showOrderModal = false;
     const isLoggedIn = this.authService.isLoggedIn();
     console.log('User logged in status:', isLoggedIn);
     
@@ -117,6 +131,7 @@ export class DesigndetailsComponent implements OnInit {
 
   customizeDesign(): void {
     // Check login status for customize design too
+     this.showOrderModal = false;
     if (this.authService.isLoggedIn()) {
       this.router.navigate(['/fully-customize-design', this.design.designID]);
     } else {
@@ -128,6 +143,7 @@ export class DesigndetailsComponent implements OnInit {
   }
 
   requestSimilarDesign(): void {
+     this.showOrderModal = false;
   if (this.authService.isLoggedIn()) {
     // Change navigation to request-similar route
     this.router.navigate(['/request-similar', this.design.designID]);

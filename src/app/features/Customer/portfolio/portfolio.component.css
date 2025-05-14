@@ -1,58 +1,82 @@
+/* Global Fix for Horizontal Scroll */
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    overflow-x: hidden;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
 /* Customer Portfolio Styling with Pink Theme */
 .customer-portfolio-container {
     background: linear-gradient(135deg, #fdeef1 0%, #ffc4d1 100%);
     padding: 60px 20px;
     position: relative;
-    overflow: hidden;
+    overflow-x: hidden;
     width: 100%;
-    margin: 0 auto;
+    max-width: 100vw;
+    margin: 0;
     border-radius: 12px;
     box-shadow: 0 5px 20px rgba(224, 95, 103, 0.1);
     min-height: 100vh;
-  }
-  
-  /* Portfolio Header */
-  .portfolio-header {
+}
+
+/* Portfolio Header */
+.portfolio-header {
     text-align: center;
     margin-bottom: 40px;
-  }
-  
-  .portfolio-title {
+    padding: 0 10px;
+    width: 100%;
+}
+
+.portfolio-title {
     font-size: 2.8rem;
     color: #333;
     font-weight: 700;
     margin-bottom: 15px;
-  }
-  
-  .portfolio-subtitle {
+    word-wrap: break-word;
+}
+
+.portfolio-subtitle {
     font-size: 1.2rem;
     color: #6c757d;
     max-width: 700px;
     margin: 0 auto 30px;
-  }
-  
-  /* Category Filter */
-  .category-filter {
+    word-wrap: break-word;
+    padding: 0 10px;
+}
+
+/* Category Filter */
+.category-filter {
     margin: 30px 0;
     text-align: center;
-  }
-  
-  .filter-label {
+    width: 100%;
+    padding: 0 10px;
+}
+
+.filter-label {
     display: block;
     margin-bottom: 15px;
     font-size: 1.1rem;
     color: #495057;
     font-weight: 600;
-  }
-  
-  .filter-options {
+    word-wrap: break-word;
+}
+
+.filter-options {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 10px;
-  }
-  
-  .category-btn {
+    width: 100%;
+    max-width: 100%;
+    padding: 0 10px;
+}
+
+.category-btn {
     padding: 10px 20px;
     border-radius: 50px;
     background-color: white;
@@ -62,40 +86,45 @@
     transition: all 0.3s ease;
     font-weight: 600;
     font-size: 0.95rem;
-  }
-  
-  .category-btn:hover, .category-btn.active {
+    white-space: nowrap;
+    max-width: calc(100% - 20px);
+}
+
+.category-btn:hover, .category-btn.active {
     background-color: #e05f67;
     color: white;
     transform: translateY(-3px);
     box-shadow: 0 4px 15px rgba(224, 95, 103, 0.3);
-  }
-  
-  /* Custom Design CTA */
-  .custom-design-cta {
+}
+
+/* Custom Design CTA */
+.custom-design-cta {
     background-color: white;
     border-radius: 12px;
     padding: 30px;
     margin: 40px auto;
     text-align: center;
-    max-width: 800px;
+    max-width: 600px;
+    width: 1000px;
     box-shadow: 0 10px 30px rgba(224, 95, 103, 0.15);
     border-top: 5px solid #e05f67;
-  }
-  
-  .custom-design-cta h3 {
+}
+
+.custom-design-cta h3 {
     color: #e05f67;
     font-size: 1.8rem;
     margin-bottom: 15px;
-  }
-  
-  .custom-design-cta p {
+    word-wrap: break-word;
+}
+
+.custom-design-cta p {
     color: #495057;
     font-size: 1.1rem;
     margin-bottom: 20px;
-  }
-  
-  .request-new-btn {
+    word-wrap: break-word;
+}
+
+.request-new-btn {
     padding: 12px 30px;
     border-radius: 50px;
     background-color: #e05f67;
@@ -106,26 +135,30 @@
     font-weight: 600;
     font-size: 1.1rem;
     box-shadow: 0 5px 15px rgba(224, 95, 103, 0.2);
-  }
-  
-  .request-new-btn:hover {
+    max-width: 100%;
+    white-space: normal;
+}
+
+.request-new-btn:hover {
     background-color: #d74b55;
     transform: translateY(-3px);
     box-shadow: 0 8px 20px rgba(224, 95, 103, 0.3);
-  }
-  
-  /* Designs Grid */
-  .designs-grid {
+}
+
+/* Designs Grid */
+.designs-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
     gap: 30px;
     margin-top: 40px;
     max-width: 1200px;
+    width: 100%;
     margin-left: auto;
     margin-right: auto;
-  }
-  
-  .design-card {
+    padding: 0 10px;
+}
+
+.design-card {
     width: 100%;
     background-color: white;
     border-radius: 12px;
@@ -136,31 +169,33 @@
     flex-direction: column;
     border-top: 5px solid #e05f67;
     min-height: 400px;
-  }
-  
-  .design-card:hover {
+    max-width: 100%;
+}
+
+.design-card:hover {
     transform: translateY(-5px);
     box-shadow: 0 15px 35px rgba(224, 95, 103, 0.2);
-  }
-  
-  .design-image {
+}
+
+.design-image {
     height: 220px;
     overflow: hidden;
     position: relative;
-  }
-  
-  .design-image img {
+    width: 100%;
+}
+
+.design-image img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     transition: transform 0.5s ease;
-  }
-  
-  .design-card:hover .design-image img {
+}
+
+.design-card:hover .design-image img {
     transform: scale(1.05);
-  }
-  
-  .design-overlay {
+}
+
+.design-overlay {
     position: absolute;
     top: 0;
     left: 0;
@@ -172,13 +207,13 @@
     justify-content: center;
     opacity: 0;
     transition: opacity 0.3s ease;
-  }
-  
-  .design-card:hover .design-overlay {
+}
+
+.design-card:hover .design-overlay {
     opacity: 1;
-  }
-  
-  .view-details-btn {
+}
+
+.view-details-btn {
     padding: 10px 20px;
     background-color: white;
     color: #e05f67;
@@ -187,57 +222,66 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.3s ease;
-  }
-  
-  .view-details-btn:hover {
+    white-space: nowrap;
+}
+
+.view-details-btn:hover {
     background-color: #f8f9fa;
     transform: scale(1.05);
-  }
-  
-  .design-content {
+}
+
+.design-content {
     padding: 25px;
     flex-grow: 1;
     text-align: center;
-  }
-  
-  .design-title {
+    width: 100%;
+    overflow: hidden;
+}
+
+.design-title {
     font-size: 1.4rem;
     color: #e05f67;
     margin: 0 0 10px 0;
     font-weight: 600;
-  }
-  
-  .design-category {
+    word-wrap: break-word;
+}
+
+.design-category {
     color: #495057;
     margin: 0 0 10px 0;
     font-size: 1rem;
     font-weight: 500;
-  }
-  
-  .design-price {
+    word-wrap: break-word;
+}
+
+.design-price {
     color: #333;
     font-size: 1.2rem;
     font-weight: 600;
     margin: 10px 0 5px;
-  }
-  
-  .price-note {
+    word-wrap: break-word;
+}
+
+.price-note {
     color: #6c757d;
     font-size: 0.85rem;
     font-style: italic;
     margin: 5px 0 15px;
-  }
-  
-  /* Design Options */
-  .design-options {
+    word-wrap: break-word;
+}
+
+/* Design Options */
+.design-options {
     display: flex;
     padding: 15px 20px;
     background-color: #fdeef1;
     border-top: 1px solid rgba(224, 95, 103, 0.2);
     gap: 10px;
-  }
-  
-  .option-btn {
+    width: 100%;
+    flex-wrap: wrap;
+}
+
+.option-btn {
     flex: 1;
     padding: 12px;
     border-radius: 50px;
@@ -247,104 +291,138 @@
     font-weight: 600;
     border: none;
     text-align: center;
-  }
-  
-  .same-design {
+    min-width: 120px;
+    white-space: normal;
+}
+
+.same-design {
     background-color: white;
     color: #e05f67;
     border: 2px solid #e05f67;
-  }
-  
-  .same-design:hover {
+}
+
+.same-design:hover {
     background-color: #e05f67;
     color: white;
     transform: translateY(-3px);
     box-shadow: 0 4px 15px rgba(224, 95, 103, 0.3);
-  }
-  
-  .customize-btn {
+}
+
+.customize-btn {
     background-color: white;
     color: #6c757d;
     border: 2px solid #6c757d;
-  }
-  
-  .customize-btn:hover {
+}
+
+.customize-btn:hover {
     background-color: #6c757d;
     color: white;
     transform: translateY(-3px);
     box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
-  }
-  
-  /* No Designs Message */
-  .no-designs-message {
+}
+
+/* No Designs Message */
+.no-designs-message {
     background-color: white;
     padding: 30px;
     border-radius: 12px;
     margin: 40px auto;
     text-align: center;
-    max-width: 70%;
+    max-width: 90%;
+    width: 100%;
     color: #e05f67;
     font-size: 1.1rem;
     border: 1px dashed #ffc4d1;
-  }
-  
-  /* Responsive Adjustments */
-  @media (max-width: 992px) {
+    word-wrap: break-word;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 992px) {
     .portfolio-title {
-      font-size: 2.4rem;
+        font-size: 2.4rem;
     }
     
     .designs-grid {
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
     }
-  }
-  
-  @media (max-width: 768px) {
+}
+
+@media (max-width: 768px) {
+    .customer-portfolio-container {
+        padding: 40px 15px;
+    }
+    
     .portfolio-title {
-      font-size: 2rem;
+        font-size: 2rem;
     }
     
     .portfolio-subtitle {
-      font-size: 1.1rem;
+        font-size: 1.1rem;
     }
     
     .designs-grid {
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    }
-    
-    .customer-portfolio-container {
-      padding: 40px 15px;
+        grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr));
+        gap: 20px;
     }
     
     .custom-design-cta {
-      padding: 25px;
+        padding: 25px 20px;
+        width: calc(100% - 30px);
     }
     
     .custom-design-cta h3 {
-      font-size: 1.6rem;
+        font-size: 1.6rem;
     }
-  }
-  
-  @media (max-width: 576px) {
+}
+
+@media (max-width: 576px) {
+    .customer-portfolio-container {
+        padding: 30px 10px;
+    }
+    
     .portfolio-title {
-      font-size: 1.8rem;
+        font-size: 1.8rem;
+        padding: 0 5px;
+    }
+    
+    .portfolio-subtitle {
+        font-size: 1rem;
+        padding: 0 5px;
     }
     
     .designs-grid {
-      grid-template-columns: 1fr;
-      max-width: 100%;
+        grid-template-columns: 1fr;
+        padding: 0;
     }
     
     .design-card {
-      max-width: 100%;
+        max-width: 100%;
     }
     
     .filter-options {
-      flex-direction: column;
-      align-items: center;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+        padding: 0;
     }
     
     .category-btn {
-      width: 80%;
+        width: 80%;
+        max-width: 250px;
     }
-  }
+    
+    .custom-design-cta {
+        width: calc(100% - 20px);
+        padding: 20px 15px;
+    }
+    
+    .no-designs-message {
+        max-width: 95%;
+        padding: 20px 15px;
+    }
+}
+
+/* Additional overflow prevention */
+.customer-portfolio-container * {
+    max-width: 100%;
+}

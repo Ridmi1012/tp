@@ -98,7 +98,7 @@ export class PortfolioComponent  {
   }
 
   requestCustomization(designId: number) {
-    this.router.navigate(['/customize', designId]);
+    this.router.navigate(['/design-details', designId]);
   }
 
   requestNewDesign() {

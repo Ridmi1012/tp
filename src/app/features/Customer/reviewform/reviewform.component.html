@@ -10,10 +10,12 @@
 </div>
 
 <div class="review-form-container">
-  <div class="form-wrapper">
+  <div class="header">
     <h1>Share Your Experience</h1>
-    <p class="form-intro">We value your feedback. Please tell us about your backdrop decoration experience.</p>
-    
+    <p class="description">We value your feedback. Please tell us about your backdrop decoration experience.</p>
+  </div>
+  
+  <div class="form-wrapper">
     <form [formGroup]="reviewForm" (ngSubmit)="submitReview()">
       <!-- Star Rating -->
       <div class="form-section">
