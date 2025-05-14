@@ -334,49 +334,47 @@ export class AuthService {
     return this.http.get<number>(`${this.apiUrl}/payments/count/pending`);
   }
 
-  requestPasswordReset(username: string): Observable<any> {
-    const payload = { username };
-    const headers = new HttpHeaders().set('Content-Type', 'application/json');
-    
-    return this.http.post(this.forgotPasswordUrl, payload, { headers }).pipe(
-      tap(response => console.log('Password reset requested', response)),
-      catchError(error => {
-        console.error('Password reset request failed', error);
-        return throwError(() => error);
-      })
-    );
-  }
-
-   /**
-   * NEW METHOD - Reset password with token
-   * Resets the password using the provided reset token
-   */
-  resetPassword(token: string, newPassword: string): Observable<any> {
-    const payload = { token, newPassword };
-    const headers = new HttpHeaders().set('Content-Type', 'application/json');
-    
-    return this.http.post(this.resetPasswordUrl, payload, { headers }).pipe(
-      tap(response => console.log('Password reset successful', response)),
-      catchError(error => {
-        console.error('Password reset failed', error);
-        return throwError(() => error);
-      })
-    );
-  }
-  
   /**
-   * NEW METHOD - Validate reset token
-   * Checks if a reset token is still valid
-   */
-  validateResetToken(token: string): Observable<any> {
-    const headers = new HttpHeaders().set('Content-Type', 'application/json');
-    
-    return this.http.get(`${this.validateTokenUrl}?token=${token}`, { headers }).pipe(
-      tap(response => console.log('Token validation response', response)),
-      catchError(error => {
-        console.error('Token validation failed', error);
-        return throwError(() => error);
-      })
-    );
-  }
+ * CHANGED: Request password reset - now just sends code
+ */
+requestPasswordReset(username: string): Observable<any> {
+  const payload = { username };
+  const headers = new HttpHeaders().set('Content-Type', 'application/json');
+  
+  return this.http.post(this.forgotPasswordUrl, payload, { headers }).pipe(
+    tap(response => console.log('Verification code sent', response)),
+    catchError(error => {
+      console.error('Password reset request failed', error);
+      return throwError(() => error);
+    })
+  );
+}
+
+/**
+ * NEW METHOD - Verify reset code
+ */
+verifyResetCode(username: string, code: string): Observable<any> {
+  const payload = { username, code };
+  const headers = new HttpHeaders().set('Content-Type', 'application/json');
+  
+  return this.http.post(`${this.apiUrl}/password/verify-code`, payload, { headers }).pipe(
+    tap(response => console.log('Code verification response', response)),
+    catchError(error => {
+      console.error('Code verification failed', error);
+      return throwError(() => error);
+    })
+  );
+}
+resetPasswordWithCode(username: string, code: string, newPassword: string): Observable<any> {
+  const payload = { username, code, newPassword };
+  const headers = new HttpHeaders().set('Content-Type', 'application/json');
+  
+  return this.http.post(this.resetPasswordUrl, payload, { headers }).pipe(
+    tap(response => console.log('Password reset successful', response)),
+    catchError(error => {
+      console.error('Password reset failed', error);
+      return throwError(() => error);
+    })
+  );
+}
 }

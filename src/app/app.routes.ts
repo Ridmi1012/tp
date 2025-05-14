@@ -17,7 +17,6 @@ import { OngoingComponent } from './features/Customer/ongoing/ongoing.component'
 import { ReviewsComponent } from './features/Customer/reviews/reviews.component';
 import { OrderAsIsComponent } from './features/Customer/order-as-is/order-as-is.component';
 import { CustomereditprofileComponent } from './auth/customereditprofile/customereditprofile.component';
-import { ResetpasswordComponent } from './auth/resetpassword/resetpassword.component';
 
 // Admin Pages
 import { AdmindashboardComponent } from './features/admin/admindashboard/admindashboard.component';
@@ -40,6 +39,7 @@ import { RequestSimilerComponent } from './features/Customer/request-similer/req
 import { FullyCustomizeDesignComponent } from './features/Customer/fully-customize-design/fully-customize-design.component';
 import { AdminEditDesignComponent } from './features/admin/admin-edit-design/admin-edit-design.component';
 import { ForgotPasswordComponent } from './auth/forgot-password/forgot-password.component';
+import { ChangepasswordComponent } from './auth/changepassword/changepassword.component';
 
 export const routes: Routes = [
  // Public Routes
@@ -57,12 +57,7 @@ export const routes: Routes = [
  {
   path: 'forgot-password',
   component: ForgotPasswordComponent
-},
-{
-  path: 'reset-password',
-  component: ResetpasswordComponent
-},
- 
+}, 
  // Protected Customer Routes
  {path:'review-form',
   component: ReviewFormComponent,
@@ -100,7 +95,7 @@ export const routes: Routes = [
 },
  { 
    path: 'change-password', 
-   component: ResetpasswordComponent,
+   component: ChangepasswordComponent,
    canActivate: [authGuard]
  },
  // Admin Routes
