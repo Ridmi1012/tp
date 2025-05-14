@@ -24,6 +24,109 @@ html, body {
     min-height: 100vh;
 }
 
+/* Login Redirect Overlay */
+.login-redirect-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: fadeIn 0.3s ease;
+}
+
+.login-redirect-message {
+    background-color: white;
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.login-icon {
+    width: 50px;
+    height: 50px;
+    margin: 0 auto 10px;
+    background-color: #fdeef1;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.login-icon i {
+    font-size: 25px;
+    color: #e05f67;
+}
+
+.login-redirect-message h3 {
+    font-size: 1.2rem;
+    color: #333;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.login-redirect-message p {
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-bottom: 5px;
+    line-height: 1.4;
+}
+
+.redirect-info {
+    color: #e05f67;
+    font-weight: 500;
+    margin-top: 15px !important;
+}
+
+.redirect-loader {
+    width: 50px;
+    height: 4px;
+    background-color: #f0f0f0;
+    border-radius: 4px;
+    margin: 15px auto 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.redirect-loader::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background-color: #e05f67;
+    animation: loading 2s ease-in-out infinite;
+}
+
+@keyframes loading {
+    to {
+        left: 100%;
+    }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
 /* Portfolio Header */
 .portfolio-header {
     text-align: center;
@@ -101,31 +204,30 @@ html, body {
 .custom-design-cta {
     background-color: white;
     border-radius: 12px;
-    padding: 30px;
-    margin: 40px auto;
+    padding: 15px 20px;
+    margin: 30px auto;
     text-align: center;
-    max-width: 600px;
-    width: 1000px;
-    box-shadow: 0 10px 30px rgba(224, 95, 103, 0.15);
-    border-top: 5px solid #e05f67;
+    width: fit-content;
+    box-shadow: 0 5px 20px rgba(224, 95, 103, 0.1);
+    border-top: 4px solid #e05f67;
 }
 
 .custom-design-cta h3 {
     color: #e05f67;
-    font-size: 1.8rem;
-    margin-bottom: 15px;
+    font-size: 1.3rem;
+    margin-bottom: 8px;
     word-wrap: break-word;
 }
 
 .custom-design-cta p {
     color: #495057;
-    font-size: 1.1rem;
-    margin-bottom: 20px;
+    font-size: 0.95rem;
+    margin-bottom: 12px;
     word-wrap: break-word;
 }
 
 .request-new-btn {
-    padding: 12px 30px;
+    padding: 8px 20px;
     border-radius: 50px;
     background-color: #e05f67;
     color: white;
@@ -133,10 +235,9 @@ html, body {
     cursor: pointer;
     transition: all 0.3s ease;
     font-weight: 600;
-    font-size: 1.1rem;
-    box-shadow: 0 5px 15px rgba(224, 95, 103, 0.2);
-    max-width: 100%;
-    white-space: normal;
+    font-size: 0.95rem;
+    box-shadow: 0 3px 10px rgba(224, 95, 103, 0.2);
+    white-space: nowrap;
 }
 
 .request-new-btn:hover {
@@ -345,6 +446,11 @@ html, body {
     .designs-grid {
         grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
     }
+    
+    .custom-design-cta {
+        width: fit-content;
+        max-width: 90%;
+    }
 }
 
 @media (max-width: 768px) {
@@ -366,12 +472,21 @@ html, body {
     }
     
     .custom-design-cta {
-        padding: 25px 20px;
-        width: calc(100% - 30px);
+        padding: 15px;
+        width: fit-content;
+        max-width: calc(100% - 30px);
     }
     
     .custom-design-cta h3 {
-        font-size: 1.6rem;
+        font-size: 1.2rem;
+    }
+    
+    .login-redirect-message {
+        padding: 15px;
+    }
+    
+    .login-redirect-message h3 {
+        font-size: 1.1rem;
     }
 }
 
@@ -412,13 +527,43 @@ html, body {
     }
     
     .custom-design-cta {
-        width: calc(100% - 20px);
-        padding: 20px 15px;
+        width: fit-content;
+        max-width: calc(100% - 20px);
+        padding: 12px 15px;
+    }
+    
+    .custom-design-cta h3 {
+        font-size: 1.1rem;
+    }
+    
+    .custom-design-cta p {
+        font-size: 0.9rem;
     }
     
     .no-designs-message {
         max-width: 95%;
         padding: 20px 15px;
+    }
+    
+    .login-redirect-message {
+        padding: 12px;
+    }
+    
+    .login-icon {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .login-icon i {
+        font-size: 22px;
+    }
+    
+    .login-redirect-message h3 {
+        font-size: 1.1rem;
+    }
+    
+    .login-redirect-message p {
+        font-size: 0.85rem;
     }
 }
 
