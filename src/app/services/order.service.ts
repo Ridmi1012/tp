@@ -570,36 +570,28 @@ cancelOrder(orderId: string, reason: string): Observable<Order> {
     return this.http.get<number>(`${this.apiUrl}/count/confirmed`);
   }
 
-  checkOngoingOrderForDesign(customerId: string, designId: string): Observable<boolean> {
-    const headers = this.getHeaders();
-    
-    return this.http.get<Order[]>(`${this.apiUrl}/customer/${customerId}/ongoing`, { headers }).pipe(
-      map(orders => {
-        // Check if any ongoing order exists for the specific design
-        return orders.some(order => order.designId === designId);
-      }),
-      catchError(error => {
-        console.error('Error checking ongoing orders for design:', error);
-        return of(false); // Return false on error to allow order to proceed
-      })
-    );
-  }
+ checkOngoingOrderForDesign(customerId: string, designId: string): Observable<boolean> {
+  const headers = this.getHeaders();
+  return this.http.get<boolean>(`${this.apiUrl}/customer/${customerId}/design/${designId}/check`, { headers }).pipe(
+    tap(hasOrder => console.log('Has existing order check result:', hasOrder)),
+    catchError(error => {
+      console.error('Error checking existing orders for design:', error);
+      // On error, return false to be safe, but log the error
+      return of(false);
+    })
+  );
+}
 
-  // NEW METHOD - Get ongoing orders for specific design
-  getOngoingOrdersForDesign(customerId: string, designId: string): Observable<Order[]> {
-    const headers = this.getHeaders();
-    
-    return this.http.get<Order[]>(`${this.apiUrl}/customer/${customerId}/ongoing`, { headers }).pipe(
-      map(orders => {
-        // Filter orders for the specific design
-        return orders.filter(order => order.designId === designId);
-      }),
-      catchError(error => {
-        console.error('Error getting ongoing orders for design:', error);
-        return of([]); // Return empty array on error
-      })
-    );
-  }
+getOngoingOrdersForDesign(customerId: string, designId: string): Observable<Order[]> {
+  const headers = this.getHeaders();
+  return this.http.get<Order[]>(`${this.apiUrl}/customer/${customerId}/design/${designId}/orders`, { headers }).pipe(
+    tap(orders => console.log(`Retrieved ${orders.length} existing orders for design ${designId}`)),
+    catchError(error => {
+      console.error('Error getting existing orders for design:', error);
+      return of([]);
+    })
+  );
+}
 
   getCompletedOrders(): Observable<Order[]> {
   const headers = this.getHeaders();
