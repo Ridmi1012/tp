@@ -142,15 +142,16 @@ export class DesigndetailsComponent implements OnInit {
   }
 
   customizeDesign(): void {
-    // Check login status for customize design too
-    this.showOrderModal = false;
-    if (this.authService.isLoggedIn()) {
-      this.router.navigate(['/fully-customize-design', this.design.designID]);
-    } else {
-      const returnUrl = `/fully-customize-design/${this.design.designID}`;
-      this.redirectToLogin(returnUrl);
-    }
+  // Check login status for customize design too
+  this.showOrderModal = false;
+  if (this.authService.isLoggedIn()) {
+    // Check for existing orders for this design
+    this.checkExistingOrders('customize');
+  } else {
+    const returnUrl = `/fully-customize-design/${this.design.designID}`;
+    this.redirectToLogin(returnUrl);
   }
+}
 
    requestSimilarDesign(): void {
     this.showOrderModal = false;
@@ -163,66 +164,143 @@ export class DesigndetailsComponent implements OnInit {
     }
   }
 
-   // NEW METHOD - Check for existing orders
-  private checkExistingOrders(orderType: string): void {
-    const userDetails = this.authService.getUserDetails();
-    const customerId = userDetails?.customerId?.toString();
-    
-    if (!customerId || !this.design) {
-      // If no customer ID or design, proceed normally
-      this.proceedWithOrder(orderType);
-      return;
-    }
+   private checkExistingOrders(orderType: string): void {
+  const userDetails = this.authService.getUserDetails();
+  const customerId = userDetails?.customerId?.toString();
+  
+  console.log('Checking existing orders:', { customerId, designId: this.design.designID });
+  
+  if (!customerId || !this.design) {
+    console.log('Missing customerId or design, proceeding with order');
+    this.proceedWithOrder(orderType);
+    return;
+  }
 
-    this.orderService.checkOngoingOrderForDesign(customerId, this.design.designID.toString()).subscribe({
-      next: (hasOngoingOrder) => {
-        if (hasOngoingOrder) {
-          // Get the count of existing orders
-          this.orderService.getOngoingOrdersForDesign(customerId, this.design.designID.toString()).subscribe({
-            next: (orders) => {
-              this.existingOrdersCount = orders.length;
-              this.confirmationOrderType = orderType;
-              this.showOrderConfirmationModal = true;
-            },
-            error: (error) => {
-              console.error('Error getting ongoing orders count:', error);
-              // On error, proceed normally
-              this.proceedWithOrder(orderType);
-            }
-          });
-        } else {
-          // No ongoing orders, proceed normally
-          this.proceedWithOrder(orderType);
-        }
-      },
-      error: (error) => {
-        console.error('Error checking for existing orders:', error);
-        // On error, proceed normally
+  // First, let's properly style the confirmation dialog to make sure it's visible
+  this.applyConfirmationOverlayStyles();
+
+  this.orderService.checkOngoingOrderForDesign(customerId, this.design.designID.toString()).subscribe({
+    next: (hasExistingOrder) => {
+      console.log('Has existing order check result:', hasExistingOrder);
+      if (hasExistingOrder) {
+        // Get the count of existing orders
+        this.orderService.getOngoingOrdersForDesign(customerId, this.design.designID.toString()).subscribe({
+          next: (orders) => {
+            this.existingOrdersCount = orders.length;
+            console.log('Found existing orders:', this.existingOrdersCount);
+            this.confirmationOrderType = orderType;
+            this.showOrderConfirmationModal = true;
+            console.log('Showing confirmation modal:', this.showOrderConfirmationModal);
+          },
+          error: (error) => {
+            // If we can't get the count, still show the confirmation but with count 1
+            console.error('Error getting existing orders count:', error);
+            this.existingOrdersCount = 1;
+            this.confirmationOrderType = orderType;
+            this.showOrderConfirmationModal = true;
+          }
+        });
+      } else {
+        console.log('No existing orders found, proceeding with order');
         this.proceedWithOrder(orderType);
       }
-    });
-  }
-
-   // NEW METHOD - Proceed with order after confirmation
-  proceedWithOrder(orderType: string): void {
-    if (orderType === 'as-is') {
-      this.router.navigate(['/order-as-is', this.design.designID]);
-    } else if (orderType === 'similar') {
-      this.router.navigate(['/request-similar', this.design.designID]);
+    },
+    error: (error) => {
+      console.error('Error checking for existing orders:', error);
+      // Show error message instead of proceeding
+      this.error = 'Unable to verify existing orders. Please try again or contact support.';
     }
-  }
+  });
+}
 
-  // NEW METHOD - Handle confirmation modal response
-  handleOrderConfirmation(proceed: boolean): void {
-    this.showOrderConfirmationModal = false;
+// Make sure the confirmation modal is properly styled
+private applyConfirmationOverlayStyles(): void {
+  const styleElement = document.createElement('style');
+  styleElement.textContent = `
+    .order-confirmation-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
     
-    if (proceed) {
-      this.proceedWithOrder(this.confirmationOrderType);
-    } else {
-      // Navigate to ongoing orders
-      this.router.navigate(['/ongoing-orders']);
+    .order-confirmation-modal {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      z-index: 1001;
     }
+    
+    .confirmation-icon.warning {
+      color: #ff9800;
+      font-size: 3rem;
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    
+    .confirmation-actions {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 2rem;
+    }
+    
+    .confirm-btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    
+    .confirm-btn.primary {
+      background-color: #4caf50;
+      color: white;
+      border: none;
+    }
+    
+    .confirm-btn.secondary {
+      background-color: #f5f5f5;
+      color: #333;
+      border: 1px solid #ddd;
+    }
+  `;
+  document.head.appendChild(styleElement);
+}
+
+
+   proceedWithOrder(orderType: string): void {
+  if (orderType === 'as-is') {
+    this.router.navigate(['/order-as-is', this.design.designID]);
+  } else if (orderType === 'similar') {
+    this.router.navigate(['/request-similar', this.design.designID]);
+  } else if (orderType === 'customize') {
+    this.router.navigate(['/fully-customize-design', this.design.designID]);
   }
+}
+
+ // Update the handleOrderConfirmation method to use the correct path
+handleOrderConfirmation(proceed: boolean): void {
+  console.log('Order confirmation response:', proceed);
+  this.showOrderConfirmationModal = false;
+  
+  if (proceed) {
+    console.log('Proceeding with order type:', this.confirmationOrderType);
+    this.proceedWithOrder(this.confirmationOrderType);
+  } else {
+    console.log('Navigating to ongoing orders');
+    // Make sure this matches your actual route path 
+    this.router.navigate(['/ongoing']);
+  }
+}
 
   goBack(): void {
     this.router.navigate(['/portfolio']);

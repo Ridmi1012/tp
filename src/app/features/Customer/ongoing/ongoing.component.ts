@@ -78,6 +78,16 @@ export class OngoingComponent implements OnInit {
     }
   }
 
+  shouldShowPaymentMessage(order: Order): boolean {
+  // Only show payment message for orders that need payment
+  if (order.paymentStatus === 'completed' || order.status === 'cancelled') {
+    return false;
+  }
+  
+  return order.status === 'confirmed' || order.status === 'partial-payment';
+}
+
+
   // Helper method to check if order should be auto-cancelled
   shouldAutoCancelOrder(order: Order, now: Date): boolean {
     const eventDate = new Date(order.customDetails.eventDate);
@@ -105,50 +115,68 @@ export class OngoingComponent implements OnInit {
     }
   }
 
-  getStatusLabel(status: string): string {
-    const statusLabels: { [key: string]: string } = {
-      'pending': 'Order Request Sent',
-      'viewed': 'Order Request Viewed',
-      'confirmed': 'Order Accepted - Awaiting Payment',
-      'partial-payment': 'Partial Payment Received',
-      'paid': 'Payment Confirmed',
-      'in-progress': 'In Progress',
-      'ready': 'Ready for Delivery',
-      'delivered': 'Delivered',
-      'cancelled': 'Cancelled'
-    };
-    return statusLabels[status] || status;
+getStatusLabel(status: string, paymentStatus?: string): string {
+  // First check if payment is completed or in a paid status
+  if (paymentStatus === 'completed' || ['paid', 'in-progress', 'ready', 'delivered'].includes(status)) {
+    return 'Payment Completed';
   }
 
-  getStatusColor(status: string): string {
-    const statusColors: { [key: string]: string } = {
-      'pending': 'accent',
-      'viewed': 'primary',
-      'confirmed': 'primary',
-      'partial-payment': 'warn',
-      'paid': 'success',
-      'in-progress': 'primary',
-      'ready': 'success',
-      'delivered': 'success',
-      'cancelled': 'warn'
-    };
-    return statusColors[status] || 'basic';
+  const statusLabels: { [key: string]: string } = {
+    'pending': 'Order Request Sent',
+    'viewed': 'Order Request Viewed',
+    'confirmed': 'Order Accepted - Awaiting Payment',
+    'partial-payment': 'Partial Payment Received',
+    'paid': 'Payment Confirmed',
+    'in-progress': 'In Progress',
+    'ready': 'Ready for Delivery',
+    'delivered': 'Delivered',
+    'cancelled': 'Cancelled'
+  };
+  
+  return statusLabels[status] || status;
+}
+
+  getStatusColor(status: string, paymentStatus?: string): string {
+  // If payment is completed, show success color
+  if (paymentStatus === 'completed' || ['paid', 'in-progress', 'ready', 'delivered'].includes(status)) {
+    return 'success';
   }
 
-  getProgressValue(status: string): number {
-    const progressValues: { [key: string]: number } = {
-      'pending': 10,
-      'viewed': 20,
-      'confirmed': 40,
-      'partial-payment': 60,
-      'paid': 80,
-      'in-progress': 85,
-      'ready': 95,
-      'delivered': 100,
-      'cancelled': 0
-    };
-    return progressValues[status] || 0;
+  const statusColors: { [key: string]: string } = {
+    'pending': 'accent',
+    'viewed': 'primary',
+    'confirmed': 'primary',
+    'partial-payment': 'warn',
+    'paid': 'success',
+    'in-progress': 'primary',
+    'ready': 'success',
+    'delivered': 'success',
+    'cancelled': 'warn'
+  };
+  
+  return statusColors[status] || 'basic';
+}
+
+ getProgressValue(status: string, paymentStatus?: string): number {
+  // If payment is completed, show 80% progress (same as 'paid' status)
+  if (paymentStatus === 'completed' && !['in-progress', 'ready', 'delivered'].includes(status)) {
+    return 80;
   }
+
+  const progressValues: { [key: string]: number } = {
+    'pending': 10,
+    'viewed': 20,
+    'confirmed': 40,
+    'partial-payment': 60,
+    'paid': 80,
+    'in-progress': 85,
+    'ready': 95,
+    'delivered': 100,
+    'cancelled': 0
+  };
+  
+  return progressValues[status] || 0;
+}
 
   viewOrderDetails(order: Order) {
     this.dialog.open(OrderDetailsDialogComponent, {
@@ -224,14 +252,19 @@ export class OngoingComponent implements OnInit {
   }
   
   canMakePayment(order: Order): boolean {
-    // Check if event date has passed
-    const eventDate = new Date(order.customDetails.eventDate);
-    const now = new Date();
-    
-    if (eventDate < now) {
-      return false; // Cannot make payment if event date has passed
-    }
-    
-    return order.status === 'confirmed' || order.status === 'partial-payment';
+  // Check if event date has passed
+  const eventDate = new Date(order.customDetails.eventDate);
+  const now = new Date();
+  
+  if (eventDate < now) {
+    return false; // Cannot make payment if event date has passed
   }
+  
+  // Check if payment is already completed
+  if (order.paymentStatus === 'completed') {
+    return false;
+  }
+  
+  return order.status === 'confirmed' || order.status === 'partial-payment';
+}
 }

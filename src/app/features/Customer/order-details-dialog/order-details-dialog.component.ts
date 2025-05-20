@@ -142,7 +142,7 @@ export class OrderDetailsDialogComponent implements OnInit{
 // Fix the payment calculation with proper typing
 calculatePaymentSummary(): void {
   // Default values
-   this.paymentSummary = {
+  this.paymentSummary = {
     totalAmount: this.order.totalPrice || 0,
     totalPaid: 0,
     remainingAmount: 0,
@@ -151,26 +151,40 @@ calculatePaymentSummary(): void {
     payments: []
   };
   
-  // Calculate total paid from payments
-  if (this.order.payments && this.order.payments.length > 0) {
-    // Sum up all completed payments with proper typing
-    this.paymentSummary.totalPaid = this.order.payments
-      .filter((payment: Payment) => payment.status === 'completed')
-      .reduce((sum: number, payment: Payment) => sum + (payment.amount || 0), 0);
+  // Check if order status indicates payment is complete
+  const paymentCompletedStatus = ['paid', 'in-progress', 'ready', 'delivered'];
+  const isStatusCompleted = paymentCompletedStatus.includes(this.order.status);
+  const isPaymentCompleted = this.order.paymentStatus === 'completed';
+  
+  // If order status or payment status indicates payment is complete, 
+  // update payment summary accordingly
+  if (isStatusCompleted || isPaymentCompleted) {
+    this.paymentSummary.totalPaid = this.paymentSummary.totalAmount;
+    this.paymentSummary.remainingAmount = 0;
+    this.paymentSummary.isFullyPaid = true;
+    this.paymentSummary.paymentStatus = 'completed';
+  } else {
+    // Calculate total paid from payments
+    if (this.order.payments && this.order.payments.length > 0) {
+      // Sum up all completed payments with proper typing
+      this.paymentSummary.totalPaid = this.order.payments
+        .filter((payment: Payment) => payment.status === 'completed')
+        .reduce((sum: number, payment: Payment) => sum + (payment.amount || 0), 0);
+    }
+    
+    // Calculate remaining amount
+    this.paymentSummary.remainingAmount = Math.max(0, this.paymentSummary.totalAmount - this.paymentSummary.totalPaid);
+    
+    // Determine if fully paid
+    this.paymentSummary.isFullyPaid = this.paymentSummary.remainingAmount === 0 && this.paymentSummary.totalPaid > 0;
+    
+    // Set payment status
+    this.paymentSummary.paymentStatus = this.paymentSummary.isFullyPaid ? 'completed' : 
+                                       (this.paymentSummary.totalPaid > 0 ? 'partial' : 'pending');
   }
   
-  // Calculate remaining amount
-  this.paymentSummary.remainingAmount = Math.max(0, this.paymentSummary.totalAmount - this.paymentSummary.totalPaid);
-  
-  // Determine if fully paid
-  this.paymentSummary.isFullyPaid = this.paymentSummary.remainingAmount === 0 && this.paymentSummary.totalPaid > 0;
-  
-  // Set payment status
-  this.paymentSummary.paymentStatus = this.paymentSummary.isFullyPaid ? 'completed' : 
-                                     (this.paymentSummary.totalPaid > 0 ? 'partial' : 'pending');
-  
-  // Calculate deadline (12 hours before event)
-  if (this.order?.customDetails?.eventDate) {
+  // Calculate deadline (12 hours before event) - only if not fully paid
+  if (!this.paymentSummary.isFullyPaid && this.order?.customDetails?.eventDate) {
     const eventDate = new Date(this.order.customDetails.eventDate);
     
     // If event time is also provided, set the hours and minutes

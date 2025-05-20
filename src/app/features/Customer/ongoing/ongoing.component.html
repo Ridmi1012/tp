@@ -36,8 +36,8 @@
           <p><strong>Time:</strong> {{ formatTime(order.customDetails.eventTime) }}</p>
           
           <div class="status-section">
-            <mat-chip [color]="getStatusColor(order.status)" selected>
-              {{ getStatusLabel(order.status) }}
+            <mat-chip [color]="getStatusColor(order.status, order.paymentStatus)" selected>
+              {{ getStatusLabel(order.status, order.paymentStatus) }}
             </mat-chip>
           </div>
 
@@ -49,12 +49,12 @@
           <div class="progress-section">
             <label>Order Progress</label>
             <mat-progress-bar 
-              [value]="getProgressValue(order.status)" 
-              [color]="getStatusColor(order.status)">
+              [value]="getProgressValue(order.status, order.paymentStatus)" 
+              [color]="getStatusColor(order.status, order.paymentStatus)">
             </mat-progress-bar>
           </div>
 
-          <div *ngIf="order.status === 'confirmed'" class="payment-message">
+          <div *ngIf="shouldShowPaymentMessage(order)" class="payment-message">
             <mat-icon>payment</mat-icon>
             <span>{{ getPaymentMessage(order) }}</span>
           </div>
@@ -62,13 +62,13 @@
       </mat-card-content>
 
       <mat-card-actions align="end">
-  <button mat-button color="primary" (click)="viewOrderDetails(order)">
-    VIEW DETAILS
-  </button>
-  <button mat-button color="accent" *ngIf="canMakePayment(order)" (click)="makePayment(order)">
-    MAKE PAYMENT
-  </button>
-</mat-card-actions>
+        <button mat-button color="primary" (click)="viewOrderDetails(order)">
+          VIEW DETAILS
+        </button>
+        <button mat-button color="accent" *ngIf="canMakePayment(order)" (click)="makePayment(order)">
+          MAKE PAYMENT
+        </button>
+      </mat-card-actions>
     </mat-card>
   </div>
 </div>
