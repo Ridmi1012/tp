@@ -141,18 +141,17 @@ export class DesigndetailsComponent implements OnInit {
     }
   }
 
-  customizeDesign(): void {
-  // Check login status for customize design too
+customizeDesign(): void {
+  // Bypass duplicate order check for customization
   this.showOrderModal = false;
   if (this.authService.isLoggedIn()) {
-    // Check for existing orders for this design
-    this.checkExistingOrders('customize');
+    // Navigate directly to customize page without checking for existing orders
+    this.router.navigate(['/fully-customize-design', this.design.designID]);
   } else {
     const returnUrl = `/fully-customize-design/${this.design.designID}`;
     this.redirectToLogin(returnUrl);
   }
 }
-
    requestSimilarDesign(): void {
     this.showOrderModal = false;
     if (this.authService.isLoggedIn()) {
@@ -282,8 +281,6 @@ private applyConfirmationOverlayStyles(): void {
     this.router.navigate(['/order-as-is', this.design.designID]);
   } else if (orderType === 'similar') {
     this.router.navigate(['/request-similar', this.design.designID]);
-  } else if (orderType === 'customize') {
-    this.router.navigate(['/fully-customize-design', this.design.designID]);
   }
 }
 
