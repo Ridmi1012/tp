@@ -13,10 +13,13 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { DatePipe } from '@angular/common';
 import { OrderDetailsDialogComponent } from '../../Customer/order-details-dialog/order-details-dialog.component';
 import { PaymentDialogComponent } from '../../Customer/payment-dialog/payment-dialog.component';
+import { MatTabsModule } from '@angular/material/tabs';
+import { AdminSingleOrderDetailsComponent } from '../admin-single-order-details/admin-single-order-details.component';
 
 @Component({
   selector: 'app-admin-confirmed-orders',
-  imports: [CommonModule,
+  imports: [
+    CommonModule,
     RouterModule,
     MatCardModule,
     MatButtonModule,
@@ -25,12 +28,18 @@ import { PaymentDialogComponent } from '../../Customer/payment-dialog/payment-di
     MatChipsModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    MatTabsModule,
     DatePipe],
   templateUrl: './admin-confirmed-orders.component.html',
   styleUrl: './admin-confirmed-orders.component.css'
 })
 export class AdminConfirmedOrdersComponent implements OnInit {
-  confirmedOrders: Order[] = [];
+  // Separate arrays for different order types
+  allConfirmedOrders: Order[] = [];
+  asIsOrders: Order[] = [];
+  requestSimilarOrders: Order[] = [];
+  customOrders: Order[] = [];
+  
   loading = true;
   error: string | null = null;
 
@@ -41,27 +50,58 @@ export class AdminConfirmedOrdersComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.loadConfirmedOrders();
+    this.loadAllConfirmedOrders();
   }
 
-  loadConfirmedOrders() {
+  loadAllConfirmedOrders() {
+    // Verify user is admin
     const currentUser = this.authService.getUserDetails();
-    if (currentUser?.username) {
-      this.orderService.getCustomerOrders(currentUser.username).subscribe({
-        next: (orders) => {
-          // Filter only active orders (confirmed through ready status)
-          this.confirmedOrders = orders.filter(order => 
-            ['confirmed', 'partial-payment', 'paid', 'in-progress', 'ready'].includes(order.status)
-          );
-          this.loading = false;
-        },
-        error: (error) => {
-          console.error('Error loading orders:', error);
-          this.error = 'Failed to load orders. Please try again.';
-          this.loading = false;
-        }
-      });
+    const userType = this.authService.getUserType();
+    
+    // Fix: Check for 'ADMIN' (uppercase) instead of 'admin'
+    if (userType !== 'ADMIN') {
+      console.error('Access denied: User is not an admin');
+      this.error = 'Access denied. Admin privileges required.';
+      this.loading = false;
+      return;
     }
+
+    // Get all orders (admin endpoint)
+    this.orderService.getAllOrders().subscribe({
+      next: (orders) => {
+        // Filter orders with completed payment status
+        // Updated logic to check both order payment status and payment entity status
+        this.allConfirmedOrders = orders.filter(order => {
+          // Check if order payment status is completed
+          if (order.paymentStatus === 'completed') {
+            return true;
+          }
+          
+          // Check if any payment has completed status
+          if (order.payments && order.payments.length > 0) {
+            return order.payments.some(payment => payment.status === 'completed');
+          }
+          
+          return false;
+        });
+        
+        // Categorize orders by type
+        this.categorizeOrders(this.allConfirmedOrders);
+        
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error loading orders:', error);
+        this.error = 'Failed to load orders. Please try again.';
+        this.loading = false;
+      }
+    });
+  }
+
+  private categorizeOrders(orders: Order[]) {
+    this.asIsOrders = orders.filter(order => order.orderType === 'as-is');
+    this.requestSimilarOrders = orders.filter(order => order.orderType === 'request-similar');
+    this.customOrders = orders.filter(order => order.orderType === 'full-custom');
   }
 
   getStatusLabel(status: string): string {
@@ -70,7 +110,9 @@ export class AdminConfirmedOrdersComponent implements OnInit {
       'partial-payment': 'Partial Payment Received',
       'paid': 'Payment Confirmed',
       'in-progress': 'In Progress',
-      'ready': 'Ready for Delivery'
+      'ready': 'Ready for Delivery',
+      'delivered': 'Delivered',
+      'completed': 'Completed'
     };
     return statusLabels[status] || status;
   }
@@ -81,7 +123,9 @@ export class AdminConfirmedOrdersComponent implements OnInit {
       'partial-payment': 'warn',
       'paid': 'success',
       'in-progress': 'primary',
-      'ready': 'success'
+      'ready': 'success',
+      'delivered': 'accent',
+      'completed': 'success'
     };
     return statusColors[status] || 'basic';
   }
@@ -92,27 +136,17 @@ export class AdminConfirmedOrdersComponent implements OnInit {
       'partial-payment': 60,
       'paid': 80,
       'in-progress': 85,
-      'ready': 95
+      'ready': 95,
+      'delivered': 98,
+      'completed': 100
     };
     return progressValues[status] || 0;
   }
 
   viewOrderDetails(order: Order) {
-    this.dialog.open(OrderDetailsDialogComponent, {
+    this.dialog.open(AdminSingleOrderDetailsComponent, {
       width: '1000px',
       data: order
-    });
-  }
-
-  openPaymentDialog(order: Order) {
-    this.dialog.open(PaymentDialogComponent, {
-      width: '600px',
-      data: order
-    }).afterClosed().subscribe(result => {
-      if (result) {
-        // Refresh the orders list if payment was made
-        this.loadConfirmedOrders();
-      }
     });
   }
 
@@ -128,19 +162,26 @@ export class AdminConfirmedOrdersComponent implements OnInit {
     return `${hour12}:${minutes} ${ampm}`;
   }
 
-  getPaymentMessage(order: Order): string {
-    if (order.status === 'confirmed') {
-      const eventDate = new Date(order.customDetails.eventDate);
-      const now = new Date();
-      const hoursUntilEvent = (eventDate.getTime() - now.getTime()) / (1000 * 60 * 60);
-      
-      if (hoursUntilEvent < 24) {
-        return 'Your event is in less than 24 hours. Please pay the full amount to confirm.';
-      } else {
-        return 'Pay full amount or 50% of the base price to confirm your order.';
-      }
+  getPaymentStatusLabel(order: Order): string {
+    if (order.paymentStatus === 'completed') {
+      return 'Payment Completed';
     }
-    return '';
+    
+    // Check if any payment has completed status
+    if (order.payments && order.payments.some(p => p.status === 'completed')) {
+      return 'Payment Completed';
+    }
+    
+    return 'Payment Status: ' + (order.paymentStatus || 'Unknown');
+  }
+
+  getOrderTypeLabel(orderType: string): string {
+    const labels: { [key: string]: string } = {
+      'as-is': 'As-Is Order',
+      'request-similar': 'Request Similar Order',
+      'full-custom': 'Full Custom Order'
+    };
+    return labels[orderType] || orderType;
   }
 }
 

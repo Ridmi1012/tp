@@ -62,10 +62,13 @@
       </mat-card-content>
 
       <mat-card-actions align="end">
-        <button mat-button color="primary" (click)="viewOrderDetails(order)">
-          VIEW DETAILS
-        </button>
-      </mat-card-actions>
+  <button mat-button color="primary" (click)="viewOrderDetails(order)">
+    VIEW DETAILS
+  </button>
+  <button mat-button color="accent" *ngIf="canMakePayment(order)" (click)="makePayment(order)">
+    MAKE PAYMENT
+  </button>
+</mat-card-actions>
     </mat-card>
   </div>
 </div>

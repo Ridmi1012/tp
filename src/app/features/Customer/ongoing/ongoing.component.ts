@@ -55,6 +55,14 @@ export class OngoingComponent implements OnInit {
     if (currentUser?.customerId) {  // Change username to customerId
       this.orderService.getCustomerOrders(currentUser.customerId.toString()).subscribe({
         next: (orders) => {
+          // Check for unpaid past-due orders and cancel them
+          const now = new Date();
+          orders.forEach(order => {
+            if (this.shouldAutoCancelOrder(order, now)) {
+              this.autoCancelOrder(order);
+            }
+          });
+          
           // Include canceled orders but exclude completed orders
           this.ongoingOrders = orders.filter(order => 
             order.status !== 'completed'
@@ -65,6 +73,33 @@ export class OngoingComponent implements OnInit {
           console.error('Error loading orders:', error);
           this.error = 'Failed to load orders. Please try again.';
           this.loading = false;
+        }
+      });
+    }
+  }
+
+  // Helper method to check if order should be auto-cancelled
+  shouldAutoCancelOrder(order: Order, now: Date): boolean {
+    const eventDate = new Date(order.customDetails.eventDate);
+    const isPastEvent = eventDate < now;
+    const isUnpaid = order.paymentStatus === 'pending' || order.paymentStatus === 'partial';
+    const isCancellable = ['confirmed', 'viewed', 'pending', 'partial-payment'].includes(order.status);
+    
+    return isPastEvent && isUnpaid && isCancellable;
+  }
+
+  // Auto-cancel an order if it's past the event date and unpaid
+  autoCancelOrder(order: Order) {
+    if (order.status !== 'cancelled') {
+      this.orderService.cancelOrder(order.id, 'Order auto-cancelled: Event date passed without full payment').subscribe({
+        next: (updatedOrder) => {
+          console.log('Order auto-cancelled:', updatedOrder);
+          // Update the local order object to reflect cancellation
+          order.status = 'cancelled';
+          order.cancellationReason = 'Event date passed without full payment';
+        },
+        error: (error) => {
+          console.error('Failed to auto-cancel order:', error);
         }
       });
     }
@@ -122,9 +157,21 @@ export class OngoingComponent implements OnInit {
     });
   }
 
-
-
   makePayment(order: Order) {
+    // Check if order is cancelled or event date has passed
+    const now = new Date();
+    const eventDate = new Date(order.customDetails.eventDate);
+    
+    if (order.status === 'cancelled') {
+      alert('Cannot make payment for cancelled orders.');
+      return;
+    }
+    
+    if (eventDate < now) {
+      alert('Cannot make payment as the event date has already passed.');
+      return;
+    }
+    
     const dialogRef = this.dialog.open(PaymentDialogComponent, {
       width: '600px',
       data: order
@@ -138,11 +185,16 @@ export class OngoingComponent implements OnInit {
     });
   }
 
-
   getPaymentMessage(order: Order): string {
+    // Check if event date has passed
+    const eventDate = new Date(order.customDetails.eventDate);
+    const now = new Date();
+    
+    if (eventDate < now) {
+      return 'The event date has passed. Payment is no longer accepted.';
+    }
+    
     if (order.status === 'confirmed') {
-      const eventDate = new Date(order.customDetails.eventDate);
-      const now = new Date();
       const hoursUntilEvent = (eventDate.getTime() - now.getTime()) / (1000 * 60 * 60);
       
       if (hoursUntilEvent < 24) {
@@ -172,7 +224,14 @@ export class OngoingComponent implements OnInit {
   }
   
   canMakePayment(order: Order): boolean {
+    // Check if event date has passed
+    const eventDate = new Date(order.customDetails.eventDate);
+    const now = new Date();
+    
+    if (eventDate < now) {
+      return false; // Cannot make payment if event date has passed
+    }
+    
     return order.status === 'confirmed' || order.status === 'partial-payment';
   }
-
 }
