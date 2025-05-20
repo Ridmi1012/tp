@@ -1,0 +1,354 @@
+<div class="order-details-dialog">
+  <div class="dialog-header">
+    <h2 mat-dialog-title>
+      <mat-icon>receipt_long</mat-icon>
+      Order Details - #{{order.orderNumber}}
+    </h2>
+    <button mat-icon-button mat-dialog-close class="close-button">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content class="dialog-content">
+    <!-- Order Header -->
+    <mat-card class="order-header-card">
+      <mat-card-content>
+        <div class="header-info">
+          <div class="order-type">
+            <mat-chip [color]="getOrderTypeColor(order.orderType)" selected>
+              {{ getOrderTypeLabel(order.orderType) }}
+            </mat-chip>
+          </div>
+          <div class="order-status">
+            <strong>Status:</strong>
+            <mat-chip color="primary" selected>
+              {{ getStatusLabel(order.status) }}
+            </mat-chip>
+          </div>
+          <div class="payment-status">
+            <strong>Payment:</strong>
+            <mat-chip color="accent" selected>
+              {{ getPaymentStatusLabel(order.paymentStatus) }}
+            </mat-chip>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Main Content Tabs -->
+    <mat-tab-group animationDuration="0ms" mat-stretch-tabs>
+      <!-- Basic Details Tab -->
+      <mat-tab label="Basic Details">
+        <div class="tab-content">
+          <mat-card>
+            <mat-card-header>
+              <mat-card-title>Order Information</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <mat-list class="info-list">
+                <mat-list-item>
+                  <mat-icon matListIcon>calendar_today</mat-icon>
+                  <div matListItemTitle>Order Date</div>
+                  <div matListItemMeta>{{ order.createdAt | date:'MMMM d, y' }}</div>
+                </mat-list-item>
+                
+                <mat-list-item *ngIf="order.customDetails.eventDate">
+                  <mat-icon matListIcon>event</mat-icon>
+                  <div matListItemTitle>Event Date</div>
+                  <div matListItemMeta>{{ order.customDetails.eventDate | date:'MMMM d, y' }} at {{ formatTime(order.customDetails.eventTime) }}</div>
+                </mat-list-item>
+
+                <mat-list-item>
+                  <mat-icon matListIcon>local_shipping</mat-icon>
+                  <div matListItemTitle>Delivery Type</div>
+                  <div matListItemMeta>{{ order.delivery?.deliveryOption === 'pickup' ? 'Pickup' : 'Delivery' }}</div>
+                </mat-list-item>
+
+                <mat-list-item *ngIf="order.delivery?.address">
+                  <mat-icon matListIcon>location_on</mat-icon>
+                  <div matListItemTitle>Delivery Address</div>
+                  <div matListItemMeta>{{ order.delivery.address }}</div>
+                </mat-list-item>
+
+                <mat-list-item>
+                  <mat-icon matListIcon>attach_money</mat-icon>
+                  <div matListItemTitle>Total Amount</div>
+                  <div matListItemMeta class="amount">{{ formatCurrency(order.totalPrice || 0) }}</div>
+                </mat-list-item>
+              </mat-list>
+            </mat-card-content>
+          </mat-card>
+
+          <!-- Customer Information -->
+          <mat-card class="customer-card">
+            <mat-card-header>
+              <mat-card-title>Customer Information</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <mat-list class="info-list">
+                <mat-list-item>
+                  <mat-icon matListIcon>person</mat-icon>
+                  <div matListItemTitle>Name</div>
+                  <div matListItemMeta>{{ order.customerInfo.firstName }} {{ order.customerInfo.lastName }}</div>
+                </mat-list-item>
+                
+                <mat-list-item>
+                  <mat-icon matListIcon>email</mat-icon>
+                  <div matListItemTitle>Email</div>
+                  <div matListItemMeta>{{ order.customerInfo.email }}</div>
+                </mat-list-item>
+
+                <mat-list-item>
+                  <mat-icon matListIcon>phone</mat-icon>
+                  <div matListItemTitle>Phone</div>
+                  <div matListItemMeta>{{ order.customerInfo.contact }}</div>
+                </mat-list-item>
+              </mat-list>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+
+      <!-- Order Specific Details Tab -->
+      <mat-tab label="Order Details">
+        <div class="tab-content">
+          <!-- As-Is Order Details -->
+          <div *ngIf="order.orderType === 'as-is'">
+            <mat-card>
+              <mat-card-header>
+                <mat-card-title>Design Information</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="design-details">
+                  <div class="detail-section">
+                    <h4>Selected Design</h4>
+                    <div class="detail-item">
+                      <strong>Design Name:</strong>
+                      <span>{{ order.design?.name || 'N/A' }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <strong>Category:</strong>
+                      <span>{{ getCategoryName(order.design?.category) || 'N/A' }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <strong>Price:</strong>
+                      <span>{{ formatCurrency(order.design?.price || 0) }}</span>
+                    </div>
+                  </div>
+                  
+                  <div class="design-image" *ngIf="order.design?.image">
+                    <h4>Design Preview</h4>
+                    <img [src]="order.design.image" alt="Design Image" class="preview-image">
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+
+          <!-- Request Similar Order Details -->
+          <div *ngIf="order.orderType === 'request-similar'">
+            <mat-card>
+              <mat-card-header>
+                <mat-card-title>Similar Design Request</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="similar-details">
+                  <div class="detail-section">
+                    <h4>Base Design</h4>
+                    <div class="detail-item">
+                      <strong>Design Name:</strong>
+                      <span>{{ order.design?.name || 'N/A' }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <strong>Category:</strong>
+                      <span>{{ getCategoryName(order.design?.category) || 'N/A' }}</span>
+                    </div>
+                  </div>
+                  
+                  <div class="design-image" *ngIf="order.design?.image">
+                    <h4>Original Design</h4>
+                    <img [src]="order.design.image" alt="Original Design" class="preview-image">
+                  </div>
+
+                  <mat-divider></mat-divider>
+
+                  <div class="detail-section">
+                    <h4>Customization Details</h4>
+                    <div class="detail-item">
+                      <strong>Theme Color:</strong>
+                      <span>{{ order.themeColor || 'None specified' }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <strong>Concept Customization:</strong>
+                    </div>
+                    <p class="notes">{{ order.conceptCustomization || 'No customization specified' }}</p>
+                  </div>
+
+                  <div class="detail-section" *ngIf="order.orderItems && order.orderItems.length > 0">
+                    <h4>Included Items</h4>
+                    <mat-list class="items-list">
+                      <mat-list-item *ngFor="let item of order.orderItems">
+                        <mat-icon matListIcon>check_circle</mat-icon>
+                        <div matListItemTitle>{{ item.itemName }}</div>
+                        <div matListItemMeta>Quantity: {{ item.quantity }} - {{ formatCurrency(item.pricePerUnit) }}</div>
+                      </mat-list-item>
+                    </mat-list>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+
+          <!-- Full Custom Order Details -->
+          <div *ngIf="order.orderType === 'full-custom'">
+            <mat-card>
+              <mat-card-header>
+                <mat-card-title>Custom Order Details</mat-card-title>
+              </mat-card-header>
+              <mat-card-content>
+                <div class="custom-details">
+                  <div class="detail-section">
+                    <h4>Event Details</h4>
+                    <mat-list class="info-list">
+                      <mat-list-item>
+                        <mat-icon matListIcon>event</mat-icon>
+                        <div matListItemTitle>Event Type</div>
+                        <div matListItemMeta>{{ order.customDetails.eventCategory || 'Not specified' }}</div>
+                      </mat-list-item>
+                      
+                      <mat-list-item>
+                        <mat-icon matListIcon>location_on</mat-icon>
+                        <div matListItemTitle>Venue</div>
+                        <div matListItemMeta>{{ order.customDetails.venue || 'Not specified' }}</div>
+                      </mat-list-item>
+
+                      <mat-list-item>
+                        <mat-icon matListIcon>event</mat-icon>
+                        <div matListItemTitle>Event Date</div>
+                        <div matListItemMeta>{{ order.customDetails.eventDate | date:'MMMM d, y' }}</div>
+                      </mat-list-item>
+
+                      <mat-list-item>
+                        <mat-icon matListIcon>schedule</mat-icon>
+                        <div matListItemTitle>Event Time</div>
+                        <div matListItemMeta>{{ formatTime(order.customDetails.eventTime) }}</div>
+                      </mat-list-item>
+                    </mat-list>
+                  </div>
+
+                  <mat-divider></mat-divider>
+
+                  <div class="detail-section">
+                    <h4>Customization Requirements</h4>
+                    <div class="detail-item">
+                      <strong>Theme Color:</strong>
+                      <span>{{ order.themeColor || 'Not specified' }}</span>
+                    </div>
+                    <div class="detail-item">
+                      <strong>Concept Customization:</strong>
+                    </div>
+                    <p class="notes">{{ order.conceptCustomization || 'Not specified' }}</p>
+                  </div>
+
+                  <div class="detail-section">
+                    <h4>Additional Notes</h4>
+                    <p class="notes">{{ order.specialNote || 'No additional notes' }}</p>
+                  </div>
+
+                  <!-- Design Photos -->
+                  <div class="detail-section" *ngIf="order.inspirationPhotos && order.inspirationPhotos.length > 0">
+                    <h4>Reference Images</h4>
+                    <div class="image-gallery">
+                      <div class="image-item" *ngFor="let photo of order.inspirationPhotos">
+                        <img [src]="photo" alt="Reference Image" class="gallery-image">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </mat-card-content>
+            </mat-card>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Payment Details Tab -->
+      <mat-tab label="Payment Details">
+        <div class="tab-content">
+          <mat-card>
+            <mat-card-header>
+              <mat-card-title>Payment Information</mat-card-title>
+            </mat-card-header>
+            <mat-card-content>
+              <div class="payment-summary">
+                <h4>Order Summary</h4>
+                <mat-list class="summary-list">
+                  <mat-list-item>
+                    <div matListItemTitle>Base Price</div>
+                    <div matListItemMeta>{{ formatCurrency(order.basePrice || 0) }}</div>
+                  </mat-list-item>
+
+                  <mat-list-item *ngIf="order.transportationCost">
+                    <div matListItemTitle>Transportation Cost</div>
+                    <div matListItemMeta>{{ formatCurrency(order.transportationCost || 0) }}</div>
+                  </mat-list-item>
+
+                  <mat-list-item *ngIf="order.additionalRentalCost">
+                    <div matListItemTitle>Additional Rental Cost</div>
+                    <div matListItemMeta>{{ formatCurrency(order.additionalRentalCost || 0) }}</div>
+                  </mat-list-item>
+
+                  <mat-divider></mat-divider>
+
+                  <mat-list-item class="total-amount">
+                    <div matListItemTitle><strong>Total Amount</strong></div>
+                    <div matListItemMeta><strong>{{ formatCurrency(order.totalPrice || 0) }}</strong></div>
+                  </mat-list-item>
+                </mat-list>
+              </div>
+
+              <mat-divider></mat-divider>
+
+              <div class="payment-history" *ngIf="order.payments && order.payments.length > 0">
+                <h4>Payment History</h4>
+                <mat-list class="payment-list">
+                  <mat-list-item *ngFor="let payment of order.payments">
+                    <mat-icon matListIcon>payment</mat-icon>
+                    <div matListItemTitle>{{ payment.paymentMethod | titlecase }} Payment</div>
+                    <div matListItemMeta>
+                      {{ formatCurrency(payment.amount) }} - 
+                      {{ payment.createdAt | date:'MMM d, y h:mm a' }} - 
+                      <mat-chip [color]="payment.status === 'completed' ? 'accent' : 'warn'" selected>
+                        {{ payment.status | titlecase }}
+                      </mat-chip>
+                    </div>
+                  </mat-list-item>
+                </mat-list>
+                
+                <mat-divider></mat-divider>
+                
+                <div class="payment-total">
+                  <div class="payment-total-item">
+                    <strong>Total Paid:</strong>
+                    <span>{{ formatCurrency(getTotalPayments()) }}</span>
+                  </div>
+                  <div class="payment-total-item">
+                    <strong>Remaining Balance:</strong>
+                    <span class="remaining-balance">{{ formatCurrency((order.totalPrice || 0) - getTotalPayments()) }}</span>
+                  </div>
+                </div>
+              </div>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </mat-dialog-content>
+
+  <mat-dialog-actions>
+    <button mat-button (click)="close()">Close</button>
+    <button mat-raised-button color="primary" (click)="close()">
+      <mat-icon>check</mat-icon>
+      OK
+    </button>
+  </mat-dialog-actions>
+</div>

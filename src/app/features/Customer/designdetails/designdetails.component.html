@@ -144,3 +144,37 @@
     </div>
   </div>
 </div>
+
+<div class="order-confirmation-overlay" *ngIf="showOrderConfirmationModal" (click)="showOrderConfirmationModal = false">
+  <div class="order-confirmation-modal" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="showOrderConfirmationModal = false">
+      <i class="fas fa-times"></i>
+    </button>
+    
+    <div class="confirmation-content">
+      <div class="confirmation-icon warning">
+        <i class="fas fa-exclamation-triangle"></i>
+      </div>
+      
+      <h2>Existing Order Found</h2>
+      
+      <p class="confirmation-message">
+        You already have {{ existingOrdersCount }} ongoing 
+        {{ existingOrdersCount === 1 ? 'order' : 'orders' }} for this design.
+      </p>
+      
+      <p class="confirmation-question">
+        Do you really want to place another order for the same design?
+      </p>
+      
+      <div class="confirmation-actions">
+        <button class="confirm-btn primary" (click)="handleOrderConfirmation(true)">
+          Yes, Place Another Order
+        </button>
+        <button class="confirm-btn secondary" (click)="handleOrderConfirmation(false)">
+          View Ongoing Orders
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

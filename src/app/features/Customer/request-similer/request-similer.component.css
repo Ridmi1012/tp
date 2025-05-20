@@ -468,11 +468,22 @@ textarea.form-control {
     display: flex;
     align-items: center;
     gap: 10px;
+    margin-bottom: 15px;
 }
 
 .success-message .success-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    background-color: #fff;
+    color: #28a745;
+    border-radius: 50%;
     font-size: 1.2rem;
-    color: #155724;
+    font-weight: bold;
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(40, 167, 69, 0.1);
 }
 
 .help-text {

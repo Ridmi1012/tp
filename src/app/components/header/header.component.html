@@ -40,9 +40,8 @@
       Events <span class="badge" *ngIf="todayEvents > 0">{{todayEvents}}</span>
     </a>
     <a routerLink="/admin-portfolio" routerLinkActive="active-link" (click)="closeMenu()">Designs</a>
-    <a routerLink="/admin/inventory" routerLinkActive="active-link" (click)="closeMenu()">Inventory</a>
     
-    <!-- Updated Orders dropdown with new payment verification options -->
+    <!-- Updated Orders dropdown with payment verification options -->
     <div class="dropdown">
       <span (click)="toggleOrdersDropdown()" class="orders-indicator">
         Orders <span class="badge" *ngIf="pendingPayments > 0">{{pendingPayments}}</span>
@@ -58,20 +57,6 @@
         <a routerLink="/admin/payment-verification" (click)="closeMenu()">
           Payment Verification <span class="badge small" *ngIf="pendingPayments > 0">{{pendingPayments}}</span>
         </a>
-        <a routerLink="/admin/payment-history" (click)="closeMenu()">Payment History</a>
-      </div>
-    </div>
-    
-    <a routerLink="/admin/reports" routerLinkActive="active-link" (click)="closeMenu()">Reports</a>
-    
-    <!-- Notifications for admin -->
-    <div class="dropdown">
-      <span (click)="toggleAdminDropdown()" class="notification-indicator">
-        Notifications <span class="badge" *ngIf="unreadNotifications > 0">{{unreadNotifications}}</span>
-      </span>
-      <div class="dropdown-menu" [ngClass]="{ 'show': showAdminDropdown }">
-        <a routerLink="/admin/notifications" (click)="closeMenu()">View All Notifications</a>
-        <a routerLink="/admin/notifications/settings" (click)="closeMenu()">Notification Settings</a>
       </div>
     </div>
     
@@ -81,9 +66,6 @@
         <img src="assets/images/profile-icon.png" alt="Admin Profile" class="profile-image" />
       </div>
       <div class="dropdown-menu" [ngClass]="{ 'show': showProfileDropdown }">
-        <a routerLink="/admin/profile" (click)="closeMenu()">Edit Profile</a>
-        <a routerLink="/admin/settings" (click)="closeMenu()">Admin Settings</a>
-        <a routerLink="/admin/reset-password" (click)="closeMenu()">Change Password</a>
         <a (click)="logout()">Logout</a>
       </div>
     </div>

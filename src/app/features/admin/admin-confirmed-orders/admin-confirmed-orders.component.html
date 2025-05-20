@@ -1,76 +1,242 @@
-<!-- components/confirmed-orders/confirmed-orders.component.html -->
 <div class="confirmed-orders-container">
-    <h1>My Active Orders</h1>
-    
-    <div *ngIf="loading" class="loading-spinner">
-      <mat-spinner></mat-spinner>
-    </div>
+  <h1>Completed Orders</h1>
   
-    <div *ngIf="error" class="error-message">
-      {{ error }}
-    </div>
-  
-    <div *ngIf="!loading && confirmedOrders.length === 0" class="no-orders">
-      <mat-icon>shopping_cart</mat-icon>
-      <h3>No active orders</h3>
-      <p>You don't have any confirmed or active orders at the moment.</p>
-      <button mat-raised-button color="primary" routerLink="/portfolio">
-        Browse Designs
-      </button>
-    </div>
-  
-    <div class="orders-grid" *ngIf="!loading && confirmedOrders.length > 0">
-      <mat-card *ngFor="let order of confirmedOrders" class="order-card">
-        <mat-card-header>
-          <mat-card-title>Order #{{ order.orderNumber }}</mat-card-title>
-          <mat-card-subtitle>
-            {{ order.customDetails.eventCategory }} - {{ order.customDetails.eventDate | date:'mediumDate' }}
-          </mat-card-subtitle>
-        </mat-card-header>
-  
-        <mat-card-content>
-          <div class="order-summary">
-            <p><strong>Event:</strong> {{ order.customDetails.customName }}'s {{ order.customDetails.eventCategory }}</p>
-            <p><strong>Venue:</strong> {{ order.customDetails.venue }}</p>
-            <p><strong>Time:</strong> {{ formatTime(order.customDetails.eventTime) }}</p>
-            
-            <div class="status-section">
-              <mat-chip [color]="getStatusColor(order.status)" selected>
-                {{ getStatusLabel(order.status) }}
-              </mat-chip>
-            </div>
-  
-            <div class="progress-section">
-              <label>Order Progress</label>
-              <mat-progress-bar 
-                [value]="getProgressValue(order.status)" 
-                [color]="getStatusColor(order.status)">
-              </mat-progress-bar>
-            </div>
-  
-            <div *ngIf="order.status === 'confirmed'" class="payment-message">
-              <mat-icon>payment</mat-icon>
-              <span>{{ getPaymentMessage(order) }}</span>
-            </div>
-            
-            <div *ngIf="order.totalPrice" class="price-section">
-              <p><strong>Total Price:</strong> Rs. {{ order.totalPrice | number:'1.2-2' }}</p>
-            </div>
-          </div>
-        </mat-card-content>
-  
-        <mat-card-actions align="end">
-          <button mat-button color="primary" (click)="viewOrderDetails(order)">
-            VIEW DETAILS
-          </button>
-          <button 
-            mat-raised-button 
-            color="accent" 
-            *ngIf="order.status === 'confirmed'" 
-            (click)="openPaymentDialog(order)">
-            MAKE PAYMENT
-          </button>
-        </mat-card-actions>
-      </mat-card>
-    </div>
+  <div *ngIf="loading" class="loading-spinner">
+    <mat-spinner></mat-spinner>
   </div>
+
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <div *ngIf="!loading && allConfirmedOrders.length === 0" class="no-orders">
+    <mat-icon>shopping_cart</mat-icon>
+    <h3>No completed orders</h3>
+    <p>There are no orders with completed payment status.</p>
+    <button mat-raised-button color="primary" routerLink="/admin/orders">
+      View All Orders
+    </button>
+  </div>
+
+  <!-- Tabbed view for different order types -->
+  <mat-tab-group *ngIf="!loading && allConfirmedOrders.length > 0">
+    <!-- As-Is Orders Tab -->
+    <mat-tab label="As-Is Orders ({{ asIsOrders.length }})">
+      <div *ngIf="asIsOrders.length === 0" class="no-category-orders">
+        <mat-icon>inbox</mat-icon>
+        <p>There aren't any completed orders under this category</p>
+      </div>
+      <div class="orders-grid" *ngIf="asIsOrders.length > 0">
+        <mat-card *ngFor="let order of asIsOrders" class="order-card">
+          <mat-card-header>
+            <mat-card-title>Order #{{ order.orderNumber }}</mat-card-title>
+            <mat-card-subtitle>
+              {{ order.customDetails.eventCategory }} - {{ order.customDetails.eventDate | date:'mediumDate' }}
+            </mat-card-subtitle>
+          </mat-card-header>
+
+          <mat-card-content>
+            <div class="order-summary">
+              <p><strong>Order Type:</strong> {{ getOrderTypeLabel(order.orderType) }}</p>
+              <p><strong>Customer:</strong> {{ order.customerInfo.firstName }} {{ order.customerInfo.lastName }}</p>
+              <p><strong>Event:</strong> {{ order.customDetails.customName }}'s {{ order.customDetails.eventCategory }}</p>
+              <p><strong>Venue:</strong> {{ order.customDetails.venue }}</p>
+              <p><strong>Time:</strong> {{ formatTime(order.customDetails.eventTime) }}</p>
+              
+              <div class="status-section">
+                <mat-chip color="success" selected>
+                  {{ getPaymentStatusLabel(order) }}
+                </mat-chip>
+              </div>
+
+              <div class="progress-section">
+                <label>Order Progress</label>
+                <mat-progress-bar 
+                  [value]="getProgressValue(order.status)" 
+                  [color]="getStatusColor(order.status)">
+                </mat-progress-bar>
+              </div>
+              
+              <div *ngIf="order.totalPrice" class="price-section">
+                <p><strong>Total Price:</strong> Rs. {{ order.totalPrice | number:'1.2-2' }}</p>
+              </div>
+            </div>
+          </mat-card-content>
+
+          <mat-card-actions align="end">
+            <button mat-button color="primary" (click)="viewOrderDetails(order)">
+              VIEW DETAILS
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <!-- Request Similar Orders Tab -->
+    <mat-tab label="Request Similar Orders ({{ requestSimilarOrders.length }})">
+      <div *ngIf="requestSimilarOrders.length === 0" class="no-category-orders">
+        <mat-icon>inbox</mat-icon>
+        <p>There aren't any completed orders under this category</p>
+      </div>
+      <div class="orders-grid" *ngIf="requestSimilarOrders.length > 0">
+        <mat-card *ngFor="let order of requestSimilarOrders" class="order-card">
+          <mat-card-header>
+            <mat-card-title>Order #{{ order.orderNumber }}</mat-card-title>
+            <mat-card-subtitle>
+              {{ order.customDetails.eventCategory }} - {{ order.customDetails.eventDate | date:'mediumDate' }}
+            </mat-card-subtitle>
+          </mat-card-header>
+
+          <mat-card-content>
+            <div class="order-summary">
+              <p><strong>Order Type:</strong> {{ getOrderTypeLabel(order.orderType) }}</p>
+              <p><strong>Customer:</strong> {{ order.customerInfo.firstName }} {{ order.customerInfo.lastName }}</p>
+              <p><strong>Event:</strong> {{ order.customDetails.customName }}'s {{ order.customDetails.eventCategory }}</p>
+              <p><strong>Venue:</strong> {{ order.customDetails.venue }}</p>
+              <p><strong>Time:</strong> {{ formatTime(order.customDetails.eventTime) }}</p>
+              
+              <div class="customization-info" *ngIf="order.themeColor || order.conceptCustomization">
+                <p *ngIf="order.themeColor"><strong>Theme Color:</strong> {{ order.themeColor }}</p>
+                <p *ngIf="order.conceptCustomization"><strong>Customization:</strong> {{ order.conceptCustomization }}</p>
+              </div>
+              
+              <div class="status-section">
+                <mat-chip color="success" selected>
+                  {{ getPaymentStatusLabel(order) }}
+                </mat-chip>
+              </div>
+
+              <div class="progress-section">
+                <label>Order Progress</label>
+                <mat-progress-bar 
+                  [value]="getProgressValue(order.status)" 
+                  [color]="getStatusColor(order.status)">
+                </mat-progress-bar>
+              </div>
+              
+              <div *ngIf="order.totalPrice" class="price-section">
+                <p><strong>Total Price:</strong> Rs. {{ order.totalPrice | number:'1.2-2' }}</p>
+              </div>
+            </div>
+          </mat-card-content>
+
+          <mat-card-actions align="end">
+            <button mat-button color="primary" (click)="viewOrderDetails(order)">
+              VIEW DETAILS
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <!-- Full Custom Orders Tab -->
+    <mat-tab label="Full Custom Orders ({{ customOrders.length }})">
+      <div *ngIf="customOrders.length === 0" class="no-category-orders">
+        <mat-icon>inbox</mat-icon>
+        <p>There aren't any completed orders under this category</p>
+      </div>
+      <div class="orders-grid" *ngIf="customOrders.length > 0">
+        <mat-card *ngFor="let order of customOrders" class="order-card">
+          <mat-card-header>
+            <mat-card-title>Order #{{ order.orderNumber }}</mat-card-title>
+            <mat-card-subtitle>
+              {{ order.customDetails.eventCategory }} - {{ order.customDetails.eventDate | date:'mediumDate' }}
+            </mat-card-subtitle>
+          </mat-card-header>
+
+          <mat-card-content>
+            <div class="order-summary">
+              <p><strong>Order Type:</strong> {{ getOrderTypeLabel(order.orderType) }}</p>
+              <p><strong>Customer:</strong> {{ order.customerInfo.firstName }} {{ order.customerInfo.lastName }}</p>
+              <p><strong>Event:</strong> {{ order.customDetails.customName }}'s {{ order.customDetails.eventCategory }}</p>
+              <p><strong>Venue:</strong> {{ order.customDetails.venue }}</p>
+              <p><strong>Time:</strong> {{ formatTime(order.customDetails.eventTime) }}</p>
+              
+              <div class="customization-info">
+                <p *ngIf="order.themeColor"><strong>Theme Color:</strong> {{ order.themeColor }}</p>
+                <p *ngIf="order.conceptCustomization"><strong>Customization:</strong> {{ order.conceptCustomization }}</p>
+                <p *ngIf="order.specialNote"><strong>Special Note:</strong> {{ order.specialNote }}</p>
+              </div>
+              
+              <div class="status-section">
+                <mat-chip color="success" selected>
+                  {{ getPaymentStatusLabel(order) }}
+                </mat-chip>
+              </div>
+
+              <div class="progress-section">
+                <label>Order Progress</label>
+                <mat-progress-bar 
+                  [value]="getProgressValue(order.status)" 
+                  [color]="getStatusColor(order.status)">
+                </mat-progress-bar>
+              </div>
+              
+              <div *ngIf="order.totalPrice" class="price-section">
+                <p><strong>Total Price:</strong> Rs. {{ order.totalPrice | number:'1.2-2' }}</p>
+              </div>
+            </div>
+          </mat-card-content>
+
+          <mat-card-actions align="end">
+            <button mat-button color="primary" (click)="viewOrderDetails(order)">
+              VIEW DETAILS
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+    </mat-tab>
+
+    <!-- All Orders Tab -->
+    <mat-tab label="All Completed Orders ({{ allConfirmedOrders.length }})">
+      <div *ngIf="allConfirmedOrders.length === 0" class="no-category-orders">
+        <mat-icon>inbox</mat-icon>
+        <p>There aren't any completed orders under this category</p>
+      </div>
+      <div class="orders-grid" *ngIf="allConfirmedOrders.length > 0">
+        <mat-card *ngFor="let order of allConfirmedOrders" class="order-card">
+          <mat-card-header>
+            <mat-card-title>Order #{{ order.orderNumber }}</mat-card-title>
+            <mat-card-subtitle>
+              {{ order.customDetails.eventCategory }} - {{ order.customDetails.eventDate | date:'mediumDate' }}
+            </mat-card-subtitle>
+          </mat-card-header>
+
+          <mat-card-content>
+            <div class="order-summary">
+              <p><strong>Order Type:</strong> {{ getOrderTypeLabel(order.orderType) }}</p>
+              <p><strong>Customer:</strong> {{ order.customerInfo.firstName }} {{ order.customerInfo.lastName }}</p>
+              <p><strong>Event:</strong> {{ order.customDetails.customName }}'s {{ order.customDetails.eventCategory }}</p>
+              <p><strong>Venue:</strong> {{ order.customDetails.venue }}</p>
+              <p><strong>Time:</strong> {{ formatTime(order.customDetails.eventTime) }}</p>
+              
+              <div class="status-section">
+                <mat-chip color="success" selected>
+                  {{ getPaymentStatusLabel(order) }}
+                </mat-chip>
+              </div>
+
+              <div class="progress-section">
+                <label>Order Progress</label>
+                <mat-progress-bar 
+                  [value]="getProgressValue(order.status)" 
+                  [color]="getStatusColor(order.status)">
+                </mat-progress-bar>
+              </div>
+              
+              <div *ngIf="order.totalPrice" class="price-section">
+                <p><strong>Total Price:</strong> Rs. {{ order.totalPrice | number:'1.2-2' }}</p>
+              </div>
+            </div>
+          </mat-card-content>
+
+          <mat-card-actions align="end">
+            <button mat-button color="primary" (click)="viewOrderDetails(order)">
+              VIEW DETAILS
+            </button>
+          </mat-card-actions>
+        </mat-card>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+</div>

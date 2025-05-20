@@ -4,6 +4,7 @@ import { DesignService } from '../../../services/design.service';
 import { Design } from '../../../services/design.service';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../services/auth.service';
+import { OrderService } from '../../../services/order.service';
 import { CloudinaryserviceService } from '../../../services/cloudinaryservice.service';
 
 @Component({
@@ -21,9 +22,14 @@ export class DesigndetailsComponent implements OnInit {
   showOrderModal = false;
   showLoginRedirectOverlay = false;
 
+  showOrderConfirmationModal = false;
+  confirmationOrderType: string = '';
+  existingOrdersCount: number = 0;
+
   constructor(
     private designService: DesignService,
     private route: ActivatedRoute,
+    private orderService: OrderService,
     private router: Router,
     private authService: AuthService,
     private cloudinaryService: CloudinaryserviceService
@@ -120,17 +126,15 @@ export class DesigndetailsComponent implements OnInit {
     }, 2000); // Show message for 2 seconds before redirecting
   }
 
-  orderAsIs(): void {
-    // Check if the user is logged in
+   orderAsIs(): void {
     this.showOrderModal = false;
     const isLoggedIn = this.authService.isLoggedIn();
     console.log('User logged in status:', isLoggedIn);
     
     if (isLoggedIn) {
-      // If logged in, navigate directly to the order page
-      this.router.navigate(['/order-as-is', this.design.designID]);
+      // Check for existing ongoing orders for this design
+      this.checkExistingOrders('as-is');
     } else {
-      // If not logged in, show overlay message then redirect to login
       console.log('User not logged in, showing message then redirecting to login');
       const returnUrl = `/order-as-is/${this.design.designID}`;
       this.redirectToLogin(returnUrl);
@@ -148,14 +152,75 @@ export class DesigndetailsComponent implements OnInit {
     }
   }
 
-  requestSimilarDesign(): void {
+   requestSimilarDesign(): void {
     this.showOrderModal = false;
     if (this.authService.isLoggedIn()) {
-      // Change navigation to request-similar route
-      this.router.navigate(['/request-similar', this.design.designID]);
+      // Check for existing ongoing orders for this design
+      this.checkExistingOrders('similar');
     } else {
       const returnUrl = `/request-similar/${this.design.designID}`;
       this.redirectToLogin(returnUrl);
+    }
+  }
+
+   // NEW METHOD - Check for existing orders
+  private checkExistingOrders(orderType: string): void {
+    const userDetails = this.authService.getUserDetails();
+    const customerId = userDetails?.customerId?.toString();
+    
+    if (!customerId || !this.design) {
+      // If no customer ID or design, proceed normally
+      this.proceedWithOrder(orderType);
+      return;
+    }
+
+    this.orderService.checkOngoingOrderForDesign(customerId, this.design.designID.toString()).subscribe({
+      next: (hasOngoingOrder) => {
+        if (hasOngoingOrder) {
+          // Get the count of existing orders
+          this.orderService.getOngoingOrdersForDesign(customerId, this.design.designID.toString()).subscribe({
+            next: (orders) => {
+              this.existingOrdersCount = orders.length;
+              this.confirmationOrderType = orderType;
+              this.showOrderConfirmationModal = true;
+            },
+            error: (error) => {
+              console.error('Error getting ongoing orders count:', error);
+              // On error, proceed normally
+              this.proceedWithOrder(orderType);
+            }
+          });
+        } else {
+          // No ongoing orders, proceed normally
+          this.proceedWithOrder(orderType);
+        }
+      },
+      error: (error) => {
+        console.error('Error checking for existing orders:', error);
+        // On error, proceed normally
+        this.proceedWithOrder(orderType);
+      }
+    });
+  }
+
+   // NEW METHOD - Proceed with order after confirmation
+  proceedWithOrder(orderType: string): void {
+    if (orderType === 'as-is') {
+      this.router.navigate(['/order-as-is', this.design.designID]);
+    } else if (orderType === 'similar') {
+      this.router.navigate(['/request-similar', this.design.designID]);
+    }
+  }
+
+  // NEW METHOD - Handle confirmation modal response
+  handleOrderConfirmation(proceed: boolean): void {
+    this.showOrderConfirmationModal = false;
+    
+    if (proceed) {
+      this.proceedWithOrder(this.confirmationOrderType);
+    } else {
+      // Navigate to ongoing orders
+      this.router.navigate(['/ongoing-orders']);
     }
   }
 

@@ -1,0 +1,706 @@
+/* Global Fixes for Horizontal Scrollbar */
+* {
+  box-sizing: border-box;
+}
+
+::ng-deep .mat-dialog-container {
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Order Details Dialog Container */
+.order-details-dialog {
+  height: 90vh;
+  max-height: 900px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: #ffffff;
+  border-radius: 8px;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* Dialog Header */
+.dialog-header {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 16px 20px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+  border-radius: 8px 8px 0 0;
+  flex-shrink: 0;
+}
+
+.dialog-header h2 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.dialog-header mat-icon {
+  font-size: 20px;
+  color: #e74c3c;
+}
+
+/* Remove close button styles */
+.close-button {
+  display: none;
+}
+
+/* Dialog Content */
+.dialog-content {
+  padding: 12px !important;
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  background: #f8f9fa;
+}
+
+/* Fix horizontal scrollbar issue */
+::ng-deep .mat-dialog-content {
+  overflow-x: hidden !important;
+  max-width: 100% !important;
+}
+
+/* Order Header Card */
+.order-header-card {
+  margin-bottom: 12px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e9ecef;
+}
+
+.header-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 16px;
+}
+
+.header-info > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 140px;
+}
+
+.header-info strong {
+  color: #6c757d;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Mat Chip Styling */
+::ng-deep .mat-chip {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  padding: 0 12px !important;
+  height: 24px !important;
+  line-height: 24px !important;
+  border-radius: 12px !important;
+  border: none !important;
+}
+
+::ng-deep .mat-chip.mat-primary {
+  background: #3498db !important;
+  color: white !important;
+}
+
+::ng-deep .mat-chip.mat-accent {
+  background: #2ecc71 !important;
+  color: white !important;
+}
+
+::ng-deep .mat-chip.mat-warn {
+  background: #e74c3c !important;
+  color: white !important;
+}
+
+/* Tab Group Styling */
+::ng-deep mat-tab-group {
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  border: 1px solid #e9ecef;
+}
+
+::ng-deep .mat-tab-header {
+  background-color: #ffffff;
+  border-bottom: 1px solid #e9ecef;
+  padding: 0;
+}
+
+::ng-deep .mat-tab-label {
+  color: #6c757d !important;
+  opacity: 1 !important;
+  font-weight: 500;
+  height: 44px;
+  min-width: 110px;
+  transition: all 0.2s ease;
+  font-size: 14px !important;
+  padding: 0 16px;
+}
+
+::ng-deep .mat-tab-label:hover {
+  background-color: #f8f9fa;
+}
+
+::ng-deep .mat-tab-label-active {
+  color: #e74c3c !important;
+  font-weight: 600;
+  background-color: transparent;
+}
+
+::ng-deep .mat-ink-bar {
+  background-color: #e74c3c !important;
+  height: 3px !important;
+}
+
+::ng-deep .mat-tab-body-content {
+  padding: 16px;
+  background-color: #ffffff;
+}
+
+/* Tab Content */
+.tab-content {
+  padding: 0;
+}
+
+/* Mat Card Styling */
+mat-card {
+  margin-bottom: 12px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e9ecef;
+  transition: all 0.2s ease;
+}
+
+mat-card:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Card Headers */
+::ng-deep mat-card-header {
+  background: #f8f9fa;
+  padding: 12px 16px;
+  margin: -16px -16px 16px -16px;
+  border-bottom: 1px solid #e9ecef;
+  border-radius: 6px 6px 0 0;
+}
+
+::ng-deep mat-card-title {
+  margin: 0 !important;
+  font-size: 15px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+/* Mat List Styling */
+::ng-deep mat-list {
+  padding: 0;
+}
+
+::ng-deep mat-list-item {
+  height: auto !important;
+  min-height: 48px;
+  padding: 8px 16px;
+  border-bottom: 1px solid #f1f3f4;
+  transition: background-color 0.2s ease;
+}
+
+::ng-deep mat-list-item:hover {
+  background-color: #f8f9fa;
+}
+
+::ng-deep mat-list-item:last-child {
+  border-bottom: none;
+}
+
+::ng-deep [matListIcon] {
+  color: #e74c3c;
+  margin-right: 12px;
+  font-size: 18px;
+}
+
+::ng-deep [matListItemTitle] {
+  font-weight: 500;
+  color: #6c757d;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+::ng-deep [matListItemMeta] {
+  color: #2c3e50;
+  font-size: 13px;
+  font-weight: 400;
+}
+
+/* Amount Styling */
+.amount {
+  color: #2ecc71 !important;
+  font-weight: 600 !important;
+  font-size: 16px !important;
+}
+
+/* Customer Card */
+.customer-card {
+  margin-top: 16px;
+  background: white;
+}
+
+/* Design Details Sections */
+.design-details,
+.similar-details,
+.custom-details {
+  padding: 16px;
+}
+
+.detail-section {
+  margin-bottom: 20px;
+}
+
+.detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.detail-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+.detail-item strong {
+  color: #6c757d;
+  font-weight: 500;
+  margin-right: 8px;
+  min-width: 110px;
+  flex-shrink: 0;
+}
+
+.detail-item span {
+  color: #2c3e50;
+  flex: 1;
+}
+
+.design-details h4,
+.similar-details h4,
+.custom-details h4,
+.detail-section h4 {
+  color: #2c3e50;
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.design-details p,
+.similar-details p,
+.custom-details p {
+  margin: 10px 0;
+  color: #555;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Notes Section */
+.notes {
+  background: #f8f9fa;
+  padding: 12px;
+  border-radius: 6px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.6;
+  color: #555;
+  border: 1px solid #e9ecef;
+  margin: 10px 0;
+  font-size: 13px;
+}
+
+/* Design Image */
+.design-image {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 350px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin: 12px auto;
+  display: block;
+  border: 1px solid #e9ecef;
+  transition: transform 0.2s ease;
+}
+
+.preview-image:hover {
+  transform: scale(1.02);
+}
+
+/* Image Gallery */
+.image-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+  padding: 12px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+}
+
+.image-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.image-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.gallery-image {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.gallery-image:hover {
+  transform: scale(1.05);
+}
+
+/* Dividers */
+::ng-deep mat-divider {
+  margin: 16px 0;
+  background-color: #e9ecef;
+}
+
+/* Payment Section */
+.payment-summary {
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  margin-bottom: 16px;
+  border: 1px solid #e9ecef;
+}
+
+.payment-summary h4 {
+  color: #2c3e50;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.summary-list mat-list-item {
+  padding: 6px 12px;
+  min-height: 40px;
+}
+
+.total-amount {
+  background-color: #f8f9fa;
+  padding: 10px 12px !important;
+  border-radius: 6px;
+  margin-top: 10px;
+  border: 2px solid #e74c3c;
+}
+
+.total-amount [matListItemTitle],
+.total-amount [matListItemMeta] {
+  font-size: 15px !important;
+  color: #e74c3c !important;
+  font-weight: 600 !important;
+}
+
+/* Payment History */
+.payment-history {
+  padding: 16px;
+  background-color: #ffffff;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.payment-history h4 {
+  color: #2c3e50;
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.payment-list mat-list-item {
+  padding: 10px 12px;
+  min-height: 52px;
+}
+
+.payment-total {
+  margin-top: 16px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.payment-total-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+.payment-total-item:last-child {
+  margin-bottom: 0;
+}
+
+.payment-total-item strong {
+  color: #555;
+  font-weight: 500;
+}
+
+.payment-total-item span {
+  color: #2c3e50;
+  font-weight: 500;
+}
+
+.remaining-balance {
+  color: #e74c3c !important;
+  font-weight: 600 !important;
+  font-size: 15px !important;
+}
+
+/* Dialog Actions */
+::ng-deep mat-dialog-actions {
+  padding: 12px 20px !important;
+  border-top: 1px solid #e9ecef;
+  background: #f8f9fa;
+  border-radius: 0 0 8px 8px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+::ng-deep mat-dialog-actions button {
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  text-transform: none;
+  letter-spacing: 0;
+  padding: 6px 16px;
+  font-size: 13px;
+  min-width: 80px;
+}
+
+::ng-deep mat-dialog-actions button[mat-button] {
+  color: #6c757d;
+  background-color: white;
+  border: 1px solid #dee2e6;
+}
+
+::ng-deep mat-dialog-actions button[mat-button]:hover {
+  background-color: #f8f9fa;
+  border-color: #6c757d;
+}
+
+::ng-deep mat-dialog-actions button[mat-raised-button] {
+  background: #e74c3c;
+  color: white;
+  box-shadow: 0 1px 3px rgba(231, 76, 60, 0.3);
+  border: none;
+}
+
+::ng-deep mat-dialog-actions button[mat-raised-button]:hover {
+  background: #c0392b;
+  box-shadow: 0 2px 6px rgba(231, 76, 60, 0.4);
+}
+
+/* Spacing Utilities */
+.info-list mat-list-item {
+  padding: 10px 16px;
+  min-height: 52px;
+}
+
+.items-list mat-list-item {
+  padding: 10px 12px;
+  min-height: 48px;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tab-content mat-card {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Scrollbar Styling */
+.dialog-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dialog-content::-webkit-scrollbar-track {
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.dialog-content::-webkit-scrollbar-thumb {
+  background: #dee2e6;
+  border-radius: 4px;
+}
+
+.dialog-content::-webkit-scrollbar-thumb:hover {
+  background: #adb5bd;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .dialog-header h2 {
+    font-size: 16px;
+  }
+  
+  .header-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .image-gallery {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+  }
+  
+  ::ng-deep mat-tab-label {
+    min-width: auto;
+    font-size: 12px !important;
+    padding: 0 12px;
+  }
+  
+  ::ng-deep .mat-tab-body-content {
+    padding: 12px;
+  }
+  
+  .detail-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .detail-item strong {
+    margin-bottom: 4px;
+  }
+  
+  .payment-total-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}
+
+@media (max-width: 600px) {
+  .dialog-header {
+    padding: 12px 16px;
+  }
+  
+  .dialog-content {
+    padding: 8px !important;
+  }
+  
+  ::ng-deep mat-dialog-actions {
+    padding: 10px 12px !important;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  ::ng-deep mat-dialog-actions button {
+    width: 100%;
+  }
+  
+  ::ng-deep .mat-tab-body-content {
+    padding: 10px;
+  }
+  
+  .gallery-image {
+    height: 140px;
+  }
+  
+  /* Fix font sizes on mobile */
+  ::ng-deep [matListItemTitle] {
+    font-size: 12px;
+  }
+  
+  ::ng-deep [matListItemMeta] {
+    font-size: 12px;
+  }
+  
+  .detail-item {
+    font-size: 12px;
+  }
+  
+  h4 {
+    font-size: 14px !important;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .dialog-header,
+  mat-dialog-actions,
+  .close-button {
+    display: none !important;
+  }
+  
+  .dialog-content {
+    max-height: none !important;
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+  
+  mat-card {
+    box-shadow: none !important;
+    break-inside: avoid;
+    border: 1px solid #ddd;
+  }
+  
+  .preview-image {
+    max-height: 300px;
+  }
+}

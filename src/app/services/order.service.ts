@@ -1,10 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, throwError, of } from 'rxjs';
-import { DesignService } from './design.service';
 import { HttpHeaders } from '@angular/common/http';
 import { catchError, tap } from 'rxjs/operators';
 import { AuthService } from './auth.service';
+import { map } from 'rxjs/operators';
+
 
 export interface OrderItemRequest {
   itemId: number;
@@ -285,6 +286,8 @@ export class OrderService {
     };
   }
 
+  
+
   getAllOrders(): Observable<Order[]> {
   const headers = this.getHeaders();  // Use your existing getHeaders method
   
@@ -297,6 +300,19 @@ export class OrderService {
   );
 }
 
+
+// Add this to your existing OrderService
+cancelOrder(orderId: string, reason: string): Observable<Order> {
+  const headers = this.getHeaders();
+
+  return this.http.post<Order>(`${this.apiUrl}/${orderId}/cancel`, { reason }, { headers }).pipe(
+    tap(order => console.log('Order cancelled successfully:', order)),
+    catchError(error => {
+      console.error('Error cancelling order:', error);
+      return throwError(() => new Error('Failed to cancel order: ' + this.getErrorMessage(error)));
+    })
+  );
+}
   // Get order by ID
   getOrderById(orderId: string): Observable<Order> {
     const headers = this.getHeaders();
@@ -366,19 +382,6 @@ export class OrderService {
       catchError(error => {
         console.error('Error confirming order:', error);
         return throwError(() => new Error('Failed to confirm order: ' + this.getErrorMessage(error)));
-      })
-    );
-  }
-
-  // Cancel order
-  cancelOrder(orderId: string, reason: string): Observable<Order> {
-    const headers = this.getHeaders();
-
-    return this.http.post<Order>(`${this.apiUrl}/${orderId}/cancel`, { reason }, { headers }).pipe(
-      tap(order => console.log('Order cancelled successfully:', order)),
-      catchError(error => {
-        console.error('Error cancelling order:', error);
-        return throwError(() => new Error('Failed to cancel order: ' + this.getErrorMessage(error)));
       })
     );
   }
@@ -566,4 +569,47 @@ export class OrderService {
   getConfirmedOrdersCount(): Observable<number> {
     return this.http.get<number>(`${this.apiUrl}/count/confirmed`);
   }
+
+  checkOngoingOrderForDesign(customerId: string, designId: string): Observable<boolean> {
+    const headers = this.getHeaders();
+    
+    return this.http.get<Order[]>(`${this.apiUrl}/customer/${customerId}/ongoing`, { headers }).pipe(
+      map(orders => {
+        // Check if any ongoing order exists for the specific design
+        return orders.some(order => order.designId === designId);
+      }),
+      catchError(error => {
+        console.error('Error checking ongoing orders for design:', error);
+        return of(false); // Return false on error to allow order to proceed
+      })
+    );
+  }
+
+  // NEW METHOD - Get ongoing orders for specific design
+  getOngoingOrdersForDesign(customerId: string, designId: string): Observable<Order[]> {
+    const headers = this.getHeaders();
+    
+    return this.http.get<Order[]>(`${this.apiUrl}/customer/${customerId}/ongoing`, { headers }).pipe(
+      map(orders => {
+        // Filter orders for the specific design
+        return orders.filter(order => order.designId === designId);
+      }),
+      catchError(error => {
+        console.error('Error getting ongoing orders for design:', error);
+        return of([]); // Return empty array on error
+      })
+    );
+  }
+
+  getCompletedOrders(): Observable<Order[]> {
+  const headers = this.getHeaders();
+  
+  return this.http.get<Order[]>(`${this.apiUrl}/completed`, { headers }).pipe(
+    tap(orders => console.log(`Retrieved ${orders.length} completed orders`)),
+    catchError(error => {
+      console.error('Error fetching completed orders:', error);
+      return throwError(() => new Error('Failed to fetch completed orders: ' + this.getErrorMessage(error)));
+    })
+  );
+}
 }
