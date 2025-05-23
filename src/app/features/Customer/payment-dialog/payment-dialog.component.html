@@ -23,9 +23,33 @@
       <span>Processing your request...</span>
     </div>
 
-    <!-- Installment Progress (when there's an active installment plan) -->
+    <!-- ENHANCED: Deadline Warning Section -->
+    <div class="deadline-warning" *ngIf="!payherePaymentInProgress && deadlineDate && !paymentSummary?.isFullyPaid">
+      <div class="deadline-header" [class.danger]="isDeadlinePassed" [class.warning]="hoursUntilDeadline <= 24">
+        <mat-icon [color]="getDeadlineColor()">schedule</mat-icon>
+        <div class="deadline-content">
+          <h3 *ngIf="!isDeadlinePassed">Payment Deadline</h3>
+          <h3 *ngIf="isDeadlinePassed" class="deadline-passed">Payment Deadline Passed</h3>
+          <p><strong>{{ getPaymentDeadline() }}</strong></p>
+          <p *ngIf="!isDeadlinePassed">Time remaining: <strong>{{ getTimeUntilDeadline() }}</strong></p>
+          <p *ngIf="isDeadlinePassed" class="deadline-message">
+            All payments must be completed 24 hours before the event. Please contact support if you need assistance.
+          </p>
+        </div>
+      </div>
+      <!-- ADDED: Deadline progress bar -->
+      <div class="deadline-progress" *ngIf="!isDeadlinePassed">
+        <mat-progress-bar 
+          [value]="getDeadlineProgress()" 
+          [color]="getDeadlineColor()"
+          mode="determinate">
+        </mat-progress-bar>
+      </div>
+    </div>
+
+    <!-- ENHANCED: Installment Progress (when there's an active installment plan) -->
     <div class="installment-progress" *ngIf="hasActivePayment && paymentSummary?.installmentPlan && !payherePaymentInProgress">
-      <h3>Payment Progress</h3>
+      <h3>Payment Progress - {{ paymentSummary?.installmentPlan?.name }}</h3>
       <div class="installment-steps">
         <div *ngFor="let step of [].constructor(paymentSummary?.installmentPlan?.numberOfInstallments || 0); let i = index" 
              class="installment-step"
@@ -34,13 +58,17 @@
              [class.pending]="i + 1 > currentInstallment">
           <div class="step-circle">
             <mat-icon *ngIf="i + 1 < currentInstallment || (i + 1 === currentInstallment && isPaymentCompleted(i + 1))">check_circle</mat-icon>
-            <mat-icon *ngIf="i + 1 === currentInstallment && !isPaymentCompleted(i + 1)">radio_button_unchecked</mat-icon>
-            <span *ngIf="i + 1 > currentInstallment">{{ i + 1 }}</span>
+            <mat-icon *ngIf="i + 1 === currentInstallment && !isPaymentCompleted(i + 1)" color="primary">radio_button_unchecked</mat-icon>
+            <span *ngIf="i + 1 > currentInstallment" class="step-number">{{ i + 1 }}</span>
           </div>
           <div class="step-label">
-            Installment {{ i + 1 }}
-            <span class="amount">Rs. {{ getInstallmentAmount(i + 1) | number:'1.2-2' }}</span>
-            <span class="status" *ngIf="getInstallmentStatus(i + 1)">{{ getInstallmentStatus(i + 1) }}</span>
+            <div class="step-title">Installment {{ i + 1 }}</div>
+            <div class="amount">Rs. {{ getInstallmentAmount(i + 1) | number:'1.2-2' }}</div>
+            <div class="percentage">({{ paymentSummary?.installmentPlan?.percentages?.[i] || 0 }}%)</div>
+            <mat-chip class="status-chip" 
+                      [class]="'chip-' + getInstallmentChipColor(getInstallmentStatus(i + 1))">
+              {{ getInstallmentStatus(i + 1) }}
+            </mat-chip>
           </div>
         </div>
       </div>
@@ -123,7 +151,8 @@
       </div>
       <div class="status-notes" *ngIf="remainingAmount > 0">
         <mat-icon>info</mat-icon>
-        <span>The remaining amount must be paid by <strong>{{ getPaymentDeadline() }}</strong> (12 hours before your event).</span>
+        <!-- CHANGED: Updated from 12 hours to 24 hours -->
+        <span>The remaining amount must be paid by <strong>{{ getPaymentDeadline() }}</strong> (24 hours before your event).</span>
       </div>
     </div>
 
@@ -134,15 +163,35 @@
         <span>Time until event: <strong>{{ getTimeUntilEvent() }}</strong></span>
       </div>
       
-      <!-- Payment Policy Notice for events within 10 days -->
-      <div class="payment-notice" *ngIf="isEventWithin10Days && !hasActivePayment">
+      <!-- CHANGED: Updated payment policy notice for events within 7 days -->
+      <div class="payment-notice" *ngIf="isEventWithin7Days && !hasActivePayment">
         <mat-icon color="warn">warning</mat-icon>
-        <p class="notice-text">Your event is in less than 10 days. <strong>Full payment is required</strong> to confirm your order.</p>
+        <p class="notice-text">Your event is in less than 7 days. <strong>Full payment is required</strong> to confirm your order.</p>
+      </div>
+
+      <!-- ADDED: Enhanced time-based installment availability notice -->
+      <div class="installment-availability-notice" *ngIf="!hasActivePayment && !isEventWithin7Days">
+        <mat-icon color="primary">info</mat-icon>
+        <div class="availability-content">
+          <p><strong>Available Payment Options:</strong></p>
+          <div class="availability-list">
+            <div class="availability-item">✓ <strong>Full Payment</strong> - Available anytime</div>
+            <div class="availability-item" [class.available]="weeksUntilEvent >= 2" [class.unavailable]="weeksUntilEvent < 2">
+              {{ weeksUntilEvent >= 2 ? '✓' : '✗' }} <strong>50% Split (2 installments)</strong> - Requires 2+ weeks
+            </div>
+            <div class="availability-item" [class.available]="weeksUntilEvent >= 3" [class.unavailable]="weeksUntilEvent < 3">
+              {{ weeksUntilEvent >= 3 ? '✓' : '✗' }} <strong>33.3% Split (3 installments)</strong> - Requires 3+ weeks
+            </div>
+            <div class="availability-item" [class.available]="weeksUntilEvent >= 4" [class.unavailable]="weeksUntilEvent < 4">
+              {{ weeksUntilEvent >= 4 ? '✓' : '✗' }} <strong>25% Split (4 installments)</strong> - Requires 4+ weeks
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- Payment Form -->
-    <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()" *ngIf="!payherePaymentInProgress && !loading">
+    <form [formGroup]="paymentForm" (ngSubmit)="onSubmit()" *ngIf="!payherePaymentInProgress && !loading && !isDeadlinePassed">
       <div class="payment-options">
         <h3>Payment Options</h3>
         
@@ -151,17 +200,44 @@
           <mat-form-field appearance="fill" class="full-width">
             <mat-label>Installment Plan</mat-label>
             <mat-select formControlName="installmentPlan" (selectionChange)="onInstallmentPlanChange()">
-              <mat-option *ngFor="let plan of availableInstallmentPlans" [value]="plan.id">
-                {{ plan.name }} - {{ plan.description }}
+              <mat-option *ngFor="let plan of availableInstallmentPlans" 
+                          [value]="plan.id"
+                          [disabled]="!isInstallmentPlanAvailable(plan)">
+                <div class="plan-option">
+                  <div class="plan-name">{{ plan.name }}</div>
+                  <div class="plan-description">{{ plan.description }}</div>
+                  <!-- ADDED: Show time requirement and availability -->
+                  <div class="plan-requirement" *ngIf="plan.timeRequirement">
+                    <small>{{ plan.timeRequirement }}</small>
+                  </div>
+                  <div class="plan-unavailable" *ngIf="!isInstallmentPlanAvailable(plan)">
+                    <small class="error-text">{{ getInstallmentPlanMessage(plan) }}</small>
+                  </div>
+                </div>
               </mat-option>
             </mat-select>
           </mat-form-field>
           
-          <!-- Installment Plan Info -->
+          <!-- ENHANCED: Installment Plan Info with breakdown -->
           <div class="installment-info" *ngIf="selectedInstallmentPlan && selectedInstallmentPlan.numberOfInstallments > 1">
             <mat-icon color="primary">info</mat-icon>
-            <p>You are making installment {{ currentInstallment }} of {{ selectedInstallmentPlan.numberOfInstallments }}.</p>
-            <p>Amount for this installment: Rs. {{ getCurrentInstallmentAmount() | number:'1.2-2' }}</p>
+            <div class="installment-breakdown">
+              <p>You are making installment {{ currentInstallment }} of {{ selectedInstallmentPlan.numberOfInstallments }}.</p>
+              <p>Amount for this installment: <strong>Rs. {{ getCurrentInstallmentAmount() | number:'1.2-2' }}</strong></p>
+              
+              <!-- Show all installment amounts -->
+              <div class="installment-preview">
+                <h4>Payment Schedule:</h4>
+                <div *ngFor="let percentage of selectedInstallmentPlan.percentages; let i = index" 
+                     class="installment-preview-item"
+                     [class.current]="i + 1 === currentInstallment">
+                  <span class="installment-label">Installment {{ i + 1 }}:</span>
+                  <span class="installment-amount">Rs. {{ (percentage / 100 * order?.totalPrice) | number:'1.2-2' }}</span>
+                  <span class="installment-percentage">({{ percentage }}%)</span>
+                  <mat-icon *ngIf="i + 1 === currentInstallment" class="current-indicator">arrow_forward</mat-icon>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         
@@ -172,6 +248,7 @@
             <p><strong>Plan:</strong> {{ paymentSummary?.installmentPlan?.name }}</p>
             <p><strong>Current Installment:</strong> {{ currentInstallment }} of {{ paymentSummary?.installmentPlan?.numberOfInstallments }}</p>
             <p><strong>Amount Due:</strong> Rs. {{ getCurrentInstallmentAmount() | number:'1.2-2' }}</p>
+            <p><strong>Percentage:</strong> {{ paymentSummary?.installmentPlan?.percentages?.[currentInstallment - 1] || 0 }}% of total order</p>
           </div>
         </div>
         
@@ -272,10 +349,17 @@
           <textarea matInput formControlName="notes" placeholder="Any additional information about your payment"></textarea>
         </mat-form-field>
 
-        <!-- Payment Status Notice -->
+        <!-- ENHANCED: Payment Status Notice -->
         <div class="payment-status-notice" *ngIf="paymentForm.get('paymentMethod')?.value === 'bank-transfer'">
           <mat-icon color="primary">info</mat-icon>
-          <p class="notice-text">After uploading your payment slip, our admin will verify it. You'll receive a confirmation once approved.</p>
+          <div class="notice-content">
+            <p class="notice-text">After uploading your payment slip, our admin will verify it. You'll receive a confirmation once approved.</p>
+            <!-- ADDED: Installment-specific notice -->
+            <p *ngIf="selectedInstallmentPlan && selectedInstallmentPlan.numberOfInstallments > 1" class="installment-notice">
+              <strong>Note:</strong> This is installment {{ currentInstallment }} of {{ selectedInstallmentPlan.numberOfInstallments }}. 
+              All installments must be completed by {{ getPaymentDeadline() }}.
+            </p>
+          </div>
         </div>
       </div>
       
@@ -287,12 +371,23 @@
           color="primary" 
           type="submit"
           [disabled]="loading || payherePaymentInProgress || !paymentForm.valid || 
-                    (paymentForm.get('paymentMethod')?.value === 'bank-transfer' && !selectedFile)">
+                    (paymentForm.get('paymentMethod')?.value === 'bank-transfer' && !selectedFile) ||
+                    isDeadlinePassed">
           <mat-icon *ngIf="loading" class="spinner">refresh</mat-icon>
           <span *ngIf="!loading">{{ getPaymentButtonText() }}</span>
         </button>
       </div>
     </form>
+
+    <!-- ADDED: Deadline Passed Notice -->
+    <div *ngIf="isDeadlinePassed" class="deadline-passed-notice">
+      <mat-icon color="warn">error</mat-icon>
+      <div class="notice-content">
+        <h3>Payment Deadline Has Passed</h3>
+        <p>The 24-hour payment deadline has passed for this order. Payments are no longer accepted.</p>
+        <p>Please contact our support team if you need assistance with your order.</p>
+      </div>
+    </div>
     
     <!-- PayHere Payment Progress -->
     <div *ngIf="payherePaymentInProgress" class="payhere-progress">

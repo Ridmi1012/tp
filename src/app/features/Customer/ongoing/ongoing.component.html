@@ -19,8 +19,37 @@
   </div>
 
   <div class="orders-grid" *ngIf="!loading && ongoingOrders.length > 0">
-    <mat-card *ngFor="let order of ongoingOrders" class="order-card" [ngClass]="{'cancelled-card': order.status === 'cancelled'}">
-      <div *ngIf="order.status === 'cancelled'" class="cancelled-badge">CANCELLED</div>
+    <mat-card *ngFor="let order of ongoingOrders" 
+              class="order-card" 
+              [ngClass]="{
+                'cancelled-card': order.status === 'cancelled',
+                'urgent-card': getOrderUrgency(order) === 'high',
+                'critical-card': getOrderUrgency(order) === 'critical',
+                'installment-card': hasInstallmentPayment(order)
+              }">
+      
+      <!-- ENHANCED: Better status badges -->
+      <div *ngIf="order.status === 'cancelled'" class="status-badge cancelled-badge">
+        <mat-icon>cancel</mat-icon>
+        CANCELLED
+      </div>
+      
+      <!-- ADDED: Urgency badges -->
+      <div *ngIf="getOrderUrgency(order) === 'critical'" class="status-badge critical-badge">
+        <mat-icon>error</mat-icon>
+        DEADLINE PASSED
+      </div>
+      
+      <div *ngIf="getOrderUrgency(order) === 'high' && order.status !== 'cancelled'" class="status-badge urgent-badge">
+        <mat-icon>warning</mat-icon>
+        URGENT
+      </div>
+
+      <!-- ADDED: Installment payment badge -->
+      <div *ngIf="hasInstallmentPayment(order)" class="status-badge installment-badge">
+        <mat-icon>schedule</mat-icon>
+        INSTALLMENTS
+      </div>
       
       <mat-card-header>
         <mat-card-title>Order #{{ order.orderNumber }}</mat-card-title>
@@ -35,15 +64,46 @@
           <p><strong>Venue:</strong> {{ order.customDetails.venue }}</p>
           <p><strong>Time:</strong> {{ formatTime(order.customDetails.eventTime) }}</p>
           
+          <!-- ENHANCED: Better status display with payment information -->
           <div class="status-section">
             <mat-chip [color]="getStatusColor(order.status, order.paymentStatus)" selected>
               {{ getStatusLabel(order.status, order.paymentStatus) }}
             </mat-chip>
+            
+            <!-- ADDED: Show installment plan information -->
+            <div *ngIf="hasInstallmentPayment(order)" class="installment-info">
+              <mat-icon>payment</mat-icon>
+              <span>Installment Payment Active</span>
+            </div>
           </div>
 
+          <!-- ENHANCED: Better cancellation reason display -->
           <div *ngIf="order.status === 'cancelled'" class="cancellation-reason">
-            <mat-icon>info</mat-icon>
-            <span>Reason: {{ order.cancellationReason }}</span>
+            <mat-icon color="warn">info</mat-icon>
+            <span><strong>Reason:</strong> {{ order.cancellationReason }}</span>
+          </div>
+
+          <!-- ADDED: Payment deadline information -->
+          <div *ngIf="!order.paymentStatus || (order.paymentStatus !== 'completed' && order.status !== 'cancelled')" 
+               class="payment-deadline-info"
+               [ngClass]="{
+                 'deadline-critical': getOrderUrgency(order) === 'critical',
+                 'deadline-urgent': getOrderUrgency(order) === 'high'
+               }">
+            <div class="deadline-header">
+              <mat-icon [color]="getOrderUrgency(order) === 'critical' ? 'warn' : 'primary'">schedule</mat-icon>
+              <div class="deadline-content">
+                <div *ngIf="!isPaymentDeadlinePassed(order)" class="deadline-active">
+                  <span class="deadline-label">Payment Deadline:</span>
+                  <span class="deadline-date">{{ getPaymentDeadline(order) }}</span>
+                  <span class="deadline-remaining">{{ getTimeUntilDeadline(order) }} remaining</span>
+                </div>
+                <div *ngIf="isPaymentDeadlinePassed(order)" class="deadline-passed">
+                  <span class="deadline-label">Payment Deadline Passed</span>
+                  <span class="deadline-message">24 hours before event</span>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="progress-section">
@@ -54,19 +114,68 @@
             </mat-progress-bar>
           </div>
 
+          <!-- ENHANCED: Better payment message with installment options -->
           <div *ngIf="shouldShowPaymentMessage(order)" class="payment-message">
-            <mat-icon>payment</mat-icon>
-            <span>{{ getPaymentMessage(order) }}</span>
+            <mat-icon color="primary">payment</mat-icon>
+            <div class="payment-content">
+              <span>{{ getPaymentMessage(order) }}</span>
+              
+              <!-- ADDED: Show available installment options -->
+              <div *ngIf="!hasInstallmentPayment(order) && getAvailableInstallmentPlansCount(order) > 1" 
+                   class="installment-options-info">
+                <mat-icon>info</mat-icon>
+                <span>{{ getAvailableInstallmentPlansCount(order) }} payment options available</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ADDED: Urgency message -->
+          <div *ngIf="getUrgencyMessage(order)" class="urgency-message"
+               [ngClass]="{
+                 'critical-message': getOrderUrgency(order) === 'critical',
+                 'urgent-message': getOrderUrgency(order) === 'high'
+               }">
+            <mat-icon [color]="getOrderUrgency(order) === 'critical' ? 'warn' : 'accent'">
+              {{ getOrderUrgency(order) === 'critical' ? 'error' : 'warning' }}
+            </mat-icon>
+            <span>{{ getUrgencyMessage(order) }}</span>
           </div>
         </div>
       </mat-card-content>
 
       <mat-card-actions align="end">
         <button mat-button color="primary" (click)="viewOrderDetails(order)">
+          <mat-icon>visibility</mat-icon>
           VIEW DETAILS
         </button>
-        <button mat-button color="accent" *ngIf="canMakePayment(order)" (click)="makePayment(order)">
-          MAKE PAYMENT
+        
+        <!-- ADDED: Payment history button for orders with payments -->
+        <button mat-button 
+                color="accent" 
+                *ngIf="hasInstallmentPayment(order) || order.paymentStatus === 'completed'"
+                (click)="showPaymentHistory(order)">
+          <mat-icon>history</mat-icon>
+          PAYMENT HISTORY
+        </button>
+        
+        <!-- ENHANCED: Better payment button with conditional display -->
+        <button mat-raised-button 
+                color="primary" 
+                *ngIf="canMakePayment(order)" 
+                (click)="makePayment(order)"
+                [disabled]="isPaymentDeadlinePassed(order)">
+          <mat-icon>payment</mat-icon>
+          <span *ngIf="!hasInstallmentPayment(order)">MAKE PAYMENT</span>
+          <span *ngIf="hasInstallmentPayment(order)">CONTINUE PAYMENT</span>
+        </button>
+
+        <!-- ADDED: Deadline passed notice -->
+        <button mat-stroked-button 
+                color="warn" 
+                *ngIf="isPaymentDeadlinePassed(order) && order.status !== 'cancelled'"
+                disabled>
+          <mat-icon>error</mat-icon>
+          DEADLINE PASSED
         </button>
       </mat-card-actions>
     </mat-card>
