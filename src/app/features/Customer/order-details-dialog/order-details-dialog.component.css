@@ -1,193 +1,413 @@
-/* Dialog Container */
-.mat-mdc-dialog-container {
-  padding: 0 !important;
-}
+/* Enhanced Order Details Dialog Styles */
 
-.mat-mdc-dialog-content {
-  padding: 0 24px 24px !important;
-  margin: 0 !important;
+.order-details {
   max-height: 80vh;
   overflow-y: auto;
+  padding: 16px;
 }
 
-.mat-mdc-dialog-actions {
-  padding: 16px 24px !important;
-  margin: 0 !important;
-  justify-content: flex-end;
-  gap: 8px;
+/* Loading and Error States */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px;
+  text-align: center;
 }
 
-/* Dialog Title */
-h2[mat-dialog-title] {
+.loading-container mat-progress-bar {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+.error-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background-color: #ffebee;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  color: #c62828;
+}
+
+.error-container mat-icon {
   font-size: 24px;
-  font-weight: 500;
-  color: #333;
-  padding: 24px 24px 16px;
-  margin: 0;
-  background-color: #f5f5f5;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-/* Order Details Container */
-.order-details {
-  padding: 0;
+  width: 24px;
+  height: 24px;
 }
 
 /* Progress Timeline */
 .progress-timeline {
-  padding: 24px;
-  background-color: #fff;
+  margin-bottom: 24px;
 }
 
 .progress-timeline h3 {
-  font-size: 18px;
+  margin-bottom: 16px;
+  color: #1976d2;
   font-weight: 500;
-  color: #333;
-  margin: 0 0 24px 0;
 }
 
 .timeline {
   position: relative;
-  padding: 0;
+  padding-left: 24px;
 }
 
 .timeline-step {
-  display: flex;
   position: relative;
-  padding-bottom: 24px;
-  min-height: 60px;
+  margin-bottom: 32px;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
 }
 
 .timeline-step:last-child {
-  padding-bottom: 0;
+  margin-bottom: 0;
 }
 
-.timeline-step.completed .step-icon {
-  background-color: #4caf50;
-  color: white;
+.timeline-step::before {
+  content: '';
+  position: absolute;
+  left: -12px;
+  top: 12px;
+  bottom: -20px;
+  width: 2px;
+  background: #e0e0e0;
 }
 
-.timeline-step.active .step-icon {
-  background-color: #2196f3;
-  color: white;
-  animation: pulse 2s infinite;
+.timeline-step:last-child::before {
+  display: none;
 }
 
-.timeline-step.pending .step-icon {
-  background-color: #f5f5f5;
-  color: #999;
-  border: 2px solid #e0e0e0;
+.timeline-step.completed::before {
+  background: #4caf50;
 }
 
-.timeline-step.cancelled .step-icon {
-  background-color: #f44336;
-  color: white;
+.timeline-step.active::before {
+  background: #ff9800;
+}
+
+.timeline-step.cancelled::before {
+  background: #f44336;
 }
 
 .step-icon {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #e0e0e0;
+  background: #e0e0e0;
   color: #666;
-  position: relative;
-  z-index: 2;
   flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+  margin-left: -36px;
 }
 
-.step-icon mat-icon {
-  font-size: 20px;
-  width: 20px;
-  height: 20px;
+.timeline-step.completed .step-icon {
+  background: #4caf50;
+  color: white;
+}
+
+.timeline-step.active .step-icon {
+  background: #ff9800;
+  color: white;
+  animation: pulse 2s infinite;
+}
+
+.timeline-step.cancelled .step-icon {
+  background: #f44336;
+  color: white;
 }
 
 .step-content {
   flex: 1;
-  padding-left: 16px;
+  padding-top: 4px;
 }
 
 .step-content h4 {
-  font-size: 16px;
+  margin: 0 0 8px 0;
   font-weight: 500;
   color: #333;
-  margin: 0 0 4px 0;
+}
+
+.timeline-step.completed .step-content h4 {
+  color: #4caf50;
+}
+
+.timeline-step.active .step-content h4 {
+  color: #ff9800;
+  font-weight: 600;
+}
+
+.timeline-step.cancelled .step-content h4 {
+  color: #f44336;
 }
 
 .step-date {
-  font-size: 14px;
+  font-size: 12px;
   color: #666;
-  margin: 0;
-}
-
-.cancellation-reason {
-  font-size: 14px;
-  color: #f44336;
-  margin: 8px 0 0 0;
-  font-style: italic;
+  margin: 4px 0;
 }
 
 .step-message {
   font-size: 14px;
-  color: #1976d2;
+  color: #555;
   margin: 8px 0 0 0;
-  padding: 8px 12px;
-  background-color: #e3f2fd;
-  border-radius: 4px;
-  border-left: 3px solid #1976d2;
+  padding: 12px;
+  background: #f5f5f5;
+  border-radius: 6px;
+  border-left: 4px solid #2196f3;
 }
 
+.timeline-step.active .step-message {
+  background: #fff3e0;
+  border-left-color: #ff9800;
+}
+
+.cancellation-reason {
+  color: #f44336;
+  font-weight: 500;
+  margin: 8px 0;
+  padding: 8px 12px;
+  background: #ffebee;
+  border-radius: 4px;
+}
+
+/* Payment Rejection Alert */
+.payment-rejection-alert {
+  background: #ffebee;
+  border: 1px solid #ffcdd2;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 12px 0;
+}
+
+.payment-rejection-alert mat-icon {
+  margin-right: 8px;
+}
+
+.payment-rejection-alert strong {
+  color: #c62828;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.payment-rejection-alert p {
+  margin: 4px 0;
+  color: #666;
+}
+
+.installment-rejection-details {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #ffcdd2;
+}
+
+.rejection-amount {
+  font-weight: 600;
+  color: #f44336;
+}
+
+/* Installment Details */
 .installment-details {
+  margin: 12px 0;
+  padding: 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+}
+
+.installment-info {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 8px;
-  margin-top: 8px;
+  margin-bottom: 8px;
 }
 
 .installment-amount {
+  font-weight: 500;
+  color: #333;
+}
+
+.clickable-installment {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #1976d2;
   font-size: 14px;
-  font-weight: 500;
-  color: #333;
+  margin-top: 8px;
 }
 
-.step-connector {
-  position: absolute;
-  left: 20px;
-  top: 40px;
-  width: 2px;
-  height: calc(100% - 40px);
-  background-color: #e0e0e0;
-  z-index: 1;
-}
-
-.timeline-step.completed .step-connector {
-  background-color: #4caf50;
-}
-
-/* Section Headings */
-.payment-summary h3,
-.order-info h3,
-.event-details h3,
-.customer-info h3 {
+.clickable-installment .payment-icon {
   font-size: 18px;
-  font-weight: 500;
-  color: #333;
-  margin: 0 0 16px 0;
+  width: 18px;
+  height: 18px;
 }
 
 /* Payment Summary */
 .payment-summary {
-  padding: 24px;
-  background-color: #f8f9fa;
+  margin: 24px 0;
+}
+
+.payment-summary h3 {
+  margin-bottom: 16px;
+  color: #1976d2;
+  font-weight: 500;
+}
+
+.installment-plan-info {
+  background: #f3f4f6;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  border: 1px solid #e5e7eb;
+}
+
+.plan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.plan-header h4 {
+  margin: 0;
+  color: #374151;
+  font-weight: 600;
+}
+
+.installment-progress {
+  margin: 16px 0;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.progress-percentage {
+  font-weight: 600;
+  color: #1976d2;
+}
+
+.installment-breakdown {
+  margin-top: 20px;
+}
+
+.installment-breakdown h5 {
+  margin: 0 0 12px 0;
+  color: #374151;
+  font-weight: 500;
+}
+
+.installment-list {
+  display: grid;
+  gap: 12px;
+}
+
+.installment-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: white;
+  border-radius: 8px;
+  border: 2px solid #e5e7eb;
+  transition: all 0.2s ease;
+}
+
+.installment-item.completed {
+  border-color: #22c55e;
+  background: #f0fdf4;
+}
+
+.installment-item.current {
+  border-color: #f59e0b;
+  background: #fffbeb;
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.1);
+}
+
+.installment-item.clickable {
+  cursor: pointer;
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.installment-item.clickable:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.installment-number {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #6b7280;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.installment-item.completed .installment-number {
+  background: #22c55e;
+}
+
+.installment-item.current .installment-number {
+  background: #f59e0b;
+}
+
+.installment-item.clickable .installment-number {
+  background: #3b82f6;
+}
+
+.installment-details {
+  flex: 1;
+  margin: 0 16px;
+  text-align: center;
+}
+
+.installment-details .amount {
+  font-weight: 600;
+  color: #374151;
+  font-size: 16px;
+}
+
+.installment-details .percentage {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+.installment-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.clickable-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  color: #3b82f6;
+  animation: bounce 2s infinite;
 }
 
 /* Info Grid */
 .info-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
+  margin-bottom: 16px;
 }
 
 .info-item {
@@ -201,7 +421,7 @@ h2[mat-dialog-title] {
 
 .info-item label {
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
   color: #666;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -209,203 +429,171 @@ h2[mat-dialog-title] {
 }
 
 .info-item p {
-  font-size: 16px;
-  color: #333;
   margin: 0;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
 }
 
-.info-item p strong {
-  font-weight: 600;
-}
-
-/* Text Colors */
 .text-success {
-  color: #4caf50;
+  color: #4caf50 !important;
 }
 
 .text-warning {
-  color: #ff9800;
+  color: #ff9800 !important;
 }
 
 .icon-success {
   color: #4caf50;
+  margin-left: 8px;
   font-size: 18px;
+  width: 18px;
+  height: 18px;
 }
 
-/* Deadline Warning */
-.deadline-warning {
-  color: #f44336;
+.next-payment {
+  color: #1976d2;
+  font-weight: 600;
+}
+
+/* Deadline Information */
+.deadline-info {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
 }
 
-.deadline-warning mat-icon {
-  font-size: 20px;
+.deadline-info.deadline-urgent {
+  background: #fff3e0;
+  border-color: #ffb74d;
 }
 
-/* Main Sections */
-.order-info,
-.event-details,
-.customer-info {
-  padding: 24px;
-  background-color: #fff;
+.deadline-info.deadline-passed {
+  background: #ffebee;
+  border-color: #ef5350;
 }
 
-/* Loading Text */
+.deadline-text {
+  flex: 1;
+}
+
+.deadline-date {
+  margin: 0;
+  font-weight: 500;
+  color: #333;
+}
+
+.deadline-warning {
+  margin: 4px 0 0 0;
+  font-size: 12px;
+  color: #666;
+}
+
+.deadline-info.deadline-urgent .deadline-warning {
+  color: #e65100;
+  font-weight: 500;
+}
+
+.deadline-info.deadline-passed .deadline-warning {
+  color: #c62828;
+  font-weight: 600;
+}
+
 .loading-text {
   color: #666;
   font-style: italic;
 }
 
-/* Material Divider */
-mat-divider {
-  margin: 0 !important;
-}
-
-/* Material Chip */
-mat-chip {
-  font-size: 12px !important;
-  min-height: 24px !important;
-  padding: 0 8px !important;
-}
-
-/* Animation for Active State */
+/* Animations */
 @keyframes pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.7);
+    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7);
   }
   70% {
-    box-shadow: 0 0 0 10px rgba(33, 150, 243, 0);
+    box-shadow: 0 0 0 10px rgba(255, 152, 0, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(33, 150, 243, 0);
+    box-shadow: 0 0 0 0 rgba(255, 152, 0, 0);
+  }
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-3px);
+  }
+  60% {
+    transform: translateY(-2px);
   }
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
+  .order-details {
+    padding: 12px;
+  }
+  
   .info-grid {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
   
-  h2[mat-dialog-title] {
-    font-size: 20px;
-    padding: 16px;
+  .timeline-step {
+    margin-bottom: 24px;
   }
   
-  .progress-timeline,
-  .payment-summary,
-  .order-info,
-  .event-details,
-  .customer-info {
-    padding: 16px;
+  .installment-item {
+    flex-direction: column;
+    text-align: center;
+    gap: 12px;
   }
   
-  .mat-mdc-dialog-content {
-    padding: 0 16px 16px !important;
+  .installment-details {
+    margin: 0;
   }
   
-  .mat-mdc-dialog-actions {
-    padding: 16px !important;
-    flex-direction: column-reverse;
+  .plan-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+/* Accessibility Improvements */
+.timeline-step:focus-within .step-icon {
+  outline: 2px solid #1976d2;
+  outline-offset: 2px;
+}
+
+.installment-item:focus {
+  outline: 2px solid #1976d2;
+  outline-offset: 2px;
+}
+
+/* Print Styles */
+@media print {
+  .order-details {
+    max-height: none;
+    overflow: visible;
   }
   
-  .mat-mdc-dialog-actions button {
-    width: 100%;
+  .timeline-step::before {
+    background: #000 !important;
   }
-}
-
-/* Scrollbar Styling */
-.mat-mdc-dialog-content::-webkit-scrollbar {
-  width: 8px;
-}
-
-.mat-mdc-dialog-content::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.mat-mdc-dialog-content::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-}
-
-.mat-mdc-dialog-content::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
-/* Button Styles */
-button[mat-button],
-button[mat-stroked-button],
-button[mat-raised-button] {
-  font-weight: 500;
-  letter-spacing: 0.5px;
-}
-
-button[mat-raised-button] mat-icon,
-button[mat-stroked-button] mat-icon {
-  margin-right: 8px;
-  font-size: 20px;
-}
-
-/* Additional Utility Classes */
-.mb-0 { margin-bottom: 0 !important; }
-.mb-1 { margin-bottom: 8px !important; }
-.mb-2 { margin-bottom: 16px !important; }
-.mb-3 { margin-bottom: 24px !important; }
-
-.mt-0 { margin-top: 0 !important; }
-.mt-1 { margin-top: 8px !important; }
-.mt-2 { margin-top: 16px !important; }
-.mt-3 { margin-top: 24px !important; }
-
-.text-center { text-align: center !important; }
-.text-left { text-align: left !important; }
-.text-right { text-align: right !important; }
-
-.font-weight-bold { font-weight: 600 !important; }
-.font-weight-normal { font-weight: 400 !important; }
-
-.timeline-step.rejected {
+  
   .step-icon {
-    background-color: #f44336;
-    color: white;
+    background: #000 !important;
+    color: white !important;
   }
   
-  .step-connector {
-    background-color: #f44336;
-  }
-}
-
-.installment-rejection-details {
-  margin-top: 8px;
-  padding-top: 8px;
-  border-top: 1px solid #ffcdd2;
-}
-
-.rejection-amount {
-  font-weight: 500;
-}
-
-/* Update timeline step styling for rejected status */
-.timeline-step.rejected {
-  .step-icon {
-    background-color: #f44336;
-    color: white;
-  }
-  
-  .step-content {
-    .step-message {
-      color: #f44336;
-      font-weight: 500;
-    }
-  }
-  
-  .step-connector {
-    background-color: #f44336;
+  .installment-item {
+    border: 1px solid #000 !important;
+    background: white !important;
   }
 }
