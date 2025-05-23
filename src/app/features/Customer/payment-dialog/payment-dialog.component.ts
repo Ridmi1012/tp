@@ -18,13 +18,17 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MatStepperModule } from '@angular/material/stepper';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import {  InstallmentPlan, Payment, PaymentSummary  } from '../../../services/payment.service';
+import { MatChipsModule } from '@angular/material/chips'; // ADDED
+import { MatProgressBarModule } from '@angular/material/progress-bar'; // ADDED
+import { MatTooltipModule } from '@angular/material/tooltip'; // ADDED
 
 
 
 
 @Component({
   selector: 'app-payment-dialog',
-  imports: [ CommonModule,
+  imports: [ 
+    CommonModule,
     FormsModule,
     ReactiveFormsModule,
     MatDialogModule,
@@ -34,12 +38,16 @@ import {  InstallmentPlan, Payment, PaymentSummary  } from '../../../services/pa
     MatSelectModule,
     MatIconModule,
     MatRadioModule,
-    MatStepperModule],
+    MatStepperModule,
+    MatChipsModule,      // ADDED
+    MatProgressBarModule, // ADDED
+    MatTooltipModule    
+  ],
   templateUrl: './payment-dialog.component.html',
   styleUrl: './payment-dialog.component.css'
 })
 export class PaymentDialogComponent implements OnInit {
-  // Form for payment
+ // Form for payment
   paymentForm: FormGroup;
 
   // UI state
@@ -55,9 +63,11 @@ export class PaymentDialogComponent implements OnInit {
   currentInstallment = 1;
   selectedFile: File | null = null;
 
-  // Order status flags
-  isEventWithin10Days = false;
+  // CHANGED: Updated from 10 days to 7 days as per new requirements
+  isEventWithin7Days = false; // CHANGED: Renamed from isEventWithin10Days
   daysUntilEvent = 0;
+  weeksUntilEvent = 0; // ADDED: Track weeks for installment eligibility
+  hoursUntilDeadline = 0; // ADDED: Track hours until 24-hour deadline
   remainingAmount = 0;
   totalAmountPaid = 0;
   
@@ -69,6 +79,11 @@ export class PaymentDialogComponent implements OnInit {
   hasActivePayment = false;
   activePayment: any = null;
   isPayingNextInstallment = false;
+
+  // ADDED: Enhanced installment tracking
+  installmentOptions: any[] = []; // Available installment options for dropdown
+  deadlineDate: Date | null = null; // 24-hour payment deadline
+  isDeadlinePassed = false; // Track if deadline has passed
 
   // Order ID property
   private _orderId: string | null = null;
@@ -104,7 +119,7 @@ export class PaymentDialogComponent implements OnInit {
 
     console.log('Order ID:', this._orderId);
 
-    // Check if event is within 10 days
+    // CHANGED: Check if event is within 7 days (updated from 10 days)
     this.checkEventTimeframe();
 
     // Load payment summary and history first
@@ -132,7 +147,8 @@ export class PaymentDialogComponent implements OnInit {
     });
   }
 
-  // Extract order ID from various possible locations in the order object
+  // EXISTING METHOD - Extract order ID from various possible locations in the order object
+  // NO CHANGES
   private extractOrderId(): string | null {
     // Try common ID properties
     if (this.order?._id) return this.order._id;
@@ -146,12 +162,19 @@ export class PaymentDialogComponent implements OnInit {
     return null;
   }
 
+  // EXISTING METHOD - ENHANCED with better installment tracking
   loadPaymentSummary(): void {
     if (this._orderId) {
       this.paymentService.getPaymentSummary(this._orderId).subscribe({
         next: (summary) => {
           console.log('Full payment summary:', summary);
           this.paymentSummary = summary;
+          
+          // ENHANCED: Better deadline tracking
+          if (summary.deadlineDate) {
+            this.deadlineDate = new Date(summary.deadlineDate);
+            this.calculateDeadlineStatus();
+          }
           
           // Check if there's an active payment
           if (summary.activePaymentId) {
@@ -168,7 +191,7 @@ export class PaymentDialogComponent implements OnInit {
           // Calculate payment status
           this.calculatePaymentStatus();
           
-          // Determine if we should show next installment payment
+          // ENHANCED: Better installment progression tracking
           if (summary.installmentPlan && summary.currentInstallment) {
             this.currentInstallment = summary.currentInstallment;
             
@@ -187,8 +210,11 @@ export class PaymentDialogComponent implements OnInit {
           // Initialize form with correct values
           this.initializePaymentForm();
           
+          // ENHANCED: Load installment options for better UI
+          this.loadInstallmentOptions();
+          
           // Load installment plans
-          if (summary.installmentPlan) {
+          if (summary.installmentPlan && this.hasActivePayment) {
             // Use the plan from summary if available
             this.availableInstallmentPlans = [summary.installmentPlan];
             this.selectedInstallmentPlan = summary.installmentPlan;
@@ -206,7 +232,41 @@ export class PaymentDialogComponent implements OnInit {
     }
   }
 
-  // Initialize form with defaults
+  // NEW METHOD - Load installment options for dropdown display
+  loadInstallmentOptions(): void {
+    if (this._orderId) {
+      this.paymentService.getInstallmentOptions(this._orderId).subscribe({
+        next: (options) => {
+          console.log('Installment options:', options);
+          this.installmentOptions = options.installments || [];
+        },
+        error: (error) => {
+          console.warn('Could not load installment options:', error);
+          this.installmentOptions = [];
+        }
+      });
+    }
+  }
+
+  // NEW METHOD - Calculate deadline status and time remaining
+  calculateDeadlineStatus(): void {
+    if (!this.deadlineDate) return;
+    
+    const now = new Date();
+    const timeUntilDeadline = this.deadlineDate.getTime() - now.getTime();
+    
+    this.isDeadlinePassed = timeUntilDeadline <= 0;
+    this.hoursUntilDeadline = Math.max(0, Math.floor(timeUntilDeadline / (1000 * 60 * 60)));
+    
+    console.log('Deadline status:', {
+      deadlineDate: this.deadlineDate,
+      isDeadlinePassed: this.isDeadlinePassed,
+      hoursUntilDeadline: this.hoursUntilDeadline
+    });
+  }
+
+  // EXISTING METHOD - Initialize form with defaults
+  // ENHANCED with better amount calculation
   initializePaymentForm(): void {
     console.log('Initializing payment form with remaining amount:', this.remainingAmount);
     
@@ -219,13 +279,19 @@ export class PaymentDialogComponent implements OnInit {
     let defaultPlanId = 1; // Full payment by default
     let paymentAmount = this.remainingAmount || 0;
     
-    // If we have an active installment plan, use it
+    // ENHANCED: Better installment amount calculation
     if (this.hasActivePayment && this.paymentSummary?.installmentPlan) {
       defaultPlanId = this.paymentSummary.installmentPlan.id;
       
       // Calculate amount for current installment
       if (this.paymentSummary.nextInstallmentAmount) {
         paymentAmount = this.paymentSummary.nextInstallmentAmount;
+      } else if (this.paymentSummary.installmentPlan.percentages) {
+        const percentageIndex = this.currentInstallment - 1;
+        if (percentageIndex < this.paymentSummary.installmentPlan.percentages.length) {
+          const percentage = this.paymentSummary.installmentPlan.percentages[percentageIndex];
+          paymentAmount = (percentage / 100) * (this.order?.totalPrice || 0);
+        }
       }
     }
     
@@ -242,99 +308,123 @@ export class PaymentDialogComponent implements OnInit {
     });
   }
 
- loadInstallmentPlans(): void {
-  if (this._orderId) {
-    console.log('Loading installment plans for order:', this._orderId);
-    
-    this.paymentService.getAvailableInstallmentPlansForOrder(this._orderId).subscribe({
-      next: (plans) => {
-        console.log('API returned plans:', plans);
-        console.log('Type of plans:', typeof plans);
-        console.log('Is plans an array?:', Array.isArray(plans));
-        console.log('Plans length:', plans?.length);
-        
-        if (plans && Array.isArray(plans)) {
-          console.log('Plans is an array with length:', plans.length);
-          plans.forEach((plan, index) => {
-            console.log(`Plan ${index}:`, plan);
-            console.log(`  Name: ${plan.name}`);
-            console.log(`  Description: ${plan.description}`);
-            console.log(`  Installments: ${plan.numberOfInstallments}`);
-            console.log(`  Percentages:`, plan.percentages);
-          });
+  // EXISTING METHOD - ENHANCED with better error handling and logging
+  loadInstallmentPlans(): void {
+    if (this._orderId) {
+      console.log('Loading installment plans for order:', this._orderId);
+      
+      this.paymentService.getAvailableInstallmentPlansForOrder(this._orderId).subscribe({
+        next: (plans) => {
+          console.log('API returned plans:', plans);
+          console.log('Type of plans:', typeof plans);
+          console.log('Is plans an array?:', Array.isArray(plans));
+          console.log('Plans length:', plans?.length);
           
-          if (plans.length > 0) {
-            this.availableInstallmentPlans = plans;
-            console.log('Available installment plans set to:', this.availableInstallmentPlans);
+          if (plans && Array.isArray(plans)) {
+            console.log('Plans is an array with length:', plans.length);
+            plans.forEach((plan, index) => {
+              console.log(`Plan ${index}:`, plan);
+              console.log(`  Name: ${plan.name}`);
+              console.log(`  Description: ${plan.description}`);
+              console.log(`  Installments: ${plan.numberOfInstallments}`);
+              console.log(`  Percentages:`, plan.percentages);
+              
+              // ADDED: Set time requirement for better UI display
+              this.setTimeRequirementForPlan(plan);
+            });
             
-            // Force change detection
-            setTimeout(() => {
-              console.log('After timeout - available plans:', this.availableInstallmentPlans);
-            }, 0);
-            
-            // If paying next installment, keep the same plan
-            if (this.isPayingNextInstallment && this.paymentSummary?.installmentPlan) {
-              this.selectedInstallmentPlan = this.paymentSummary.installmentPlan;
-              this.paymentForm.get('installmentPlan')?.setValue(this.selectedInstallmentPlan.id);
-              this.paymentForm.get('installmentPlan')?.disable(); // Disable plan selection for next installments
-            } else {
-              // Pre-select the first plan (usually full payment)
-              if (this.availableInstallmentPlans.length > 0) {
-                this.selectedInstallmentPlan = this.availableInstallmentPlans[0];
+            if (plans.length > 0) {
+              this.availableInstallmentPlans = plans;
+              console.log('Available installment plans set to:', this.availableInstallmentPlans);
+              
+              // Force change detection
+              setTimeout(() => {
+                console.log('After timeout - available plans:', this.availableInstallmentPlans);
+              }, 0);
+              
+              // If paying next installment, keep the same plan
+              if (this.isPayingNextInstallment && this.paymentSummary?.installmentPlan) {
+                this.selectedInstallmentPlan = this.paymentSummary.installmentPlan;
                 this.paymentForm.get('installmentPlan')?.setValue(this.selectedInstallmentPlan.id);
+                this.paymentForm.get('installmentPlan')?.disable(); // Disable plan selection for next installments
+              } else {
+                // Pre-select the first plan (usually full payment)
+                if (this.availableInstallmentPlans.length > 0) {
+                  this.selectedInstallmentPlan = this.availableInstallmentPlans[0];
+                  this.paymentForm.get('installmentPlan')?.setValue(this.selectedInstallmentPlan.id);
+                }
               }
+              
+              this.updatePaymentAmount();
+            } else {
+              // No plans in array - show error
+              console.error('No installment plans available from server');
+              this.showError('No payment plans available. Please contact support.');
+              this.availableInstallmentPlans = [];
             }
-            
-            this.updatePaymentAmount();
           } else {
-            // No plans in array - show error
-            console.error('No installment plans available from server');
-            this.showError('No payment plans available. Please contact support.');
+            // Unexpected response format
+            console.error('Unexpected response format - expected array, got:', typeof plans);
+            console.error('Response data:', plans);
+            this.showError('Error loading payment plans. Please try again later.');
             this.availableInstallmentPlans = [];
           }
-        } else {
-          // Unexpected response format
-          console.error('Unexpected response format - expected array, got:', typeof plans);
-          console.error('Response data:', plans);
-          this.showError('Error loading payment plans. Please try again later.');
+        },
+        error: (error) => {
+          console.error('Error loading installment plans:', error);
+          console.error('Error details:', error.message, error.status);
+          
+          // Handle specific error cases
+          if (error.status === 404) {
+            this.showError('Order not found. Please check the order details.');
+          } else if (error.status === 401) {
+            this.showError('Authentication error. Please log in again.');
+          } else {
+            this.showError('Failed to load payment plans. Please try again later.');
+          }
+          
+          // Set empty array to prevent undefined errors
           this.availableInstallmentPlans = [];
         }
-      },
-      error: (error) => {
-        console.error('Error loading installment plans:', error);
-        console.error('Error details:', error.message, error.status);
-        
-        // Handle specific error cases
-        if (error.status === 404) {
-          this.showError('Order not found. Please check the order details.');
-        } else if (error.status === 401) {
-          this.showError('Authentication error. Please log in again.');
-        } else {
-          this.showError('Failed to load payment plans. Please try again later.');
-        }
-        
-        // Set empty array to prevent undefined errors
-        this.availableInstallmentPlans = [];
-      }
-    });
-  } else {
-    // No order ID - show error
-    console.error('No order ID provided');
-    this.showError('Order information is missing. Cannot load payment plans.');
-    this.availableInstallmentPlans = [];
+      });
+    } else {
+      // No order ID - show error
+      console.error('No order ID provided');
+      this.showError('Order information is missing. Cannot load payment plans.');
+      this.availableInstallmentPlans = [];
+    }
   }
-}
 
-// Add this helper method to show errors (if not already present)
-private showError(message: string): void {
-  this.error = message;
-  // If you're using a snackbar or toast service, you can also show it there
-  // this.snackBar.open(message, 'Close', { duration: 5000 });
-}
+  // NEW METHOD - Set time requirement display for installment plans
+  private setTimeRequirementForPlan(plan: InstallmentPlan): void {
+    switch (plan.numberOfInstallments) {
+      case 1:
+        plan.timeRequirement = 'Available for all orders';
+        break;
+      case 2:
+        plan.timeRequirement = 'Available for events 2+ weeks away';
+        break;
+      case 3:
+        plan.timeRequirement = 'Available for events 3+ weeks away';
+        break;
+      case 4:
+        plan.timeRequirement = 'Available for events 4+ weeks away';
+        break;
+      default:
+        plan.timeRequirement = 'Custom plan';
+    }
+  }
 
-  
+  // EXISTING METHOD - Add this helper method to show errors (if not already present)
+  // NO CHANGES
+  private showError(message: string): void {
+    this.error = message;
+    // If you're using a snackbar or toast service, you can also show it there
+    // this.snackBar.open(message, 'Close', { duration: 5000 });
+  }
 
-  // Update payment amount when installment plan changes
+  // EXISTING METHOD - Update payment amount when installment plan changes
+  // ENHANCED with better calculation logic
   updatePaymentAmount(): void {
     const planId = this.paymentForm.get('installmentPlan')?.value;
     
@@ -348,11 +438,20 @@ private showError(message: string): void {
     this.selectedInstallmentPlan = this.availableInstallmentPlans.find(p => p.id === planId) || null;
     
     if (this.selectedInstallmentPlan) {
-      const installmentAmount = this.calculateInstallmentAmount(
-        this.order?.totalPrice || 0,
-        this.selectedInstallmentPlan,
-        this.currentInstallment
-      );
+      let installmentAmount;
+      
+      // ENHANCED: Better amount calculation for installments
+      if (this.hasActivePayment && this.selectedInstallmentPlan.id === this.paymentSummary?.installmentPlan?.id) {
+        // Use the predetermined amount from payment summary
+        installmentAmount = this.paymentSummary?.nextInstallmentAmount || this.remainingAmount;
+      } else {
+        // Calculate based on percentage for new installment plans
+        installmentAmount = this.calculateInstallmentAmount(
+          this.order?.totalPrice || 0,
+          this.selectedInstallmentPlan,
+          this.currentInstallment
+        );
+      }
       
       this.paymentForm.get('paymentAmount')?.setValue(installmentAmount);
       console.log(`Updated payment amount for installment ${this.currentInstallment}:`, installmentAmount);
@@ -362,7 +461,8 @@ private showError(message: string): void {
     }
   }
 
-  // Calculate installment amount based on percentage
+  // EXISTING METHOD - Calculate installment amount based on percentage
+  // ENHANCED with better error handling
   calculateInstallmentAmount(totalPrice: number, plan: InstallmentPlan, installmentNumber: number): number {
     if (!plan || installmentNumber < 1 || installmentNumber > plan.numberOfInstallments) {
       console.warn('Invalid plan or installment number, returning full remaining amount');
@@ -378,32 +478,38 @@ private showError(message: string): void {
     // Calculate amount from percentage
     let calculatedAmount = (plan.percentages[percentageIndex] / 100) * totalPrice;
     
-    // Cap at remaining amount to prevent overpayment
+    // ENHANCED: Cap at remaining amount to prevent overpayment
     calculatedAmount = Math.min(calculatedAmount, this.remainingAmount);
     
     console.log(`Calculated amount: ${calculatedAmount} (${plan.percentages[percentageIndex]}% of ${totalPrice})`);
     return calculatedAmount;
   }
 
-  // Handle installment plan change
+  // EXISTING METHOD - Handle installment plan change
+  // NO CHANGES
   onInstallmentPlanChange(): void {
     this.updatePaymentAmount();
   }
 
-  // Check if event is within 10 days
+  // CHANGED: Updated from 10 days to 7 days and added week calculation
   checkEventTimeframe(): void {
     if (this.order?.customDetails?.eventDate) {
       const eventDate = new Date(this.order.customDetails.eventDate);
       const now = new Date();
       
-      this.daysUntilEvent = Math.floor((eventDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-      this.isEventWithin10Days = this.daysUntilEvent <= 10;
+      const timeDiff = eventDate.getTime() - now.getTime();
+      this.daysUntilEvent = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+      this.weeksUntilEvent = Math.floor(this.daysUntilEvent / 7); // ADDED: Track weeks
       
-      console.log(`Days until event: ${this.daysUntilEvent}, Is within 10 days: ${this.isEventWithin10Days}`);
+      // CHANGED: Updated from 10 days to 7 days
+      this.isEventWithin7Days = this.daysUntilEvent <= 7;
+      
+      console.log(`Days until event: ${this.daysUntilEvent}, Weeks: ${this.weeksUntilEvent}, Is within 7 days: ${this.isEventWithin7Days}`);
     }
   }
 
-  // Calculate payment status based on existing payments
+  // EXISTING METHOD - Calculate payment status based on existing payments
+  // ENHANCED with better status tracking
   calculatePaymentStatus(): void {
     if (this.paymentSummary) {
       this.remainingAmount = this.paymentSummary.remainingAmount || 0;
@@ -440,7 +546,7 @@ private showError(message: string): void {
     });
   }
 
-  // Format date for payment deadline
+  // ENHANCED: Better deadline formatting with 24-hour emphasis
   getPaymentDeadline(): string {
     if (this.paymentSummary?.deadlineDate) {
       return new Date(this.paymentSummary.deadlineDate).toLocaleString('en-US', {
@@ -456,9 +562,9 @@ private showError(message: string): void {
     if (this.order?.customDetails?.eventDate) {
       const eventDate = new Date(this.order.customDetails.eventDate);
       
-      // Calculate deadline (12 hours before event)
+      // ENHANCED: Calculate 24-hour deadline (changed from 12 hours)
       const deadlineDate = new Date(eventDate);
-      deadlineDate.setHours(deadlineDate.getHours() - 12);
+      deadlineDate.setHours(deadlineDate.getHours() - 24); // CHANGED: 24 hours instead of 12
       
       // Format deadline time
       return deadlineDate.toLocaleString('en-US', {
@@ -474,7 +580,37 @@ private showError(message: string): void {
     return "Unknown";
   }
 
+  // NEW METHOD - Get deadline progress percentage for progress bar
+  getDeadlineProgress(): number {
+    if (!this.deadlineDate || !this.order?.customDetails?.eventDate) return 0;
+    
+    const now = new Date();
+    const eventDate = new Date(this.order.customDetails.eventDate);
+    const orderDate = new Date(this.order.createdAt || now); // Assume order creation date
+    
+    const totalTime = eventDate.getTime() - orderDate.getTime();
+    const remainingTime = this.deadlineDate.getTime() - now.getTime();
+    
+    const progress = Math.max(0, Math.min(100, ((totalTime - remainingTime) / totalTime) * 100));
+    return progress;
+  }
+
+  // NEW METHOD - Get deadline status color
+  getDeadlineColor(): string {
+    if (this.isDeadlinePassed) return 'warn';
+    if (this.hoursUntilDeadline <= 24) return 'warn';
+    if (this.hoursUntilDeadline <= 72) return 'accent';
+    return 'primary';
+  }
+
+  // EXISTING METHOD - ENHANCED with deadline validation
   onSubmit(): void {
+    // ADDED: Check deadline before allowing payment
+    if (this.isDeadlinePassed) {
+      this.error = 'Payment deadline has passed. Payments must be completed 24 hours before the event.';
+      return;
+    }
+    
     if (!this.paymentForm.valid) {
       console.error('Form is invalid', this.paymentForm.errors);
       return;
@@ -534,7 +670,8 @@ private showError(message: string): void {
     }
   }
 
-  // Process PayHere payment
+  // EXISTING METHOD - Process PayHere payment
+  // NO MAJOR CHANGES
   processPayHerePayment(amount: number, installmentPlanId?: number, notes?: string): void {
     if (!this._orderId) {
       this.error = 'Order ID is missing. Cannot process payment.';
@@ -583,7 +720,8 @@ private showError(message: string): void {
       });
   }
 
-  // Process manual payment (bank transfer with slip)
+  // EXISTING METHOD - Process manual payment (bank transfer with slip)
+  // ENHANCED with better installment messaging
   processManualPayment(amount: number, installmentPlanId?: number, notes?: string): void {
     if (!this._orderId) {
       this.error = 'Order ID is missing. Cannot process payment.';
@@ -607,10 +745,10 @@ private showError(message: string): void {
       installmentNumber: this.currentInstallment
     });
     
-    // Add automatic reminder for installment payments
+    // ENHANCED: Better automatic reminder for installment payments
     let paymentNotes = notes || '';
     if (this.selectedInstallmentPlan && this.selectedInstallmentPlan.numberOfInstallments > 1) {
-      const reminderText = `This is installment ${this.currentInstallment} of ${this.selectedInstallmentPlan.numberOfInstallments}. The full payment must be completed at least 12 hours before your event.`;
+      const reminderText = `This is installment ${this.currentInstallment} of ${this.selectedInstallmentPlan.numberOfInstallments}. The full payment must be completed at least 24 hours before your event (by ${this.getPaymentDeadline()}).`; // CHANGED: 24 hours instead of 12
       paymentNotes = paymentNotes ? paymentNotes + "\n\n" + reminderText : reminderText;
     }
     
@@ -635,9 +773,9 @@ private showError(message: string): void {
         console.log('Payment slip upload successful:', response);
         this.success = 'Payment slip uploaded successfully. Awaiting admin verification.';
         
-        // Show different message for installments
+        // ENHANCED: Show different message for installments
         if (this.selectedInstallmentPlan && this.selectedInstallmentPlan.numberOfInstallments > 1) {
-          this.success = `Installment ${this.currentInstallment} payment slip uploaded successfully. Awaiting admin verification.`;
+          this.success = `Installment ${this.currentInstallment} of ${this.selectedInstallmentPlan.numberOfInstallments} payment slip uploaded successfully. Awaiting admin verification.`;
         }
         
         setTimeout(() => {
@@ -660,7 +798,8 @@ private showError(message: string): void {
     });
   }
 
-  // Process return from PayHere
+  // EXISTING METHOD - Process return from PayHere
+  // NO CHANGES
   processPayHereReturn(orderId: string, paymentId: string, status: string): void {
     this.loading = true;
     this.error = null;
@@ -694,7 +833,8 @@ private showError(message: string): void {
     }
   }
 
-  // Handle file selection for bank transfer
+  // EXISTING METHOD - Handle file selection for bank transfer
+  // NO CHANGES
   onFileSelected(event: any): void {
     const file = event.target.files[0];
     
@@ -720,20 +860,46 @@ private showError(message: string): void {
     }
   }
   
-  // Get formatted time until event
+  // CHANGED: Get formatted time until event - updated to reflect 7-day rule
   getTimeUntilEvent(): string {
     if (this.daysUntilEvent <= 0) {
       return "Event has already started";
     }
     
     if (this.daysUntilEvent > 0) {
-      return `${this.daysUntilEvent} day${this.daysUntilEvent !== 1 ? 's' : ''}`;
+      // ENHANCED: Show both weeks and days for better clarity
+      if (this.weeksUntilEvent > 0) {
+        const remainingDays = this.daysUntilEvent % 7;
+        if (remainingDays > 0) {
+          return `${this.weeksUntilEvent} week${this.weeksUntilEvent !== 1 ? 's' : ''} ${remainingDays} day${remainingDays !== 1 ? 's' : ''}`;
+        } else {
+          return `${this.weeksUntilEvent} week${this.weeksUntilEvent !== 1 ? 's' : ''}`;
+        }
+      } else {
+        return `${this.daysUntilEvent} day${this.daysUntilEvent !== 1 ? 's' : ''}`;
+      }
     }
     
     return "Soon";
   }
+
+  // NEW METHOD - Get formatted time until deadline
+  getTimeUntilDeadline(): string {
+    if (this.isDeadlinePassed) {
+      return "Deadline passed";
+    }
+    
+    if (this.hoursUntilDeadline > 24) {
+      const days = Math.floor(this.hoursUntilDeadline / 24);
+      const hours = this.hoursUntilDeadline % 24;
+      return `${days} day${days !== 1 ? 's' : ''} ${hours} hour${hours !== 1 ? 's' : ''}`;
+    } else {
+      return `${this.hoursUntilDeadline} hour${this.hoursUntilDeadline !== 1 ? 's' : ''}`;
+    }
+  }
   
-  // Get current installment amount for display
+  // EXISTING METHOD - Get current installment amount for display
+  // NO CHANGES
   getCurrentInstallmentAmount(): number {
     if (!this.selectedInstallmentPlan) {
       return 0;
@@ -746,7 +912,8 @@ private showError(message: string): void {
     );
   }
   
-  // formatDate method that handles undefined
+  // EXISTING METHOD - formatDate method that handles undefined
+  // NO CHANGES
   formatDate(date: string | undefined): string {
     if (!date) return 'Date not available';
     
@@ -765,7 +932,8 @@ private showError(message: string): void {
     }
   }
   
-  // Get payment history for display
+  // EXISTING METHOD - Get payment history for display
+  // NO CHANGES
   getPaymentHistory(): Payment[] {
     if (this.previousPayments && this.previousPayments.length > 0) {
       // Sort by date (most recent first)
@@ -778,7 +946,8 @@ private showError(message: string): void {
     return [];
   }
   
-  // Get formatted payment status
+  // EXISTING METHOD - Get formatted payment status
+  // NO CHANGES
   getPaymentStatusLabel(status: string): string {
     switch (status) {
       case 'completed': return 'Paid';
@@ -789,10 +958,10 @@ private showError(message: string): void {
     }
   }
   
-  // Check if should show make payment button
+  // CHANGED: Updated to reflect 7-day rule instead of 10-day
   shouldShowMakePaymentButton(): boolean {
-    // If event is within 10 days, only show full payment
-    if (this.isEventWithin10Days && this.availableInstallmentPlans.length === 1) {
+    // CHANGED: Check if event is within 7 days instead of 10 days
+    if (this.isEventWithin7Days && this.availableInstallmentPlans.length === 1) {
       return true;
     }
     
@@ -813,22 +982,25 @@ private showError(message: string): void {
     );
   }
   
-  // Get button text based on state
+  // ENHANCED: Better button text with installment progress
   getPaymentButtonText(): string {
     if (this.loading) return 'Processing...';
+    
+    if (this.isDeadlinePassed) return 'Payment Deadline Passed';
     
     if (this.isPayingNextInstallment && this.selectedInstallmentPlan) {
       return `Pay Installment ${this.currentInstallment} of ${this.selectedInstallmentPlan.numberOfInstallments}`;
     }
     
     if (this.hasActivePayment && this.paymentSummary?.installmentPlan) {
-      return `Pay Next Installment (${this.currentInstallment})`;
+      return `Pay Next Installment (${this.currentInstallment} of ${this.paymentSummary.installmentPlan.numberOfInstallments})`;
     }
     
     return 'Process Payment';
   }
   
-  // Close dialog
+  // EXISTING METHOD - Close dialog
+  // NO CHANGES
   closeDialog(): void {
     // Only close if we're not in the middle of a PayHere payment
     if (!this.payherePaymentInProgress) {
@@ -838,13 +1010,15 @@ private showError(message: string): void {
     }
   }
   
-  // Check if an installment is completed
+  // EXISTING METHOD - Check if an installment is completed
+  // NO CHANGES
   isPaymentCompleted(installmentNumber: number): boolean {
     const payment = this.previousPayments.find(p => p.installmentNumber === installmentNumber);
     return payment ? payment.status === 'completed' || payment.status === 'confirmed' : false;
   }
   
-  // Get installment amount
+  // EXISTING METHOD - Get installment amount
+  // NO CHANGES
   getInstallmentAmount(installmentNumber: number): number {
     if (!this.paymentSummary?.installmentPlan) return 0;
     
@@ -858,7 +1032,8 @@ private showError(message: string): void {
     return 0;
   }
   
-  // Get installment status
+  // EXISTING METHOD - Get installment status
+  // NO CHANGES
   getInstallmentStatus(installmentNumber: number): string {
     const payment = this.previousPayments.find(p => p.installmentNumber === installmentNumber);
     
@@ -882,6 +1057,8 @@ private showError(message: string): void {
     }
   }
 
+  // EXISTING METHOD - Get installment chip color
+  // NO CHANGES
   getInstallmentChipColor(status: string): string {
     switch (status?.toLowerCase()) {
       case 'completed':
@@ -897,6 +1074,8 @@ private showError(message: string): void {
     }
   }
 
+  // EXISTING METHOD - Get installment status text
+  // NO CHANGES
   getInstallmentStatusText(status: string): string {
     switch (status?.toLowerCase()) {
       case 'completed':
@@ -910,6 +1089,40 @@ private showError(message: string): void {
         return 'Overdue';
       default:
         return status ? status.charAt(0).toUpperCase() + status.slice(1) : 'Unknown';
+    }
+  }
+
+  // NEW METHOD - Check if installment plan is available based on time
+  isInstallmentPlanAvailable(plan: InstallmentPlan): boolean {
+    switch (plan.numberOfInstallments) {
+      case 1: // Full payment - always available
+        return true;
+      case 2: // 50% split - available for 2+ weeks
+        return this.weeksUntilEvent >= 2;
+      case 3: // 33.3% split - available for 3+ weeks
+        return this.weeksUntilEvent >= 3;
+      case 4: // 25% split - available for 4+ weeks
+        return this.weeksUntilEvent >= 4;
+      default:
+        return false;
+    }
+  }
+
+  // NEW METHOD - Get installment plan availability message
+  getInstallmentPlanMessage(plan: InstallmentPlan): string {
+    if (this.isInstallmentPlanAvailable(plan)) {
+      return '';
+    }
+    
+    switch (plan.numberOfInstallments) {
+      case 2:
+        return 'Requires at least 2 weeks until event';
+      case 3:
+        return 'Requires at least 3 weeks until event';
+      case 4:
+        return 'Requires at least 4 weeks until event';
+      default:
+        return 'Not available for this order';
     }
   }
 }

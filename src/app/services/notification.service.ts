@@ -74,29 +74,58 @@ export class NotificationService {
   }
 
   loadNotifications(): void {
-    try {
-      const headers = this.getHeaders();
-      this.http.get<any>(`${this.apiUrl}`, { headers })
-        .pipe(
-          tap(response => {
+  try {
+    const headers = this.getHeaders();
+    this.http.get<any>(`${this.apiUrl}`, { headers })
+      .pipe(
+        tap(response => {
+          console.log('Received notification response:', response);
+          
+          // Check if notifications array exists
+          if (response && response.notifications) {
+            // Transform the notifications from the backend format
+            const notifications = response.notifications.map((notification: any) => ({
+              id: notification.id.toString(),
+              title: notification.title || 'No Title',
+              body: notification.body || 'No content',
+              type: notification.type || 'unknown',
+              orderId: notification.orderId || null,
+              read: !!notification.read, // Convert to boolean
+              timestamp: notification.timestamp || new Date().toISOString(),
+              data: { type: notification.type, orderId: notification.orderId }
+            }));
+            
             // Update notifications
-            this.notificationsSubject.next(response.notifications || []);
+            this.notificationsSubject.next(notifications);
             
             // Update unread count
-            const unreadCount = (response.notifications || [])
-              .filter((notification: Notification) => !notification.read).length;
+            const unreadCount = notifications.filter((n: Notification) => !n.read).length;
             this.unreadCountSubject.next(unreadCount);
-          }),
-          catchError(error => {
-            console.error('Error loading notifications:', error);
-            return of({ notifications: [] });
-          })
-        )
-        .subscribe();
-    } catch (error) {
-      console.error('Error getting headers:', error);
-    }
+            
+            // Log success
+            console.log('Successfully loaded notifications:', notifications.length);
+          } else {
+            console.warn('Received empty or invalid notification format:', response);
+            this.notificationsSubject.next([]);
+            this.unreadCountSubject.next(0);
+          }
+        }),
+        catchError(error => {
+          console.error('Error loading notifications:', error);
+          // Check specific error details
+          if (error.status === 403) {
+            console.error('Authorization error - check user permissions');
+          } else if (error.status === 500) {
+            console.error('Server error - check backend logs');
+          }
+          return of({ notifications: [] });
+        })
+      )
+      .subscribe();
+  } catch (error) {
+    console.error('Error getting headers:', error);
   }
+}
 
   markNotificationAsRead(notificationId: string): Observable<any> {
     try {

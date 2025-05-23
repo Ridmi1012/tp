@@ -1,9 +1,22 @@
-<h2 mat-dialog-title>Order Details - #{{ order.orderNumber }}</h2>
+<h2 mat-dialog-title>Order Details - #{{ order?.orderNumber || 'N/A' }}</h2>
 
 <mat-dialog-content>
   <div class="order-details">
+    
+    <!-- Loading State -->
+    <div *ngIf="loading" class="loading-container">
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+      <p>Loading payment information...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="error" class="error-container">
+      <mat-icon color="warn">error</mat-icon>
+      <p>{{ error }}</p>
+    </div>
+
     <!-- Progress Timeline -->
-    <div class="progress-timeline">
+    <div class="progress-timeline" *ngIf="!loading">
       <h3>Order Progress</h3>
       <div class="timeline">
         <div *ngFor="let step of getStatusSteps(); let i = index" class="timeline-step"
@@ -20,6 +33,7 @@
             </p>
             <p *ngIf="step.message" class="step-message">{{ step.message }}</p>
 
+            <!-- Payment Rejection Alert -->
             <div class="payment-rejection-alert" *ngIf="hasRejectedPayment()">
               <mat-icon color="warn">error</mat-icon>
               <strong>Payment Rejected</strong>
@@ -32,14 +46,24 @@
               </div>
             </div>
 
-            <!-- Installment specific details -->
+            <!-- ENHANCED: Installment specific details with progress -->
             <div *ngIf="step.installmentDetails" class="installment-details">
-              <span class="installment-amount">{{ step.installmentDetails.percentage }}% (Rs. {{
-                step.installmentDetails.amount | number:'1.2-2' }})</span>
-              <mat-chip *ngIf="step.installmentDetails.status"
-                [color]="getInstallmentChipColor(step.installmentDetails.status)" selected>
-                {{ getInstallmentStatusText(step.installmentDetails.status) }}
-              </mat-chip>
+              <div class="installment-info">
+                <span class="installment-amount">
+                  Installment {{ step.installmentDetails.installmentNumber }}: 
+                  {{ step.installmentDetails.percentage }}% 
+                  (Rs. {{ step.installmentDetails.amount | number:'1.2-2' }})
+                </span>
+                <mat-chip [color]="getInstallmentChipColor(step.installmentDetails.status)" selected>
+                  {{ getInstallmentStatusText(step.installmentDetails.status) }}
+                </mat-chip>
+              </div>
+              
+              <!-- Clickable installment indicator -->
+              <div *ngIf="step.installmentDetails.isClickable" class="clickable-installment">
+                <mat-icon class="payment-icon">touch_app</mat-icon>
+                <span>Click "Make Payment" to pay this installment</span>
+              </div>
             </div>
           </div>
           <div *ngIf="i < getStatusSteps().length - 1" class="step-connector"></div>
@@ -47,12 +71,57 @@
       </div>
     </div>
 
-    <mat-divider></mat-divider>
+    <mat-divider *ngIf="!loading"></mat-divider>
 
-    <!-- Payment Summary Section (when applicable) -->
-    <div class="payment-summary"
-      *ngIf="paymentSummary && (paymentSummary.totalPaid > 0 || order.paymentStatus !== 'pending')">
+    <!-- ENHANCED: Payment Summary Section with comprehensive installment tracking -->
+    <div class="payment-summary" *ngIf="paymentSummary && (paymentSummary.totalPaid > 0 || order.paymentStatus !== 'pending') && !loading">
       <h3>Payment Summary</h3>
+      
+      <!-- Installment Plan Information -->
+      <div *ngIf="paymentSummary.installmentPlan" class="installment-plan-info">
+        <div class="plan-header">
+          <h4>{{ paymentSummary.installmentPlan.name }}</h4>
+          <mat-chip color="primary" selected>{{ getInstallmentPlanSummary() }}</mat-chip>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="installment-progress" *ngIf="getInstallmentProgress() as progress">
+          <div class="progress-header">
+            <span>Progress: {{ progress.completed }}/{{ progress.total }} installments</span>
+            <span class="progress-percentage">{{ progress.percentage | number:'1.0-0' }}%</span>
+          </div>
+          <mat-progress-bar mode="determinate" [value]="progress.percentage" color="primary"></mat-progress-bar>
+        </div>
+
+        <!-- Installment Breakdown -->
+        <div class="installment-breakdown" *ngIf="installmentOptions && installmentOptions.installments">
+          <h5>Installment Breakdown:</h5>
+          <div class="installment-list">
+            <div 
+              *ngFor="let installment of installmentOptions.installments" 
+              class="installment-item"
+              [class.completed]="installment.isCompleted"
+              [class.current]="installment.isCurrent"
+              [class.clickable]="installment.isClickable"
+              [matTooltip]="installment.description"
+            >
+              <div class="installment-number">{{ installment.number }}</div>
+              <div class="installment-details">
+                <div class="amount">Rs. {{ installment.amount | number:'1.2-2' }}</div>
+                <div class="percentage">{{ installment.percentage }}%</div>
+              </div>
+              <div class="installment-status">
+                <mat-chip [color]="getInstallmentChipColor(installment.status)" selected>
+                  {{ getInstallmentStatusText(installment.status) }}
+                </mat-chip>
+                <mat-icon *ngIf="installment.isClickable" class="clickable-icon">touch_app</mat-icon>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Summary Grid -->
       <div class="info-grid">
         <div class="info-item">
           <label>Total Amount</label>
@@ -69,25 +138,35 @@
           <label>Remaining Amount</label>
           <p class="text-warning">Rs. {{ paymentSummary.remainingAmount | number:'1.2-2' }}</p>
         </div>
-        <div class="info-item" *ngIf="order.installmentPlanId && order.installmentTotalInstallments">
-          <label>Installment Plan</label>
-          <p>{{ order.currentInstallmentNumber || 1 }} of {{ order.installmentTotalInstallments }}</p>
+        
+        <!-- ENHANCED: Next installment information -->
+        <div class="info-item" *ngIf="paymentSummary.nextInstallmentAmount && !paymentSummary.isFullyPaid">
+          <label>Next Payment Due</label>
+          <p class="next-payment">Rs. {{ paymentSummary.nextInstallmentAmount | number:'1.2-2' }}</p>
         </div>
-        <div class="info-item full-width" *ngIf="!paymentSummary.isFullyPaid && paymentSummary.deadlineDate">
+        
+        <!-- ENHANCED: Payment deadline with visual indicators -->
+        <div class="info-item full-width" *ngIf="deadlineInfo && !paymentSummary.isFullyPaid">
           <label>Payment Deadline</label>
-          <p class="deadline-warning">
-            <mat-icon color="warn">schedule</mat-icon>
-            Full payment required by {{ formatDate(paymentSummary.deadlineDate) }}
-          </p>
+          <div class="deadline-info" [class.deadline-passed]="deadlineInfo.isPassed" [class.deadline-urgent]="deadlineInfo.isUrgent">
+            <mat-icon [color]="deadlineInfo.isPassed ? 'warn' : (deadlineInfo.isUrgent ? 'accent' : 'primary')">
+              {{ deadlineInfo.isPassed ? 'error' : 'schedule' }}
+            </mat-icon>
+            <div class="deadline-text">
+              <p class="deadline-date">{{ deadlineInfo.formatted }}</p>
+              <p class="deadline-warning" *ngIf="getDeadlineWarningMessage()">
+                {{ getDeadlineWarningMessage() }}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <mat-divider
-      *ngIf="paymentSummary && (paymentSummary.totalPaid > 0 || order.paymentStatus !== 'pending')"></mat-divider>
+    <mat-divider *ngIf="paymentSummary && (paymentSummary.totalPaid > 0 || order.paymentStatus !== 'pending') && !loading"></mat-divider>
 
     <!-- Order Information -->
-    <div class="order-info">
+    <div class="order-info" *ngIf="!loading">
       <h3>Order Information</h3>
       <div class="info-grid">
         <div class="info-item">
@@ -106,23 +185,23 @@
         </div>
         <div class="info-item" *ngIf="order.transportationCost">
           <label>Transportation Cost</label>
-          <p>Rs. {{ order.transportationCost }}</p>
+          <p>Rs. {{ order.transportationCost | number:'1.2-2' }}</p>
         </div>
         <div class="info-item" *ngIf="order.additionalRentalCost">
           <label>Additional Rental Cost</label>
-          <p>Rs. {{ order.additionalRentalCost }}</p>
+          <p>Rs. {{ order.additionalRentalCost | number:'1.2-2' }}</p>
         </div>
         <div class="info-item" *ngIf="order.totalPrice">
           <label>Total Price</label>
-          <p><strong>Rs. {{ order.totalPrice }}</strong></p>
+          <p><strong>Rs. {{ order.totalPrice | number:'1.2-2' }}</strong></p>
         </div>
       </div>
     </div>
 
-    <mat-divider></mat-divider>
+    <mat-divider *ngIf="!loading"></mat-divider>
 
     <!-- Event Details -->
-    <div class="event-details">
+    <div class="event-details" *ngIf="!loading">
       <h3>Event Details</h3>
       <div class="info-grid">
         <div class="info-item">
@@ -152,10 +231,10 @@
       </div>
     </div>
 
-    <mat-divider></mat-divider>
+    <mat-divider *ngIf="!loading"></mat-divider>
 
     <!-- Customer Information -->
-    <div class="customer-info">
+    <div class="customer-info" *ngIf="!loading">
       <h3>Customer Information</h3>
       <div class="info-grid">
         <div class="info-item">
@@ -182,16 +261,46 @@
 <mat-dialog-actions align="end">
   <button mat-button (click)="dialogRef.close()">Close</button>
 
-  <!-- Payment History Button - always show if there are payments -->
-  <button mat-stroked-button color="primary" *ngIf="shouldShowPaymentHistoryButton()"
-    (click)="openPaymentHistoryDialog()">
+  <!-- Payment History Button - show if there are payments or installments -->
+  <button 
+    mat-stroked-button 
+    color="primary" 
+    *ngIf="shouldShowPaymentHistoryButton() && !loading"
+    (click)="openPaymentHistoryDialog()"
+    matTooltip="View detailed payment history"
+  >
     <mat-icon>history</mat-icon>
     Payment History
   </button>
 
-  <!-- Make Payment Button - only show if order needs payment -->
-  <button mat-raised-button color="primary" *ngIf="shouldShowMakePaymentButton()" (click)="openPaymentDialog()">
+  <!-- Make Payment Button - enhanced with installment awareness -->
+  <button 
+    mat-raised-button 
+    color="primary" 
+    *ngIf="shouldShowMakePaymentButton() && !loading" 
+    (click)="openPaymentDialog()"
+    [disabled]="deadlineInfo?.isPassed"
+    [matTooltip]="deadlineInfo?.isPassed ? 'Payment deadline has passed' : 
+                  (installmentOptions?.hasInstallmentPlan ? 
+                   'Pay next installment: Rs. ' + (paymentSummary?.nextInstallmentAmount | number:'1.2-2') : 
+                   'Make payment')"
+  >
     <mat-icon>payment</mat-icon>
-    Make Payment
+    <span *ngIf="!installmentOptions?.hasInstallmentPlan">Make Payment</span>
+    <span *ngIf="installmentOptions?.hasInstallmentPlan && installmentOptions?.currentInstallment">
+      Pay Installment {{ installmentOptions?.currentInstallment }}
+    </span>
+  </button>
+
+  <!-- Deadline Warning Button (if urgent) -->
+  <button 
+    mat-stroked-button 
+    color="warn" 
+    *ngIf="deadlineInfo?.isUrgent && !deadlineInfo?.isPassed && !paymentSummary?.isFullyPaid && !loading"
+    disabled
+    matTooltip="Payment deadline is approaching soon"
+  >
+    <mat-icon>warning</mat-icon>
+    Urgent
   </button>
 </mat-dialog-actions>
